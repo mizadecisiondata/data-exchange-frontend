@@ -1,7 +1,12 @@
 import http from "node:http";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { getFrontendConfig, buildFrontendHealth } from "../src/config/env.mjs";
 
 const config = getFrontendConfig();
+const currentDir = dirname(fileURLToPath(import.meta.url));
+const publicDir = join(currentDir, "..", "public");
 
 function html(title, body) {
   return `<!doctype html>
@@ -44,7 +49,8 @@ const server = http.createServer((request, response) => {
   }
 
   if (request.method === "GET" && url.pathname === "/admin/agent-workbench") {
-    write(response, 200, "text/html; charset=utf-8", html("Agent Workbench", "<main><h1>Agent Workbench</h1><p>Ventana admin reservada para visualizar agentes IA en fases posteriores.</p></main>"));
+    const workbenchHtml = readFileSync(join(publicDir, "agent-workbench-live.html"), "utf8");
+    write(response, 200, "text/html; charset=utf-8", workbenchHtml);
     return;
   }
 

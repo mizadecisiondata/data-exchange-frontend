@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent Workbench - Data Exchange</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #08111f;
+        --panel: #101b2d;
+        --panel-2: #13243a;
+        --line: #2b3e58;
+        --text: #edf4ff;
+        --muted: #9fb0c7;
+        --green: #31d09b;
+        --blue: #62a8ff;
+        --amber: #f4c95d;
+        --red: #ff746d;
+        --violet: #b38cff;
+        --ink: #07111e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(180deg, rgba(8, 17, 31, 0.92), rgba(8, 17, 31, 1)),
+          radial-gradient(circle at 80% 10%, rgba(98, 168, 255, 0.16), transparent 32%),
+          radial-gradient(circle at 10% 20%, rgba(49, 208, 155, 0.12), transparent 28%);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      button {
+        border: 1px solid var(--line);
+        background: #142640;
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0.65rem 0.85rem;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: var(--blue);
+      }
+
+      .shell {
+        width: min(1440px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 24px 0 32px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--green), var(--blue));
+        color: var(--ink);
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(1.5rem, 2.6vw, 2.45rem);
+        line-height: 1.05;
+      }
+
+      .subtitle {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 0.96rem;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(49, 208, 155, 0.35);
+        background: rgba(49, 208, 155, 0.08);
+        color: #c7ffe9;
+        border-radius: 999px;
+        padding: 0.45rem 0.75rem;
+        font-size: 0.88rem;
+        white-space: nowrap;
+      }
+
+      .pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 0 0 rgba(49, 208, 155, 0.65);
+        animation: pulse 1.6s infinite;
+      }
+
+      @keyframes pulse {
+        70% {
+          box-shadow: 0 0 0 10px rgba(49, 208, 155, 0);
+        }
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
+        gap: 16px;
+      }
+
+      .panel {
+        background: rgba(16, 27, 45, 0.92);
+        border: 1px solid rgba(159, 176, 199, 0.18);
+        border-radius: 8px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px solid rgba(159, 176, 199, 0.14);
+      }
+
+      .panel-head h2 {
+        font-size: 1rem;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .kpi {
+        padding: 16px;
+      }
+
+      .kpi strong {
+        display: block;
+        font-size: 1.75rem;
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+
+      .kpi span {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(11, minmax(68px, 1fr));
+        gap: 8px;
+        padding: 16px;
+        overflow-x: auto;
+      }
+
+      .phase {
+        min-height: 82px;
+        background: var(--panel-2);
+        border: 1px solid rgba(159, 176, 199, 0.16);
+        border-radius: 8px;
+        padding: 10px;
+      }
+
+      .phase.done {
+        border-color: rgba(49, 208, 155, 0.5);
+      }
+
+      .phase.active {
+        border-color: rgba(98, 168, 255, 0.78);
+        box-shadow: inset 0 0 0 1px rgba(98, 168, 255, 0.28);
+      }
+
+      .phase small {
+        display: block;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .phase b {
+        font-size: 0.86rem;
+      }
+
+      .agents {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .agent {
+        min-height: 170px;
+        border: 1px solid rgba(159, 176, 199, 0.16);
+        background: linear-gradient(180deg, rgba(19, 36, 58, 0.96), rgba(13, 25, 43, 0.96));
+        border-radius: 8px;
+        padding: 14px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .agent::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 3px;
+        background: var(--accent, var(--blue));
+        transform: scaleX(var(--progress, 0.2));
+        transform-origin: left;
+        transition: transform 0.4s ease;
+      }
+
+      .agent-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        align-items: flex-start;
+        margin-bottom: 12px;
+      }
+
+      .agent h3 {
+        font-size: 0.98rem;
+      }
+
+      .badge {
+        border: 1px solid rgba(159, 176, 199, 0.22);
+        border-radius: 999px;
+        padding: 0.25rem 0.5rem;
+        color: #d9e7fb;
+        font-size: 0.75rem;
+        white-space: nowrap;
+      }
+
+      .task {
+        min-height: 44px;
+        color: #dbe8fb;
+        font-size: 0.92rem;
+        line-height: 1.35;
+      }
+
+      .progress-wrap {
+        margin-top: 14px;
+      }
+
+      .progress-label {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 0.78rem;
+        margin-bottom: 6px;
+      }
+
+      .bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .bar span {
+        display: block;
+        height: 100%;
+        width: var(--progress-percent, 20%);
+        background: var(--accent, var(--blue));
+        transition: width 0.4s ease;
+      }
+
+      .stream {
+        padding: 14px 16px 16px;
+        max-height: 483px;
+        overflow: auto;
+      }
+
+      .event {
+        display: grid;
+        grid-template-columns: 74px 1fr;
+        gap: 10px;
+        padding: 11px 0;
+        border-bottom: 1px solid rgba(159, 176, 199, 0.12);
+      }
+
+      .event:last-child {
+        border-bottom: 0;
+      }
+
+      .time {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+        font-size: 0.78rem;
+      }
+
+      .event b {
+        display: block;
+        font-size: 0.88rem;
+        margin-bottom: 3px;
+      }
+
+      .event p {
+        color: #c7d5e8;
+        font-size: 0.86rem;
+        line-height: 1.35;
+      }
+
+      .questions {
+        display: grid;
+        gap: 10px;
+        padding: 16px;
+      }
+
+      .question {
+        border: 1px solid rgba(244, 201, 93, 0.28);
+        background: rgba(244, 201, 93, 0.08);
+        border-radius: 8px;
+        padding: 12px;
+      }
+
+      .question b {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .question span {
+        color: #ffe6a6;
+        font-size: 0.87rem;
+      }
+
+      .rules {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 16px;
+      }
+
+      .rule {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(159, 176, 199, 0.14);
+        border-radius: 8px;
+        padding: 11px;
+        color: #dbe8fb;
+        font-size: 0.86rem;
+        line-height: 1.35;
+      }
+
+      @media (max-width: 1120px) {
+        .grid,
+        .agents,
+        .kpis {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .actions {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div class="brand">
+          <div class="mark">DD</div>
+          <div>
+            <h1>Agent Workbench</h1>
+            <p class="subtitle">Decision Data / Data Exchange - visualizacion local del trabajo por fases</p>
+          </div>
+        </div>
+        <div class="actions">
+          <span class="status-pill"><span class="pulse"></span><span id="run-state">En vivo</span></span>
+          <button id="toggle">Pausar</button>
+          <button id="tick">Avanzar</button>
+          <button id="reset">Reiniciar</button>
+        </div>
+      </section>
+
+      <section class="kpis">
+        <article class="panel kpi"><strong id="phase-kpi">1</strong><span>Fase activa</span></article>
+        <article class="panel kpi"><strong id="progress-kpi">0%</strong><span>Avance visible</span></article>
+        <article class="panel kpi"><strong id="agents-kpi">7</strong><span>Agentes en tablero</span></article>
+        <article class="panel kpi"><strong id="events-kpi">0</strong><span>Eventos registrados</span></article>
+      </section>
+
+      <section class="grid">
+        <div>
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Mapa de fases</h2>
+              <span class="meta" id="clock">--:--:--</span>
+            </div>
+            <div class="timeline" id="timeline"></div>
+          </article>
+
+          <article class="panel" style="margin-top: 16px;">
+            <div class="panel-head">
+              <h2>Agentes activos</h2>
+              <span class="meta">Portal admin solamente</span>
+            </div>
+            <div class="agents" id="agents"></div>
+          </article>
+
+          <article class="panel" style="margin-top: 16px;">
+            <div class="panel-head">
+              <h2>Guardrails de proyecto</h2>
+              <span class="meta">No editables sin Mateo</span>
+            </div>
+            <div class="rules">
+              <div class="rule">Cliente Normal, Contributor, Active y Founding se mantienen separados.</div>
+              <div class="rule">Contributor acredita 1:2 solo para consultas basicas.</div>
+              <div class="rule">Active y Founding acreditan 1:1 para beneficio preferencial.</div>
+              <div class="rule">Exceso sobre credits se factura como Cliente Normal.</div>
+              <div class="rule">Facturacion mensual postpago; prepago no es modelo principal.</div>
+              <div class="rule">Ingesta de bloques de informacion con calidad minima 95%.</div>
+              <div class="rule">Duplicados se descartan sin error ni Decision Credits.</div>
+              <div class="rule">Toda consulta registra BAC, consentimiento, canal, IP, tarifa y estado.</div>
+            </div>
+          </article>
+        </div>
+
+        <aside>
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Bitacora viva</h2>
+              <span class="meta">Visualizacion local, no ejecuta agentes reales</span>
+            </div>
+            <div class="stream" id="stream"></div>
+          </article>
+
+          <article class="panel" style="margin-top: 16px;">
+            <div class="panel-head">
+              <h2>Preguntas para Mateo</h2>
+              <span class="meta" id="questions-count">0 abiertas</span>
+            </div>
+            <div class="questions" id="questions"></div>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const phases = [
+        "Setup",
+        "Frontend base",
+        "Auth y onboarding",
+        "Ingesta",
+        "Credits y pricing",
+        "Consulta individual",
+        "Consulta bloque",
+        "API / SFTP",
+        "Admin completo",
+        "Seguridad",
+        "QA y produccion"
+      ];
+
+      const agents = [
+        { name: "Frontend Agent", accent: "#62a8ff", task: "Preparando rutas admin y cliente separadas." },
+        { name: "Backend Architect", accent: "#31d09b", task: "Manteniendo contratos de healthcheck y API base." },
+        { name: "Data Ingestion Agent", accent: "#f4c95d", task: "Esperando diccionario definitivo para bloques de informacion." },
+        { name: "Decision Credits Agent", accent: "#b38cff", task: "Protegiendo reglas Contributor 1:2 y Active/Founding 1:1." },
+        { name: "BAC Audit Agent", accent: "#ff746d", task: "Listando eventos obligatorios para trazabilidad completa." },
+        { name: "Security Agent", accent: "#7dd3fc", task: "Separando alcance admin y cliente." },
+        { name: "PM Tracking Agent", accent: "#fca5a5", task: "Actualizando avance por fase y preguntas pendientes." }
+      ];
+
+      const taskPool = [
+        "Leyendo memoria operativa V6 y orden por fases.",
+        "Verificando que portal cliente y admin no se mezclen.",
+        "Anotando criterio de cierre antes de avanzar.",
+        "Marcando decisiones reservadas a Mateo.",
+        "Preparando evidencia de pruebas locales.",
+        "Revisando guardrails de Decision Credits.",
+        "Controlando que Agent Workbench sea solo admin.",
+        "Validando que no se use prepago como modelo principal.",
+        "Separando ingestion, queries, BAC y billing por modulo.",
+        "Esperando aprobacion antes de pasar a la siguiente fase."
+      ];
+
+      const questions = [
+        { title: "Repositorio remoto", body: "Confirmado: frontend y backend ya existen en GitHub." },
+        { title: "Stack backend", body: "Confirmado: Node/NestJS queda como camino de produccion." },
+        { title: "Auth/RBAC/BAC funcional", body: "Confirmado: no pertenece a Fase 0; entra despues." },
+        { title: "Texto legal consentimiento", body: "Pendiente para fase de consultas." },
+        { title: "Diccionario de carga", body: "Pendiente antes de implementar ingesta real." }
+      ];
+
+      const state = {
+        running: true,
+        tick: 0,
+        events: []
+      };
+
+      const timeline = document.querySelector("#timeline");
+      const agentsEl = document.querySelector("#agents");
+      const stream = document.querySelector("#stream");
+      const questionsEl = document.querySelector("#questions");
+      const phaseKpi = document.querySelector("#phase-kpi");
+      const progressKpi = document.querySelector("#progress-kpi");
+      const eventsKpi = document.querySelector("#events-kpi");
+      const clock = document.querySelector("#clock");
+      const runState = document.querySelector("#run-state");
+      const toggle = document.querySelector("#toggle");
+      const tickButton = document.querySelector("#tick");
+      const resetButton = document.querySelector("#reset");
+      const questionsCount = document.querySelector("#questions-count");
+
+      function currentTime() {
+        return new Intl.DateTimeFormat("es-EC", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        }).format(new Date());
+      }
+
+      function activePhase() {
+        return Math.min(1 + Math.floor(state.tick / 14), phases.length - 1);
+      }
+
+      function totalProgress() {
+        const base = 9;
+        return Math.min(100, base + state.tick * 2);
+      }
+
+      function renderTimeline() {
+        const active = activePhase();
+        timeline.innerHTML = phases
+          .map((phase, index) => {
+            const klass = index < active ? "phase done" : index === active ? "phase active" : "phase";
+            return `<div class="${klass}"><small>Fase ${index}</small><b>${phase}</b></div>`;
+          })
+          .join("");
+      }
+
+      function renderAgents() {
+        agentsEl.innerHTML = agents
+          .map((agent, index) => {
+            const progress = Math.min(98, 18 + ((state.tick * (index + 3)) % 78));
+            const task = state.tick % 5 === 0 ? taskPool[(state.tick + index) % taskPool.length] : agent.task;
+            const status = index % 3 === 0 ? "Construyendo" : index % 3 === 1 ? "Verificando" : "En espera";
+            return `
+              <article class="agent" style="--accent: ${agent.accent}; --progress: ${progress / 100}; --progress-percent: ${progress}%;">
+                <div class="agent-top">
+                  <h3>${agent.name}</h3>
+                  <span class="badge">${status}</span>
+                </div>
+                <p class="task">${task}</p>
+                <div class="progress-wrap">
+                  <div class="progress-label"><span>avance local</span><span>${progress}%</span></div>
+                  <div class="bar"><span></span></div>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      function addEvent() {
+        const agent = agents[state.tick % agents.length];
+        const detail = taskPool[state.tick % taskPool.length];
+        state.events.unshift({
+          time: currentTime(),
+          agent: agent.name,
+          detail
+        });
+        state.events = state.events.slice(0, 16);
+      }
+
+      function renderStream() {
+        stream.innerHTML = state.events
+          .map((event) => `
+            <div class="event">
+              <span class="time">${event.time}</span>
+              <div>
+                <b>${event.agent}</b>
+                <p>${event.detail}</p>
+              </div>
+            </div>
+          `)
+          .join("");
+      }
+
+      function renderQuestions() {
+        questionsEl.innerHTML = questions
+          .map((question) => `
+            <div class="question">
+              <b>${question.title}</b>
+              <span>${question.body}</span>
+            </div>
+          `)
+          .join("");
+        questionsCount.textContent = `${questions.length} registradas`;
+      }
+
+      function renderKpis() {
+        phaseKpi.textContent = activePhase();
+        progressKpi.textContent = `${totalProgress()}%`;
+        eventsKpi.textContent = state.events.length;
+        clock.textContent = currentTime();
+      }
+
+      function step(manual = false) {
+        state.tick += 1;
+        if (manual || state.tick % 2 === 0) {
+          addEvent();
+        }
+        render();
+      }
+
+      function render() {
+        renderTimeline();
+        renderAgents();
+        renderStream();
+        renderQuestions();
+        renderKpis();
+        runState.textContent = state.running ? "En vivo" : "Pausado";
+        toggle.textContent = state.running ? "Pausar" : "Reanudar";
+      }
+
+      toggle.addEventListener("click", () => {
+        state.running = !state.running;
+        render();
+      });
+
+      tickButton.addEventListener("click", () => step(true));
+
+      resetButton.addEventListener("click", () => {
+        state.tick = 0;
+        state.events = [];
+        addEvent();
+        render();
+      });
+
+      addEvent();
+      render();
+
+      setInterval(() => {
+        clock.textContent = currentTime();
+        if (state.running) {
+          step();
+        }
+      }, 2200);
+    </script>
+  </body>
+</html>

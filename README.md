@@ -46,4 +46,4 @@ npm run test
 - `GET /health`
 - `GET /client`
 - `GET /admin`
-- `GET /admin/agent-workbench`
+- `GET /admin/agent-workbench`: vista viva local del Agent Workbench para visualizar avance simulado. No ejecuta agentes reales ni automatiza decisiones.

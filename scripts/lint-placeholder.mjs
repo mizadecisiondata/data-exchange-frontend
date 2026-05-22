@@ -5,6 +5,7 @@ const requiredFiles = [
   "src/app/admin/README.md",
   "src/app/admin/agent-workbench/README.md",
   "src/config/env.mjs",
+  "public/agent-workbench-live.html",
   ".env.example",
   "README.md"
 ];
