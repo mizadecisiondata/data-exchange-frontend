@@ -1,6 +1,6 @@
 import http from "node:http";
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getFrontendConfig, buildFrontendHealth } from "../src/config/env.mjs";
 
@@ -30,6 +30,20 @@ function write(response, statusCode, contentType, body) {
   response.end(body);
 }
 
+function contentTypeFor(pathname) {
+  const ext = extname(pathname).toLowerCase();
+  const types = {
+    ".css": "text/css; charset=utf-8",
+    ".html": "text/html; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".png": "image/png",
+    ".svg": "image/svg+xml; charset=utf-8"
+  };
+
+  return types[ext] ?? "application/octet-stream";
+}
+
 const server = http.createServer((request, response) => {
   const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
 
@@ -52,6 +66,16 @@ const server = http.createServer((request, response) => {
     const workbenchHtml = readFileSync(join(publicDir, "agent-workbench-live.html"), "utf8");
     write(response, 200, "text/html; charset=utf-8", workbenchHtml);
     return;
+  }
+
+  if (request.method === "GET" && url.pathname.startsWith("/")) {
+    const requestedPath = normalize(url.pathname.replace(/^\/+/, ""));
+    const assetPath = join(publicDir, requestedPath);
+
+    if (assetPath.startsWith(publicDir) && existsSync(assetPath)) {
+      write(response, 200, contentTypeFor(assetPath), readFileSync(assetPath));
+      return;
+    }
   }
 
   write(response, 404, "application/json; charset=utf-8", JSON.stringify({ status: "not_found", path: url.pathname }));

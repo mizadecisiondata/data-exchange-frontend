@@ -7,18 +7,19 @@
     <style>
       :root {
         color-scheme: dark;
-        --bg: #08111f;
-        --panel: #101b2d;
-        --panel-2: #13243a;
-        --line: #2b3e58;
-        --text: #edf4ff;
-        --muted: #9fb0c7;
-        --green: #31d09b;
-        --blue: #62a8ff;
-        --amber: #f4c95d;
+        --bg: #03071c;
+        --panel: #07122c;
+        --panel-2: #0c1a38;
+        --line: #273757;
+        --text: #f4f7ff;
+        --muted: #aeb9cf;
+        --green: #32d59b;
+        --blue: #5b9dff;
+        --amber: #ffc400;
+        --orange: #ff6b1a;
         --red: #ff746d;
         --violet: #b38cff;
-        --ink: #07111e;
+        --ink: #05091f;
       }
 
       * {
@@ -29,9 +30,10 @@
         margin: 0;
         min-height: 100vh;
         background:
-          linear-gradient(180deg, rgba(8, 17, 31, 0.92), rgba(8, 17, 31, 1)),
-          radial-gradient(circle at 80% 10%, rgba(98, 168, 255, 0.16), transparent 32%),
-          radial-gradient(circle at 10% 20%, rgba(49, 208, 155, 0.12), transparent 28%);
+          linear-gradient(180deg, rgba(3, 7, 28, 0.88), rgba(3, 7, 28, 1)),
+          radial-gradient(circle at 78% 8%, rgba(255, 196, 0, 0.18), transparent 28%),
+          radial-gradient(circle at 12% 18%, rgba(255, 107, 26, 0.14), transparent 24%),
+          radial-gradient(circle at 55% 42%, rgba(91, 157, 255, 0.1), transparent 34%);
         color: var(--text);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         letter-spacing: 0;
@@ -73,14 +75,21 @@
       }
 
       .mark {
-        width: 44px;
-        height: 44px;
+        width: 56px;
+        height: 56px;
         border-radius: 8px;
-        background: linear-gradient(135deg, var(--green), var(--blue));
-        color: var(--ink);
+        background: #05091f;
         display: grid;
         place-items: center;
-        font-weight: 900;
+        border: 1px solid rgba(255, 196, 0, 0.32);
+        box-shadow: 0 0 0 1px rgba(255, 107, 26, 0.18), 0 14px 34px rgba(255, 107, 26, 0.16);
+        overflow: hidden;
+      }
+
+      .mark img {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
       }
 
       h1,
@@ -183,6 +192,7 @@
         font-size: 1.75rem;
         line-height: 1;
         margin-bottom: 8px;
+        color: #ffd45a;
       }
 
       .kpi span {
@@ -384,11 +394,395 @@
         line-height: 1.35;
       }
 
+      .office-panel {
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+
+      .office-stage {
+        position: relative;
+        min-height: 470px;
+        padding: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
+          linear-gradient(90deg, rgba(255, 196, 0, 0.08), transparent 36%),
+          #061029;
+      }
+
+      .office-floor {
+        position: absolute;
+        inset: 18px;
+        border-radius: 8px;
+        background:
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+        background-size: 36px 36px;
+        opacity: 0.48;
+      }
+
+      .office-orbit {
+        position: absolute;
+        left: 4%;
+        right: 4%;
+        top: 47%;
+        height: 120px;
+        border: 2px dashed rgba(255, 196, 0, 0.22);
+        border-left-color: rgba(255, 107, 26, 0.35);
+        border-right-color: rgba(255, 196, 0, 0.35);
+        border-radius: 50%;
+        transform: rotate(-4deg);
+      }
+
+      .office-logo-watermark {
+        position: absolute;
+        right: 26px;
+        bottom: 22px;
+        width: 148px;
+        opacity: 0.08;
+      }
+
+      .desk {
+        position: absolute;
+        width: 185px;
+        min-height: 145px;
+      }
+
+      .desk.frontend {
+        left: 7%;
+        top: 18%;
+      }
+
+      .desk.backend {
+        right: 10%;
+        top: 18%;
+      }
+
+      .desk.bac {
+        left: 12%;
+        bottom: 13%;
+      }
+
+      .desk.credits {
+        right: 16%;
+        bottom: 13%;
+      }
+
+      .desktop {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 10px;
+        height: 58px;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #17284c, #0e1a35);
+        border: 1px solid rgba(255, 196, 0, 0.2);
+        box-shadow: 0 18px 28px rgba(0, 0, 0, 0.28);
+      }
+
+      .monitor {
+        position: absolute;
+        left: 22px;
+        bottom: 62px;
+        width: 82px;
+        height: 54px;
+        border-radius: 6px;
+        border: 3px solid #304366;
+        background: #05091f;
+        overflow: hidden;
+      }
+
+      .monitor::before,
+      .monitor::after {
+        content: "";
+        position: absolute;
+        left: 9px;
+        right: 9px;
+        height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--orange), var(--amber));
+        animation: codePulse 1.4s infinite ease-in-out;
+      }
+
+      .monitor::before {
+        top: 15px;
+      }
+
+      .monitor::after {
+        top: 29px;
+        right: 26px;
+        animation-delay: 0.4s;
+      }
+
+      @keyframes codePulse {
+        50% {
+          transform: translateX(7px);
+          opacity: 0.55;
+        }
+      }
+
+      .person {
+        position: absolute;
+        right: 28px;
+        bottom: 52px;
+        width: 54px;
+        height: 84px;
+      }
+
+      .head {
+        position: absolute;
+        top: 0;
+        left: 15px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #ffd4a8;
+        border: 2px solid rgba(5, 9, 31, 0.65);
+      }
+
+      .body {
+        position: absolute;
+        top: 25px;
+        left: 12px;
+        width: 30px;
+        height: 38px;
+        border-radius: 12px 12px 7px 7px;
+        background: var(--suit, #5b9dff);
+      }
+
+      .arm {
+        position: absolute;
+        top: 37px;
+        width: 26px;
+        height: 7px;
+        border-radius: 999px;
+        background: #ffd4a8;
+        transform-origin: left center;
+        animation: typing 0.9s infinite ease-in-out;
+      }
+
+      .arm.left {
+        left: 2px;
+        transform: rotate(16deg);
+      }
+
+      .arm.right {
+        left: 28px;
+        animation-delay: 0.25s;
+        transform: rotate(-16deg);
+      }
+
+      .leg {
+        position: absolute;
+        top: 61px;
+        width: 9px;
+        height: 23px;
+        border-radius: 999px;
+        background: #273757;
+      }
+
+      .leg.left {
+        left: 17px;
+      }
+
+      .leg.right {
+        right: 17px;
+      }
+
+      @keyframes typing {
+        50% {
+          transform: rotate(-8deg) translateX(3px);
+        }
+      }
+
+      .nameplate {
+        position: absolute;
+        left: 10px;
+        bottom: -18px;
+        width: 165px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(5, 9, 31, 0.82);
+        border-radius: 8px;
+        padding: 8px;
+        font-size: 0.72rem;
+        color: #dde8fb;
+      }
+
+      .nameplate b {
+        display: block;
+        color: #ffd45a;
+        margin-bottom: 2px;
+      }
+
+      .desk-state {
+        color: var(--muted);
+      }
+
+      .runner {
+        position: absolute;
+        left: 20%;
+        top: 48%;
+        width: 70px;
+        height: 96px;
+        animation: walkPath 9s infinite ease-in-out;
+        z-index: 4;
+      }
+
+      .runner .person {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        transform: scale(0.95);
+      }
+
+      .runner .leg.left {
+        animation: stepLeft 0.48s infinite ease-in-out;
+      }
+
+      .runner .leg.right {
+        animation: stepRight 0.48s infinite ease-in-out;
+      }
+
+      @keyframes walkPath {
+        0%, 18% {
+          transform: translate(0, 0);
+        }
+        38%, 56% {
+          transform: translate(260px, -82px);
+        }
+        75%, 100% {
+          transform: translate(510px, 38px);
+        }
+      }
+
+      @keyframes stepLeft {
+        50% {
+          transform: rotate(18deg) translateY(3px);
+        }
+      }
+
+      @keyframes stepRight {
+        50% {
+          transform: rotate(-18deg) translateY(3px);
+        }
+      }
+
+      .talk-bubble {
+        position: absolute;
+        left: 46px;
+        top: -18px;
+        min-width: 170px;
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: #fff4cb;
+        color: #251a02;
+        font-size: 0.78rem;
+        line-height: 1.25;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+        animation: bubbleSwap 9s infinite ease-in-out;
+      }
+
+      .talk-bubble::before {
+        content: "";
+        position: absolute;
+        left: -8px;
+        top: 22px;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-right: 8px solid #fff4cb;
+      }
+
+      @keyframes bubbleSwap {
+        0%, 18% {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        24%, 58% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        70%, 100% {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+      }
+
+      .handoff {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(440px, calc(100% - 36px));
+        border-radius: 8px;
+        border: 1px solid rgba(255, 196, 0, 0.28);
+        background: rgba(5, 9, 31, 0.82);
+        padding: 12px 14px;
+        text-align: center;
+        color: #ffe6a6;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
+      }
+
+      .handoff b {
+        color: #ffffff;
+      }
+
+      .coffee-table {
+        position: absolute;
+        left: 50%;
+        bottom: 18%;
+        width: 128px;
+        height: 58px;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        background: linear-gradient(180deg, #1f3158, #101c38);
+        border: 1px solid rgba(255, 196, 0, 0.22);
+        display: grid;
+        place-items: center;
+        color: #ffd45a;
+        font-size: 0.72rem;
+      }
+
       @media (max-width: 1120px) {
         .grid,
         .agents,
         .kpis {
           grid-template-columns: 1fr;
+        }
+
+        .office-stage {
+          min-height: 720px;
+        }
+
+        .desk.frontend,
+        .desk.backend,
+        .desk.bac,
+        .desk.credits {
+          left: 50%;
+          right: auto;
+          transform: translateX(-50%);
+        }
+
+        .desk.frontend {
+          top: 110px;
+        }
+
+        .desk.backend {
+          top: 260px;
+        }
+
+        .desk.bac {
+          top: 410px;
+          bottom: auto;
+        }
+
+        .desk.credits {
+          top: 560px;
+          bottom: auto;
+        }
+
+        .office-orbit,
+        .runner,
+        .coffee-table {
+          display: none;
         }
 
         .topbar {
@@ -406,7 +800,7 @@
     <main class="shell">
       <section class="topbar">
         <div class="brand">
-          <div class="mark">DD</div>
+          <div class="mark"><img src="/decision-data-logo.png" alt="Decision Data" /></div>
           <div>
             <h1>Agent Workbench</h1>
             <p class="subtitle">Decision Data / Data Exchange - visualizacion local del trabajo por fases</p>
@@ -425,6 +819,64 @@
         <article class="panel kpi"><strong id="progress-kpi">0%</strong><span>Avance visible</span></article>
         <article class="panel kpi"><strong id="agents-kpi">7</strong><span>Agentes en tablero</span></article>
         <article class="panel kpi"><strong id="events-kpi">0</strong><span>Eventos registrados</span></article>
+      </section>
+
+      <section class="panel office-panel">
+        <div class="panel-head">
+          <h2>Oficina viva de agentes</h2>
+          <span class="meta" id="office-status">Agentes trabajando en escritorios</span>
+        </div>
+        <div class="office-stage" aria-label="Escena animada de agentes trabajando en una oficina">
+          <div class="office-floor"></div>
+          <div class="office-orbit"></div>
+          <img class="office-logo-watermark" src="/decision-data-logo.png" alt="" />
+          <div class="handoff"><b>Retroalimentacion en curso:</b> cada agente pregunta, valida y vuelve a su escritorio.</div>
+
+          <div class="desk frontend">
+            <div class="monitor"></div>
+            <div class="person" style="--suit: #5b9dff;">
+              <span class="head"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
+            </div>
+            <div class="desktop"></div>
+            <div class="nameplate"><b>Frontend Agent</b><span class="desk-state" data-desk-state="0">Construyendo interfaz admin.</span></div>
+          </div>
+
+          <div class="desk backend">
+            <div class="monitor"></div>
+            <div class="person" style="--suit: #31d09b;">
+              <span class="head"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
+            </div>
+            <div class="desktop"></div>
+            <div class="nameplate"><b>Backend Architect</b><span class="desk-state" data-desk-state="1">Revisando contratos API.</span></div>
+          </div>
+
+          <div class="desk bac">
+            <div class="monitor"></div>
+            <div class="person" style="--suit: #ff746d;">
+              <span class="head"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
+            </div>
+            <div class="desktop"></div>
+            <div class="nameplate"><b>BAC Audit Agent</b><span class="desk-state" data-desk-state="2">Listando trazabilidad.</span></div>
+          </div>
+
+          <div class="desk credits">
+            <div class="monitor"></div>
+            <div class="person" style="--suit: #ffc400;">
+              <span class="head"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
+            </div>
+            <div class="desktop"></div>
+            <div class="nameplate"><b>Decision Credits Agent</b><span class="desk-state" data-desk-state="3">Cuidando reglas 1:2 y 1:1.</span></div>
+          </div>
+
+          <div class="coffee-table">mesa de feedback</div>
+
+          <div class="runner" aria-hidden="true">
+            <div class="person" style="--suit: #ff6b1a;">
+              <span class="head"></span><span class="body"></span><span class="arm left"></span><span class="arm right"></span><span class="leg left"></span><span class="leg right"></span>
+            </div>
+            <div class="talk-bubble" id="talk-bubble">Tengo una duda de integracion. Valido con backend y vuelvo.</div>
+          </div>
+        </div>
       </section>
 
       <section class="grid">
@@ -529,6 +981,29 @@
         { title: "Diccionario de carga", body: "Pendiente antes de implementar ingesta real." }
       ];
 
+      const officeStories = [
+        {
+          status: "Frontend consulta a Backend sobre la ruta del Agent Workbench.",
+          bubble: "Necesito confirmar el contrato visual antes de conectar datos reales.",
+          desks: ["Ajustando escena admin.", "Validando rutas /health.", "Preparando eventos BAC.", "Protegiendo reglas comerciales."]
+        },
+        {
+          status: "BAC Audit Agent se acerca a Decision Credits para revisar trazabilidad.",
+          bubble: "Toda consulta debe quedar auditada con consentimiento, tarifa y estado.",
+          desks: ["Puliendo microinteracciones.", "Revisando modulo queries.", "Mapeando campos BAC.", "Calculando consumo mensual."]
+        },
+        {
+          status: "Decision Credits pide feedback antes de tocar pricing.",
+          bubble: "Si esto cambia facturacion, se pregunta a Mateo antes de implementar.",
+          desks: ["Separando cliente/admin.", "Guardando contratos base.", "Registrando guardrails.", "Manteniendo Contributor 1:2."]
+        },
+        {
+          status: "PM Tracking consolida avances y preguntas pendientes.",
+          bubble: "Cierro evidencia, marco fase y dejo preguntas claras para Mateo.",
+          desks: ["Listo para Fase 1.", "Esperando backend real.", "BAC reservado.", "Pricing reservado."]
+        }
+      ];
+
       const state = {
         running: true,
         tick: 0,
@@ -548,6 +1023,9 @@
       const tickButton = document.querySelector("#tick");
       const resetButton = document.querySelector("#reset");
       const questionsCount = document.querySelector("#questions-count");
+      const officeStatus = document.querySelector("#office-status");
+      const talkBubble = document.querySelector("#talk-bubble");
+      const deskStates = Array.from(document.querySelectorAll("[data-desk-state]"));
 
       function currentTime() {
         return new Intl.DateTimeFormat("es-EC", {
@@ -643,6 +1121,15 @@
         clock.textContent = currentTime();
       }
 
+      function renderOffice() {
+        const story = officeStories[Math.floor(state.tick / 4) % officeStories.length];
+        officeStatus.textContent = story.status;
+        talkBubble.textContent = story.bubble;
+        deskStates.forEach((deskState, index) => {
+          deskState.textContent = story.desks[index] ?? "Trabajando.";
+        });
+      }
+
       function step(manual = false) {
         state.tick += 1;
         if (manual || state.tick % 2 === 0) {
@@ -657,6 +1144,7 @@
         renderStream();
         renderQuestions();
         renderKpis();
+        renderOffice();
         runState.textContent = state.running ? "En vivo" : "Pausado";
         toggle.textContent = state.running ? "Pausar" : "Reanudar";
       }
