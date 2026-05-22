@@ -952,14 +952,14 @@
 
       const actualProgress = {
         stateLabel: "F1 activa",
-        overallPercent: 22,
+        overallPercent: 25,
         activePhaseIndex: 1,
         completedPhaseIndexes: [0],
         note: "Fase 1 en progreso: frontend base y navegacion cliente/admin."
       };
 
       const agents = [
-        { name: "Frontend Agent", accent: "#62a8ff", progress: 52, status: "Fase 1 activa", task: "Login primero, autorregistro y estados vacios/carga/error/agente." },
+        { name: "Frontend Agent", accent: "#62a8ff", progress: 59, status: "Fase 1 activa", task: "Login primero, estados UX, notificaciones y actividad visual." },
         { name: "Backend Architect", accent: "#31d09b", progress: 9, status: "Fase 0 cerrada", task: "Backend bootstrap y healthcheck ya quedaron listos." },
         { name: "Data Ingestion Agent", accent: "#f4c95d", progress: 0, status: "Pendiente", task: "No inicia hasta confirmar diccionario y entrar a Fase 3." },
         { name: "Decision Credits Agent", accent: "#b38cff", progress: 0, status: "Pendiente", task: "Reglas comerciales protegidas; implementacion real queda para Fase 4." },
@@ -979,6 +979,7 @@
         { agent: "Frontend Agent", detail: "Ajuste UX: cliente y admin abren primero en login; la navegacion aparece solo despues de ingresar." },
         { agent: "Frontend Agent", detail: "Cliente ahora tiene autorregistro visual, flujo de aprobacion admin, claves temporales y cambio de clave." },
         { agent: "Frontend Agent", detail: "Se agregaron estados visuales de vacio, carga, error y aprobacion para cliente y admin." },
+        { agent: "Frontend Agent", detail: "Se agregaron notificaciones y actividad reciente visual para cliente y admin." },
         { agent: "PM Tracking Agent", detail: "Preguntas no bloqueantes quedan diferidas para el resumen de 8 horas." },
         { agent: "PM Tracking Agent", detail: "Se agrego seccion '¿Que es Data Exchange?' en portal cliente como ayuda temporal." },
         { agent: "PM Tracking Agent", detail: "Ajuste solicitado: el progreso no sube a 100% automaticamente; refleja solo avances reales." },

@@ -102,6 +102,7 @@
           <a href="#api">API</a>
           <a href="#facturacion">Facturacion</a>
           <a href="#estados">Estados</a>
+          <a href="#notificaciones">Notificaciones</a>
           <a href="#perfil">Perfil y clave</a>
         </nav>
         <div class="sidebar-footer">
@@ -229,6 +230,27 @@
               </div>
             </div>
           </article>
+        </section>
+
+        <section id="notificaciones" class="view">
+          <div class="grid cols-2">
+            <article class="panel">
+              <div class="panel-head"><h2>Notificaciones cliente</h2><span class="status warn">Visual Fase 1</span></div>
+              <div class="panel-body notification-stack">
+                <div class="notification ok"><b>Solicitud aprobada</b><p>En Fase 2 se enviaria correo con clave temporal y enlace de cambio obligatorio.</p></div>
+                <div class="notification"><b>Bloque observado</b><p>Si la calidad cae bajo 95%, se mostrara reporte de errores descargable.</p></div>
+                <div class="notification error"><b>Consulta bloqueada</b><p>Si falta consentimiento o documentos bloqueantes, el cliente no puede consumir.</p></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Actividad reciente</h2><span class="status warn">Demo visual</span></div>
+              <div class="panel-body activity-list">
+                <div class="activity-item"><span class="activity-time">Hoy 00:30</span><div><b>Login demo</b><span>Navegacion cliente habilitada visualmente.</span></div><span class="status ok">visual</span></div>
+                <div class="activity-item"><span class="activity-time">Hoy 00:24</span><div><b>Autorregistro</b><span>Flujo pendiente de aprobacion admin mapeado.</span></div><span class="status warn">Fase 2</span></div>
+                <div class="activity-item"><span class="activity-time">Hoy 00:18</span><div><b>Workbench</b><span>Avance real actualizado en tablero admin.</span></div><span class="status ok">listo</span></div>
+              </div>
+            </article>
+          </div>
         </section>
 
         <section id="perfil" class="view">

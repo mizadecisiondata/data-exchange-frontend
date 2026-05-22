@@ -512,6 +512,71 @@ h1 {
   background: rgba(49, 208, 155, 0.07);
 }
 
+.activity-list {
+  display: grid;
+  gap: 10px;
+}
+
+.activity-item {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.activity-time {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-item b {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.activity-item span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.notification-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.notification {
+  border-left: 4px solid var(--amber);
+  background: rgba(255, 196, 0, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.notification.ok {
+  border-left-color: var(--green);
+  background: rgba(49, 208, 155, 0.07);
+}
+
+.notification.error {
+  border-left-color: var(--red);
+  background: rgba(255, 116, 109, 0.08);
+}
+
+.notification b {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.notification p {
+  color: var(--muted);
+  line-height: 1.4;
+  font-size: 0.9rem;
+}
+
 .explain-box {
   margin-top: 12px;
   display: grid;
@@ -558,6 +623,10 @@ h1 {
   .grid.cols-2,
   .grid.cols-3,
   .state-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-item {
     grid-template-columns: 1fr;
   }
 
