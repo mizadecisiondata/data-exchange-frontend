@@ -815,8 +815,8 @@
       </section>
 
       <section class="kpis">
-        <article class="panel kpi"><strong id="phase-kpi">1</strong><span>Fase activa</span></article>
-        <article class="panel kpi"><strong id="progress-kpi">0%</strong><span>Avance visible</span></article>
+        <article class="panel kpi"><strong id="phase-kpi">F0</strong><span>Estado actual</span></article>
+        <article class="panel kpi"><strong id="progress-kpi">9%</strong><span>Avance real total</span></article>
         <article class="panel kpi"><strong id="agents-kpi">7</strong><span>Agentes en tablero</span></article>
         <article class="panel kpi"><strong id="events-kpi">0</strong><span>Eventos registrados</span></article>
       </section>
@@ -830,7 +830,7 @@
           <div class="office-floor"></div>
           <div class="office-orbit"></div>
           <img class="office-logo-watermark" src="/decision-data-logo.png" alt="" />
-          <div class="handoff"><b>Retroalimentacion en curso:</b> cada agente pregunta, valida y vuelve a su escritorio.</div>
+          <div class="handoff"><b>Retroalimentacion visible:</b> la animacion muestra coordinacion; el avance real se actualiza solo con trabajo hecho.</div>
 
           <div class="desk frontend">
             <div class="monitor"></div>
@@ -950,57 +950,63 @@
         "QA y produccion"
       ];
 
+      const actualProgress = {
+        stateLabel: "F0 cerrada",
+        overallPercent: 9,
+        activePhaseIndex: 0,
+        completedPhaseIndexes: [0],
+        note: "Fase 1 no iniciada. Agent Workbench es una vista admin de seguimiento."
+      };
+
       const agents = [
-        { name: "Frontend Agent", accent: "#62a8ff", task: "Preparando rutas admin y cliente separadas." },
-        { name: "Backend Architect", accent: "#31d09b", task: "Manteniendo contratos de healthcheck y API base." },
-        { name: "Data Ingestion Agent", accent: "#f4c95d", task: "Esperando diccionario definitivo para bloques de informacion." },
-        { name: "Decision Credits Agent", accent: "#b38cff", task: "Protegiendo reglas Contributor 1:2 y Active/Founding 1:1." },
-        { name: "BAC Audit Agent", accent: "#ff746d", task: "Listando eventos obligatorios para trazabilidad completa." },
-        { name: "Security Agent", accent: "#7dd3fc", task: "Separando alcance admin y cliente." },
-        { name: "PM Tracking Agent", accent: "#fca5a5", task: "Actualizando avance por fase y preguntas pendientes." }
+        { name: "Frontend Agent", accent: "#62a8ff", progress: 18, status: "Workbench visual", task: "Construyo la vista admin de visualizacion; Fase 1 aun no inicia." },
+        { name: "Backend Architect", accent: "#31d09b", progress: 9, status: "Fase 0 cerrada", task: "Backend bootstrap y healthcheck ya quedaron listos." },
+        { name: "Data Ingestion Agent", accent: "#f4c95d", progress: 0, status: "Pendiente", task: "No inicia hasta confirmar diccionario y entrar a Fase 3." },
+        { name: "Decision Credits Agent", accent: "#b38cff", progress: 0, status: "Pendiente", task: "Reglas comerciales protegidas; implementacion real queda para Fase 4." },
+        { name: "BAC Audit Agent", accent: "#ff746d", progress: 6, status: "Diseno base", task: "BAC esta documentado como guardrail, no implementado funcionalmente." },
+        { name: "Security Agent", accent: "#7dd3fc", progress: 4, status: "Guardrails", task: "Portal cliente y admin se mantienen separados." },
+        { name: "PM Tracking Agent", accent: "#fca5a5", progress: 14, status: "Seguimiento", task: "Registra avances reales, preguntas y decisiones de Mateo." }
       ];
 
-      const taskPool = [
-        "Leyendo memoria operativa V6 y orden por fases.",
-        "Verificando que portal cliente y admin no se mezclen.",
-        "Anotando criterio de cierre antes de avanzar.",
-        "Marcando decisiones reservadas a Mateo.",
-        "Preparando evidencia de pruebas locales.",
-        "Revisando guardrails de Decision Credits.",
-        "Controlando que Agent Workbench sea solo admin.",
-        "Validando que no se use prepago como modelo principal.",
-        "Separando ingestion, queries, BAC y billing por modulo.",
-        "Esperando aprobacion antes de pasar a la siguiente fase."
+      const actualEvents = [
+        { agent: "PM Tracking Agent", detail: "Fase 0 validada por Mateo: Node/NestJS, repos Git separados y auth/RBAC/BAC fuera de Fase 0." },
+        { agent: "Frontend Agent", detail: "Agent Workbench creado como vista admin local de visualizacion; no ejecuta agentes reales." },
+        { agent: "Frontend Agent", detail: "Logo y colores de Decision Data aplicados al tablero." },
+        { agent: "Frontend Agent", detail: "Se agrego oficina animada con agentes en escritorios y retroalimentacion visual." },
+        { agent: "PM Tracking Agent", detail: "Ajuste solicitado: el progreso ya no sube a 100% automaticamente; refleja solo avances reales." },
+        { agent: "Security Agent", detail: "Se mantiene el Workbench dentro de /admin/agent-workbench, separado del portal cliente." },
+        { agent: "Backend Architect", detail: "Backend sigue en bootstrap de Fase 0; no se implementaron APIs funcionales de negocio." },
+        { agent: "Decision Credits Agent", detail: "Reglas Contributor 1:2 y Active/Founding 1:1 siguen como guardrails, no como modulo implementado." }
       ];
 
       const questions = [
-        { title: "Repositorio remoto", body: "Confirmado: frontend y backend ya existen en GitHub." },
-        { title: "Stack backend", body: "Confirmado: Node/NestJS queda como camino de produccion." },
-        { title: "Auth/RBAC/BAC funcional", body: "Confirmado: no pertenece a Fase 0; entra despues." },
-        { title: "Texto legal consentimiento", body: "Pendiente para fase de consultas." },
-        { title: "Diccionario de carga", body: "Pendiente antes de implementar ingesta real." }
+        { status: "Confirmada", title: "Stack backend", body: "Node/NestJS queda como camino de produccion." },
+        { status: "Confirmada", title: "Repos Git", body: "Frontend y backend ya existen y se subieron a GitHub." },
+        { status: "Confirmada", title: "Alcance Fase 0", body: "Auth/RBAC/BAC funcional queda fuera de Fase 0." },
+        { status: "Abierta", title: "Texto legal consentimiento", body: "Pendiente antes de implementar consultas reales." },
+        { status: "Abierta", title: "Diccionario de carga", body: "Pendiente antes de implementar ingesta real." }
       ];
 
       const officeStories = [
         {
-          status: "Frontend consulta a Backend sobre la ruta del Agent Workbench.",
-          bubble: "Necesito confirmar el contrato visual antes de conectar datos reales.",
-          desks: ["Ajustando escena admin.", "Validando rutas /health.", "Preparando eventos BAC.", "Protegiendo reglas comerciales."]
+          status: "Frontend ajusta el Workbench para reflejar avance real.",
+          bubble: "No marco 100%. Solo muestro lo que ya se construyo.",
+          desks: ["Vista admin en ajuste.", "Healthcheck listo.", "BAC documentado.", "Reglas protegidas."]
         },
         {
-          status: "BAC Audit Agent se acerca a Decision Credits para revisar trazabilidad.",
-          bubble: "Toda consulta debe quedar auditada con consentimiento, tarifa y estado.",
-          desks: ["Puliendo microinteracciones.", "Revisando modulo queries.", "Mapeando campos BAC.", "Calculando consumo mensual."]
+          status: "PM Tracking valida coherencia antes de avanzar a Fase 1.",
+          bubble: "Si aparece una pregunta, la registro aqui antes de seguir.",
+          desks: ["Fase 1 pendiente.", "API real pendiente.", "Preguntas visibles.", "Pricing sin tocar."]
         },
         {
-          status: "Decision Credits pide feedback antes de tocar pricing.",
+          status: "Decision Credits pide feedback antes de tocar pricing real.",
           bubble: "Si esto cambia facturacion, se pregunta a Mateo antes de implementar.",
-          desks: ["Separando cliente/admin.", "Guardando contratos base.", "Registrando guardrails.", "Manteniendo Contributor 1:2."]
+          desks: ["Cliente/admin separados.", "Contratos base.", "Guardrails activos.", "Contributor 1:2 intacto."]
         },
         {
-          status: "PM Tracking consolida avances y preguntas pendientes.",
-          bubble: "Cierro evidencia, marco fase y dejo preguntas claras para Mateo.",
-          desks: ["Listo para Fase 1.", "Esperando backend real.", "BAC reservado.", "Pricing reservado."]
+          status: "La oficina anima coordinacion, no reemplaza avances reales.",
+          bubble: "La animacion vive; el avance se actualiza con commits y tareas reales.",
+          desks: ["Workbench visible.", "Backend F0.", "BAC futuro.", "Credits futuro."]
         }
       ];
 
@@ -1036,20 +1042,21 @@
       }
 
       function activePhase() {
-        return Math.min(1 + Math.floor(state.tick / 14), phases.length - 1);
+        return actualProgress.activePhaseIndex;
       }
 
       function totalProgress() {
-        const base = 9;
-        return Math.min(100, base + state.tick * 2);
+        return actualProgress.overallPercent;
       }
 
       function renderTimeline() {
-        const active = activePhase();
         timeline.innerHTML = phases
           .map((phase, index) => {
-            const klass = index < active ? "phase done" : index === active ? "phase active" : "phase";
-            return `<div class="${klass}"><small>Fase ${index}</small><b>${phase}</b></div>`;
+            const completed = actualProgress.completedPhaseIndexes.includes(index);
+            const active = index === actualProgress.activePhaseIndex;
+            const klass = ["phase", completed ? "done" : "", active ? "active" : ""].filter(Boolean).join(" ");
+            const label = completed ? "Completada" : active ? "En cierre" : "Pendiente";
+            return `<div class="${klass}"><small>Fase ${index} - ${label}</small><b>${phase}</b></div>`;
           })
           .join("");
       }
@@ -1057,18 +1064,16 @@
       function renderAgents() {
         agentsEl.innerHTML = agents
           .map((agent, index) => {
-            const progress = Math.min(98, 18 + ((state.tick * (index + 3)) % 78));
-            const task = state.tick % 5 === 0 ? taskPool[(state.tick + index) % taskPool.length] : agent.task;
-            const status = index % 3 === 0 ? "Construyendo" : index % 3 === 1 ? "Verificando" : "En espera";
+            const pulseProgress = Math.min(24, agent.progress + (state.tick % 2));
             return `
-              <article class="agent" style="--accent: ${agent.accent}; --progress: ${progress / 100}; --progress-percent: ${progress}%;">
+              <article class="agent" style="--accent: ${agent.accent}; --progress: ${pulseProgress / 100}; --progress-percent: ${pulseProgress}%;">
                 <div class="agent-top">
                   <h3>${agent.name}</h3>
-                  <span class="badge">${status}</span>
+                  <span class="badge">${agent.status}</span>
                 </div>
-                <p class="task">${task}</p>
+                <p class="task">${agent.task}</p>
                 <div class="progress-wrap">
-                  <div class="progress-label"><span>avance local</span><span>${progress}%</span></div>
+                  <div class="progress-label"><span>avance real del bloque</span><span>${agent.progress}%</span></div>
                   <div class="bar"><span></span></div>
                 </div>
               </article>
@@ -1078,12 +1083,11 @@
       }
 
       function addEvent() {
-        const agent = agents[state.tick % agents.length];
-        const detail = taskPool[state.tick % taskPool.length];
+        const event = actualEvents[state.tick % actualEvents.length];
         state.events.unshift({
           time: currentTime(),
-          agent: agent.name,
-          detail
+          agent: event.agent,
+          detail: event.detail
         });
         state.events = state.events.slice(0, 16);
       }
@@ -1107,15 +1111,16 @@
           .map((question) => `
             <div class="question">
               <b>${question.title}</b>
-              <span>${question.body}</span>
+              <span>${question.status}: ${question.body}</span>
             </div>
           `)
           .join("");
-        questionsCount.textContent = `${questions.length} registradas`;
+        const open = questions.filter((question) => question.status === "Abierta").length;
+        questionsCount.textContent = `${open} abiertas / ${questions.length} registradas`;
       }
 
       function renderKpis() {
-        phaseKpi.textContent = activePhase();
+        phaseKpi.textContent = actualProgress.stateLabel;
         progressKpi.textContent = `${totalProgress()}%`;
         eventsKpi.textContent = state.events.length;
         clock.textContent = currentTime();
