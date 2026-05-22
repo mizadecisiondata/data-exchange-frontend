@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Data Exchange - Portal Admin</title>
+    <link rel="stylesheet" href="/portal-base.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/decision-data-logo.png" alt="Decision Data" />
+          <div>
+            <b>Decision Data</b>
+            <span>Portal admin</span>
+          </div>
+        </div>
+        <nav class="nav" data-nav>
+          <a href="#dashboard" class="active">Dashboard</a>
+          <a href="#solicitudes">Solicitudes</a>
+          <a href="#clientes">Clientes</a>
+          <a href="#ingesta">Calidad de ingesta</a>
+          <a href="#bac">BAC</a>
+          <a href="#facturacion">Facturacion</a>
+          <a href="/admin/agent-workbench">Agent Workbench</a>
+        </nav>
+        <div class="sidebar-footer">
+          Vista admin separada del portal cliente. Fase 1 visual.
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Decision Data</div>
+            <h1>Centro de control admin</h1>
+            <p class="sub">Revision documental, modalidades, calidad, BAC y seguimiento de avance.</p>
+          </div>
+          <div class="toolbar">
+            <a class="btn" href="/client">Portal cliente</a>
+            <a class="btn primary" href="/admin/agent-workbench">Agent Workbench</a>
+          </div>
+        </header>
+
+        <section id="dashboard" class="view active">
+          <div class="grid cols-3">
+            <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Clientes productivos reales</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>F1</strong><span>Fase visual en progreso</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>2</strong><span>Preguntas abiertas</span></div></article>
+          </div>
+          <article class="panel" style="margin-top: 14px;">
+            <div class="panel-head"><h2>Estado de construccion</h2><span class="status warn">En progreso</span></div>
+            <div class="panel-body steps">
+              <div class="step"><span class="num">0</span><div>Setup repos, README, env y healthchecks</div><span class="status ok">cerrada</span></div>
+              <div class="step"><span class="num">1</span><div>Frontend base + navegacion cliente/admin</div><span class="status warn">actual</span></div>
+              <div class="step"><span class="num">2</span><div>Auth, roles y onboarding real</div><span class="status warn">pendiente</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section id="solicitudes" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Solicitudes de clientes</h2><span class="status warn">Visual</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Empresa</th><th>Modalidad tentativa</th><th>Estado</th><th>SLA</th></tr>
+                <tr><td>MEGADATOS S.A. demo</td><td>Founding</td><td>Documentos por revisar</td><td>5 dias habiles</td></tr>
+                <tr><td>Retail Demo</td><td>Active</td><td>Solicitud nueva</td><td>5 dias habiles</td></tr>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section id="clientes" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Gestion de clientes</h2><span class="status warn">Fase 8 real</span></div>
+            <div class="panel-body grid cols-2">
+              <div class="notice">Cambios de modalidad, tarifas o excepciones comerciales requieren aprobacion de Mateo.</div>
+              <form class="form">
+                <div class="field"><label>Cliente</label><input value="MEGADATOS S.A. demo" /></div>
+                <div class="field"><label>Modalidad</label><select><option>Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></select></div>
+                <button class="btn primary" type="button">Guardar revision</button>
+              </form>
+            </div>
+          </article>
+        </section>
+
+        <section id="ingesta" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Calidad de ingesta</h2><span class="status warn">Pendiente Fase 3</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Regla</th><th>Valor</th><th>Estado</th></tr>
+                <tr><td>Calidad minima</td><td>95%</td><td>Guardrail</td></tr>
+                <tr><td>Duplicados</td><td>No error / no credits</td><td>Guardrail</td></tr>
+                <tr><td>Tipo de carga</td><td>Bloques de informacion</td><td>Guardrail</td></tr>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section id="bac" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>BAC</h2><span class="status warn">Diseno base</span></div>
+            <div class="panel-body">
+              <div class="notice">Toda accion relevante debe registrar actor, usuario, canal, IP, producto, tarifa, valor estimado, consentimiento cuando aplique y estado.</div>
+            </div>
+          </article>
+        </section>
+
+        <section id="facturacion" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Facturacion mensual</h2><span class="status ok">Postpago</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Modalidad</th><th>Decision Credits</th><th>Exceso</th></tr>
+                <tr><td>Cliente Normal</td><td>No acredita</td><td>Tarifa normal</td></tr>
+                <tr><td>Contributor</td><td>1:2 basico</td><td>Tarifa normal</td></tr>
+                <tr><td>Active / Founding</td><td>1:1 preferencial</td><td>Tarifa normal</td></tr>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+    <script src="/portal-nav.js"></script>
+  </body>
+</html>

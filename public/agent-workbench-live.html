@@ -816,7 +816,7 @@
 
       <section class="kpis">
         <article class="panel kpi"><strong id="phase-kpi">F0</strong><span>Estado actual</span></article>
-        <article class="panel kpi"><strong id="progress-kpi">9%</strong><span>Avance real total</span></article>
+        <article class="panel kpi"><strong id="progress-kpi">14%</strong><span>Avance real total</span></article>
         <article class="panel kpi"><strong id="agents-kpi">7</strong><span>Agentes en tablero</span></article>
         <article class="panel kpi"><strong id="events-kpi">0</strong><span>Eventos registrados</span></article>
       </section>
@@ -951,15 +951,15 @@
       ];
 
       const actualProgress = {
-        stateLabel: "F0 cerrada",
-        overallPercent: 9,
-        activePhaseIndex: 0,
+        stateLabel: "F1 activa",
+        overallPercent: 14,
+        activePhaseIndex: 1,
         completedPhaseIndexes: [0],
-        note: "Fase 1 no iniciada. Agent Workbench es una vista admin de seguimiento."
+        note: "Fase 1 en progreso: frontend base y navegacion cliente/admin."
       };
 
       const agents = [
-        { name: "Frontend Agent", accent: "#62a8ff", progress: 18, status: "Workbench visual", task: "Construyo la vista admin de visualizacion; Fase 1 aun no inicia." },
+        { name: "Frontend Agent", accent: "#62a8ff", progress: 32, status: "Fase 1 activa", task: "Construyendo portal cliente, portal admin y navegacion visual." },
         { name: "Backend Architect", accent: "#31d09b", progress: 9, status: "Fase 0 cerrada", task: "Backend bootstrap y healthcheck ya quedaron listos." },
         { name: "Data Ingestion Agent", accent: "#f4c95d", progress: 0, status: "Pendiente", task: "No inicia hasta confirmar diccionario y entrar a Fase 3." },
         { name: "Decision Credits Agent", accent: "#b38cff", progress: 0, status: "Pendiente", task: "Reglas comerciales protegidas; implementacion real queda para Fase 4." },
@@ -973,7 +973,10 @@
         { agent: "Frontend Agent", detail: "Agent Workbench creado como vista admin local de visualizacion; no ejecuta agentes reales." },
         { agent: "Frontend Agent", detail: "Logo y colores de Decision Data aplicados al tablero." },
         { agent: "Frontend Agent", detail: "Se agrego oficina animada con agentes en escritorios y retroalimentacion visual." },
-        { agent: "PM Tracking Agent", detail: "Ajuste solicitado: el progreso ya no sube a 100% automaticamente; refleja solo avances reales." },
+        { agent: "PM Tracking Agent", detail: "Fase 1 iniciada con validacion de Mateo: frontend base y navegacion cliente/admin." },
+        { agent: "Frontend Agent", detail: "Portal cliente visual creado con login, autorregistro, dashboard, ingesta, consultas, API y facturacion." },
+        { agent: "Frontend Agent", detail: "Portal admin visual creado con dashboard, solicitudes, clientes, calidad, BAC y facturacion." },
+        { agent: "PM Tracking Agent", detail: "Ajuste solicitado: el progreso no sube a 100% automaticamente; refleja solo avances reales." },
         { agent: "Security Agent", detail: "Se mantiene el Workbench dentro de /admin/agent-workbench, separado del portal cliente." },
         { agent: "Backend Architect", detail: "Backend sigue en bootstrap de Fase 0; no se implementaron APIs funcionales de negocio." },
         { agent: "Decision Credits Agent", detail: "Reglas Contributor 1:2 y Active/Founding 1:1 siguen como guardrails, no como modulo implementado." }

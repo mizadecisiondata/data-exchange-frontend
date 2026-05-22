@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Data Exchange - Portal Cliente</title>
+    <link rel="stylesheet" href="/portal-base.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/decision-data-logo.png" alt="Decision Data" />
+          <div>
+            <b>Data Exchange</b>
+            <span>Portal cliente</span>
+          </div>
+        </div>
+        <nav class="nav" data-nav>
+          <a href="#login" class="active">Login</a>
+          <a href="#registro">Autorregistro</a>
+          <a href="#dashboard">Dashboard</a>
+          <a href="#ingesta">Bloques de informacion</a>
+          <a href="#consultas">Consultas</a>
+          <a href="#api">API</a>
+          <a href="#facturacion">Facturacion</a>
+        </nav>
+        <div class="sidebar-footer">
+          Fase 1 visual. No consume datos reales ni ejecuta consultas.
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">Decision Data</div>
+            <h1>Portal cliente / Data Partner</h1>
+            <p class="sub">Experiencia separada para registro, carga, consultas y consumo mensual postpago.</p>
+          </div>
+          <div class="toolbar">
+            <a class="btn" href="/admin">Portal admin</a>
+            <a class="btn primary" href="/admin/agent-workbench">Agent Workbench</a>
+          </div>
+        </header>
+
+        <section id="login" class="view active">
+          <div class="grid cols-2">
+            <article class="panel">
+              <div class="panel-head"><h2>Acceso cliente</h2><span class="status warn">Visual</span></div>
+              <div class="panel-body">
+                <form class="form">
+                  <div class="field"><label>Correo corporativo</label><input value="operaciones@megadatos.demo" /></div>
+                  <div class="field"><label>Contrasena</label><input type="password" value="demo1234" /></div>
+                  <button class="btn primary" type="button">Ingresar</button>
+                </form>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Modalidades visibles</h2><span class="status ok">Separadas</span></div>
+              <div class="panel-body grid">
+                <div class="notice">Cliente Normal no reporta informacion ni genera Decision Credits.</div>
+                <div class="notice">Contributor: 1 sujeto valido completo = 2 consultas basicas.</div>
+                <div class="notice">Active y Founding: 1 sujeto valido completo = 1 Decision Credit preferencial.</div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="registro" class="view">
+          <div class="grid cols-2">
+            <article class="panel">
+              <div class="panel-head"><h2>Autorregistro</h2><span class="status warn">Pendiente backend</span></div>
+              <div class="panel-body">
+                <form class="form">
+                  <div class="field"><label>RUC</label><input value="0999999999001" /></div>
+                  <div class="field"><label>Razon social</label><input value="MEGADATOS S.A. demo" /></div>
+                  <div class="field"><label>Sector</label><select><option>Telco / ISP</option><option>Retail</option><option>Fintech</option></select></div>
+                  <div class="field"><label>Modalidad tentativa</label><select><option>Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></select></div>
+                  <button class="btn primary" type="button">Enviar solicitud</button>
+                </form>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Documentos requeridos</h2><span class="status warn">Visual</span></div>
+              <div class="panel-body steps">
+                <div class="step"><span class="num">1</span><div>RUC y datos legales</div><span class="status ok">listo</span></div>
+                <div class="step"><span class="num">2</span><div>Nombramiento representante legal</div><span class="status warn">pendiente</span></div>
+                <div class="step"><span class="num">3</span><div>Convenio y consentimiento operativo</div><span class="status warn">pendiente</span></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="dashboard" class="view">
+          <div class="grid cols-3">
+            <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Consultas reales ejecutadas</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Bloques reales cargados</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>$0.00</strong><span>Facturacion real del periodo</span></div></article>
+          </div>
+          <article class="panel" style="margin-top: 14px;">
+            <div class="panel-head"><h2>Journey cliente</h2><span class="status warn">Visual Fase 1</span></div>
+            <div class="panel-body steps">
+              <div class="step"><span class="num">1</span><div>Registro y seleccion tentativa de modalidad</div><span class="status ok">visual</span></div>
+              <div class="step"><span class="num">2</span><div>Aprobacion admin y documentos bloqueantes</div><span class="status warn">Fase 2</span></div>
+              <div class="step"><span class="num">3</span><div>Ingesta con calidad minima 95%</div><span class="status warn">Fase 3</span></div>
+              <div class="step"><span class="num">4</span><div>Consultas individual, bloque y API</div><span class="status warn">Fase 5+</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section id="ingesta" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Bloques de informacion</h2><span class="status warn">No procesa todavia</span></div>
+            <div class="panel-body grid cols-2">
+              <div class="notice">Umbral minimo: 95%. Duplicados se descartan sin error y sin Decision Credits.</div>
+              <form class="form">
+                <div class="field"><label>Archivo CSV/XLSX</label><input value="plantilla_bloque_informacion_datapartner_v6.csv" /></div>
+                <button class="btn primary" type="button">Validar bloque</button>
+              </form>
+            </div>
+          </article>
+        </section>
+
+        <section id="consultas" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Consulta unificada</h2><span class="status warn">Visual</span></div>
+            <div class="panel-body">
+              <form class="form">
+                <div class="field"><label>Cedula, RUC o codigo SB</label><input value="0923048581" /></div>
+                <div class="field"><label>Producto</label><select><option>Reporte basico</option><option>Reporte completo</option></select></div>
+                <div class="notice">Toda consulta real debe registrar BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado.</div>
+                <button class="btn primary" type="button">Consultar con consentimiento</button>
+              </form>
+            </div>
+          </article>
+        </section>
+
+        <section id="api" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Consumo via API</h2><span class="status warn">Fase 7</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Endpoint</th><th>Estado</th><th>Uso</th></tr>
+                <tr><td>POST /api/v1/queries</td><td>Reservado</td><td>Consulta individual</td></tr>
+                <tr><td>POST /api/v1/batch-queries</td><td>Reservado</td><td>Consulta por bloque</td></tr>
+                <tr><td>GET /api/v1/usage</td><td>Reservado</td><td>Consumo mensual</td></tr>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section id="facturacion" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Facturacion estimada</h2><span class="status ok">Postpago mensual</span></div>
+            <div class="panel-body">
+              <div class="notice">Decision Credits no son prepago. El exceso sobre credits se factura a tarifa Cliente Normal.</div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+    <script src="/portal-nav.js"></script>
+  </body>
+</html>

@@ -53,12 +53,14 @@ const server = http.createServer((request, response) => {
   }
 
   if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/client")) {
-    write(response, 200, "text/html; charset=utf-8", html("Data Exchange - Portal Cliente", "<main><h1>Data Exchange</h1><p>Portal cliente reservado para Fase 1.</p></main>"));
+    const clientHtml = readFileSync(join(publicDir, "client-portal.html"), "utf8");
+    write(response, 200, "text/html; charset=utf-8", clientHtml);
     return;
   }
 
   if (request.method === "GET" && url.pathname === "/admin") {
-    write(response, 200, "text/html; charset=utf-8", html("Data Exchange - Portal Admin", "<main><h1>Decision Data Admin</h1><p>Portal admin reservado para Fase 1.</p></main>"));
+    const adminHtml = readFileSync(join(publicDir, "admin-portal.html"), "utf8");
+    write(response, 200, "text/html; charset=utf-8", adminHtml);
     return;
   }
 

@@ -5,8 +5,12 @@ const requiredFiles = [
   "src/app/admin/README.md",
   "src/app/admin/agent-workbench/README.md",
   "src/config/env.mjs",
+  "public/admin-portal.html",
   "public/agent-workbench-live.html",
+  "public/client-portal.html",
   "public/decision-data-logo.png",
+  "public/portal-base.css",
+  "public/portal-nav.js",
   ".env.example",
   "README.md"
 ];

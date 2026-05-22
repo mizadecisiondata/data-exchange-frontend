@@ -44,6 +44,6 @@ npm run test
 ## Rutas bootstrap
 
 - `GET /health`
-- `GET /client`
-- `GET /admin`
+- `GET /client`: portal cliente visual de Fase 1.
+- `GET /admin`: portal admin visual de Fase 1.
 - `GET /admin/agent-workbench`: vista viva local del Agent Workbench para visualizar avance simulado. No ejecuta agentes reales ni automatiza decisiones.
