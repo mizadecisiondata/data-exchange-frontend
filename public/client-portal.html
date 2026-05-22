@@ -101,6 +101,7 @@
           <a href="#consultas">Consultas</a>
           <a href="#api">API</a>
           <a href="#facturacion">Facturacion</a>
+          <a href="#estados">Estados</a>
           <a href="#perfil">Perfil y clave</a>
         </nav>
         <div class="sidebar-footer">
@@ -187,6 +188,45 @@
             <div class="panel-head"><h2>Facturacion estimada</h2><span class="status ok">Postpago mensual</span></div>
             <div class="panel-body">
               <div class="notice">Decision Credits no son prepago. El exceso sobre credits se factura a tarifa Cliente Normal.</div>
+            </div>
+          </article>
+        </section>
+
+        <section id="estados" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Estados del portal cliente</h2><span class="status warn">Fase 1 visual</span></div>
+            <div class="panel-body state-grid">
+              <div class="state-card">
+                <div>
+                  <div class="state-icon">0</div>
+                  <h3>Sin bloques cargados</h3>
+                  <p>Cuando el cliente aun no reporta informacion, se invita a descargar plantilla y manual.</p>
+                </div>
+                <button class="btn" type="button">Descargar plantilla</button>
+              </div>
+              <div class="state-card">
+                <div>
+                  <div class="state-icon">...</div>
+                  <h3>Validando archivo</h3>
+                  <p>Estado de carga mientras el backend calcula calidad, duplicados y observados.</p>
+                  <div class="skeleton"><span></span><span></span><span></span></div>
+                </div>
+              </div>
+              <div class="state-card error">
+                <div>
+                  <div class="state-icon">!</div>
+                  <h3>Bloque bajo 95%</h3>
+                  <p>Si no supera el umbral, el lote se rechaza y se muestra reporte de errores.</p>
+                </div>
+                <button class="btn" type="button">Ver errores</button>
+              </div>
+              <div class="state-card success">
+                <div>
+                  <div class="state-icon">OK</div>
+                  <h3>Cliente aprobado</h3>
+                  <p>Una vez aprobado, se habilitan consultas segun modalidad y se mantiene BAC.</p>
+                </div>
+              </div>
             </div>
           </article>
         </section>

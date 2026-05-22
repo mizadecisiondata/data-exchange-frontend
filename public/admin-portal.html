@@ -59,6 +59,7 @@
           <a href="#ingesta">Calidad de ingesta</a>
           <a href="#bac">BAC</a>
           <a href="#facturacion">Facturacion</a>
+          <a href="#estados">Estados UI</a>
           <a href="/admin/agent-workbench">Agent Workbench</a>
         </nav>
         <div class="sidebar-footer">
@@ -167,6 +168,43 @@
                 <tr><td>Contributor</td><td>1:2 basico</td><td>Tarifa normal</td></tr>
                 <tr><td>Active / Founding</td><td>1:1 preferencial</td><td>Tarifa normal</td></tr>
               </table>
+            </div>
+          </article>
+        </section>
+
+        <section id="estados" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Estados administrativos</h2><span class="status warn">Fase 1 visual</span></div>
+            <div class="panel-body state-grid">
+              <div class="state-card">
+                <div>
+                  <div class="state-icon">0</div>
+                  <h3>Sin solicitudes nuevas</h3>
+                  <p>Estado para bandeja limpia sin pendientes de aprobacion.</p>
+                </div>
+              </div>
+              <div class="state-card">
+                <div>
+                  <div class="state-icon">...</div>
+                  <h3>Cargando BAC</h3>
+                  <p>El admin ve una espera clara mientras se consulta auditoria.</p>
+                  <div class="skeleton"><span></span><span></span><span></span></div>
+                </div>
+              </div>
+              <div class="state-card error">
+                <div>
+                  <div class="state-icon">!</div>
+                  <h3>Revision bloqueada</h3>
+                  <p>Si falta documento bloqueante, el admin no aprueba acceso.</p>
+                </div>
+              </div>
+              <div class="state-card success">
+                <div>
+                  <div class="state-icon">OK</div>
+                  <h3>Usuario aprobado</h3>
+                  <p>El sistema debe preparar correo con clave temporal en Fase 2.</p>
+                </div>
+              </div>
             </div>
           </article>
         </section>
