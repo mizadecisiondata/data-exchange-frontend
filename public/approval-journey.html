@@ -165,8 +165,13 @@
 
       <section class="grid cols-3" style="margin-bottom: 14px;">
         <article class="panel metric"><div class="panel-body"><strong>MEGADATOS</strong><span>Cliente demo: telco / ISP</span></div></article>
-        <article class="panel metric"><div class="panel-body"><strong>96.8%</strong><span>Calidad simulada del bloque</span></div></article>
+        <article class="panel metric"><div class="panel-body"><strong>57</strong><span>Campos del Diccionario Reporte</span></div></article>
         <article class="panel metric"><div class="panel-body"><strong>Postpago</strong><span>Modelo mensual, no prepago</span></div></article>
+      </section>
+      <section class="grid cols-3" style="margin-bottom: 14px;">
+        <article class="panel"><div class="panel-body"><span class="status ok">Fuente cerrada</span><h3>Consentimiento</h3><p class="sub">Base Red Clic auditada, adaptada a Decision Data con texto estrategico y no invasivo.</p></div></article>
+        <article class="panel"><div class="panel-body"><span class="status ok">Fuente cerrada</span><h3>Diccionario</h3><p class="sub">Google Sheet: pestana Diccionario Reporte para cargas de Data Partners.</p></div></article>
+        <article class="panel"><div class="panel-body"><span class="status ok">Fuente cerrada</span><h3>Pricing</h3><p class="sub">Propuesta DD-COM-2026-017 como base comercial de modalidades y tarifas.</p></div></article>
       </section>
 
       <section class="journey-map">
@@ -227,8 +232,9 @@
             <article class="journey-stage" data-stage-panel="3">
               <table class="table">
                 <tr><th>Validacion</th><th>Resultado demo</th><th>Regla</th></tr>
+                <tr><td>Diccionario</td><td>57 campos / 21 obligatorios</td><td>Fuente: Diccionario Reporte</td></tr>
                 <tr><td>Registros recibidos</td><td>10,000</td><td>Bloque de informacion</td></tr>
-                <tr><td>Validos</td><td>9,680</td><td>Supera 95%</td></tr>
+                <tr><td>Validos</td><td>9,680</td><td>96.8% supera 95%</td></tr>
                 <tr><td>Duplicados</td><td>120 descartados</td><td>No error / no credits</td></tr>
                 <tr><td>Observados</td><td>200</td><td>Reporte descargable</td></tr>
               </table>
@@ -246,21 +252,33 @@
             </article>
 
             <article class="journey-stage" data-stage-panel="5">
-              <table class="table">
-                <tr><th>Campo BAC</th><th>Ejemplo demo</th></tr>
-                <tr><td>BAC</td><td>BAC-2026-000001</td></tr>
-                <tr><td>Consentimiento</td><td>consentimiento_v1_aceptado</td></tr>
-                <tr><td>Usuario / canal / IP</td><td>miza@decisiondata.ec / portal / 127.0.0.1</td></tr>
-                <tr><td>Producto / tarifa / valor / estado</td><td>reporte_basico / tarifa_demo / 0.00 / simulado</td></tr>
-              </table>
+              <div class="grid cols-2">
+                <div class="notice">Consentimiento operativo `dd-consent-v1`: autoriza consulta, validacion, procesamiento y emision del reporte solo para la finalidad informada. No habilita usos ajenos ni decisiones automaticas.</div>
+                <table class="table">
+                  <tr><th>Campo BAC</th><th>Ejemplo demo</th></tr>
+                  <tr><td>BAC</td><td>BAC-2026-000001</td></tr>
+                  <tr><td>Consentimiento</td><td>dd-consent-v1 / evidenceHash</td></tr>
+                  <tr><td>Usuario / canal / IP</td><td>miza@decisiondata.ec / portal / 127.0.0.1</td></tr>
+                  <tr><td>Producto / tarifa / valor / estado</td><td>reporte_basico / CN-101-500 / 0.90 / simulado</td></tr>
+                </table>
+              </div>
             </article>
 
             <article class="journey-stage" data-stage-panel="6">
-              <div class="steps">
-                <div class="step"><span class="num">N</span><div>Cliente Normal no genera credits; paga tarifa normal.</div><span class="status warn">regla</span></div>
-                <div class="step"><span class="num">C</span><div>Contributor: 1:2 para consultas basicas; exceso a tarifa Cliente Normal.</div><span class="status warn">regla</span></div>
-                <div class="step"><span class="num">A</span><div>Active y Founding: 1:1 preferencial; exceso a tarifa Cliente Normal.</div><span class="status warn">regla</span></div>
-                <div class="step"><span class="num">$</span><div>Facturacion mensual postpago. Decision Credits no son prepago.</div><span class="status ok">guardrail</span></div>
+              <div class="grid cols-2">
+                <div class="steps">
+                  <div class="step"><span class="num">N</span><div>Cliente Normal no genera credits; paga tarifa normal.</div><span class="status warn">regla</span></div>
+                  <div class="step"><span class="num">C</span><div>Contributor: 1:2 para consultas basicas; exceso a tarifa Cliente Normal.</div><span class="status warn">regla</span></div>
+                  <div class="step"><span class="num">A</span><div>Active y Founding: 1:1 preferencial; exceso a tarifa Cliente Normal.</div><span class="status warn">regla</span></div>
+                  <div class="step"><span class="num">$</span><div>Facturacion mensual postpago. Decision Credits no son prepago.</div><span class="status ok">guardrail</span></div>
+                </div>
+                <table class="table">
+                  <tr><th>Volumen</th><th>Normal</th><th>Activo</th><th>Founding</th></tr>
+                  <tr><td>1-100</td><td>$1.00</td><td>$0.80</td><td>$0.50</td></tr>
+                  <tr><td>101-500</td><td>$0.90</td><td>$0.65</td><td>$0.40</td></tr>
+                  <tr><td>501-1,000</td><td>$0.80</td><td>$0.50</td><td>$0.30</td></tr>
+                  <tr><td>10,001+</td><td>$0.30</td><td>$0.18</td><td>$0.15</td></tr>
+                </table>
               </div>
             </article>
 
@@ -282,6 +300,7 @@
                 <label class="approval-check"><input type="checkbox" /><div><b>Calidad de ingesta</b><span>95% minimo, duplicados descartados sin error ni credits.</span></div><span class="status warn">Fase 3 real</span></label>
                 <label class="approval-check"><input type="checkbox" /><div><b>Consulta y BAC</b><span>Consentimiento, usuario, canal, IP, producto, tarifa, valor y estado.</span></div><span class="status warn">Fase 4 real</span></label>
                 <label class="approval-check"><input type="checkbox" /><div><b>Facturacion</b><span>Monthly postpaid y Decision Credits segun modalidad.</span></div><span class="status warn">Fase 6 real</span></label>
+                <label class="approval-check"><input type="checkbox" /><div><b>Fuentes de Mateo integradas</b><span>Consentimiento, diccionario y pricing tienen contrato backend versionado.</span></div><span class="status ok">cerrado</span></label>
               </div>
             </article>
 
