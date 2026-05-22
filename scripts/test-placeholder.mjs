@@ -10,4 +10,8 @@ if (health.portals.client === health.portals.admin) {
   throw new Error("Client and admin portals must remain separated.");
 }
 
+if (health.portals.approvalJourney !== "/journey") {
+  throw new Error("Approval journey route must remain available for Mateo validation.");
+}
+
 console.log("Frontend bootstrap tests ok.");

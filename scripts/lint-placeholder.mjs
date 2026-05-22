@@ -6,6 +6,7 @@ const requiredFiles = [
   "src/app/admin/agent-workbench/README.md",
   "src/config/env.mjs",
   "public/admin-portal.html",
+  "public/approval-journey.html",
   "public/agent-workbench-live.html",
   "public/client-portal.html",
   "public/decision-data-logo.png",

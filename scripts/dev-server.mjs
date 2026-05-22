@@ -70,6 +70,12 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (request.method === "GET" && (url.pathname === "/journey" || url.pathname === "/admin/approval-journey")) {
+    const journeyHtml = readFileSync(join(publicDir, "approval-journey.html"), "utf8");
+    write(response, 200, "text/html; charset=utf-8", journeyHtml);
+    return;
+  }
+
   if (request.method === "GET" && url.pathname.startsWith("/")) {
     const requestedPath = normalize(url.pathname.replace(/^\/+/, ""));
     const assetPath = join(publicDir, requestedPath);

@@ -47,3 +47,4 @@ npm run test
 - `GET /client`: portal cliente visual de Fase 1 con login primero, autorregistro y navegacion posterior al acceso.
 - `GET /admin`: portal admin visual de Fase 1 con login primero y navegacion administrativa posterior al acceso.
 - `GET /admin/agent-workbench`: vista viva local del Agent Workbench para visualizar avance simulado. No ejecuta agentes reales ni automatiza decisiones.
+- `GET /journey`: journey completo de aprobacion preproduccion para recorrer cliente, admin, ingesta, consulta, BAC, facturacion, API y checklist de Mateo.

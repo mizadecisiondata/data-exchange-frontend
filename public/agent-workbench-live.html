@@ -39,7 +39,8 @@
         letter-spacing: 0;
       }
 
-      button {
+      button,
+      .action-link {
         border: 1px solid var(--line);
         background: #142640;
         color: var(--text);
@@ -47,9 +48,11 @@
         padding: 0.65rem 0.85rem;
         font: inherit;
         cursor: pointer;
+        text-decoration: none;
       }
 
-      button:hover {
+      button:hover,
+      .action-link:hover {
         border-color: var(--blue);
       }
 
@@ -808,6 +811,7 @@
         </div>
         <div class="actions">
           <span class="status-pill"><span class="pulse"></span><span id="run-state">En vivo</span></span>
+          <a class="action-link" href="/journey">Journey aprobacion</a>
           <button id="toggle">Pausar</button>
           <button id="tick">Avanzar</button>
           <button id="reset">Reiniciar</button>
@@ -952,15 +956,15 @@
 
       const actualProgress = {
         stateLabel: "F1 activa",
-        overallPercent: 28,
+        overallPercent: 32,
         activePhaseIndex: 1,
         completedPhaseIndexes: [0],
-        note: "Fase 1 en progreso: frontend base y navegacion cliente/admin."
+        note: "Fase 1 en progreso: frontend base, navegacion y journey de aprobacion."
       };
 
       const agents = [
-        { name: "Frontend Agent", accent: "#62a8ff", progress: 64, status: "Fase 1 activa", task: "Sesion visual, roles, usuarios y navegacion cliente/admin." },
-        { name: "Backend Architect", accent: "#31d09b", progress: 9, status: "Fase 0 cerrada", task: "Backend bootstrap y healthcheck ya quedaron listos." },
+        { name: "Frontend Agent", accent: "#62a8ff", progress: 70, status: "Fase 1 activa", task: "Journey completo de aprobacion y navegacion cliente/admin." },
+        { name: "Backend Architect", accent: "#31d09b", progress: 13, status: "Contratos", task: "Contrato /contracts/v1 creado para alinear guardrails." },
         { name: "Data Ingestion Agent", accent: "#f4c95d", progress: 0, status: "Pendiente", task: "No inicia hasta confirmar diccionario y entrar a Fase 3." },
         { name: "Decision Credits Agent", accent: "#b38cff", progress: 0, status: "Pendiente", task: "Reglas comerciales protegidas; implementacion real queda para Fase 4." },
         { name: "BAC Audit Agent", accent: "#ff746d", progress: 6, status: "Diseno base", task: "BAC esta documentado como guardrail, no implementado funcionalmente." },
@@ -981,6 +985,8 @@
         { agent: "Frontend Agent", detail: "Se agregaron estados visuales de vacio, carga, error y aprobacion para cliente y admin." },
         { agent: "Frontend Agent", detail: "Se agregaron notificaciones y actividad reciente visual para cliente y admin." },
         { agent: "Frontend Agent", detail: "Se agrego sesion visual, cierre de sesion y vistas de usuarios/roles sin activar auth real." },
+        { agent: "Frontend Agent", detail: "Se agrego /journey como recorrido completo de aprobacion preproduccion para Mateo." },
+        { agent: "Backend Architect", detail: "Se agrego contrato tecnico /contracts/v1 con guardrails y rutas reservadas." },
         { agent: "PM Tracking Agent", detail: "Preguntas no bloqueantes quedan diferidas para el resumen de 8 horas." },
         { agent: "PM Tracking Agent", detail: "Se agrego seccion 'Que es Data Exchange?' en portal cliente como ayuda temporal." },
         { agent: "PM Tracking Agent", detail: "Ajuste solicitado: el progreso no sube a 100% automaticamente; refleja solo avances reales." },

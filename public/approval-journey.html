@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Data Exchange - Journey de Aprobacion</title>
+    <link rel="stylesheet" href="/portal-base.css" />
+    <style>
+      .journey-shell {
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .journey-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+
+      .journey-brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .journey-brand img {
+        width: 58px;
+        height: 58px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .journey-map {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .journey-steps {
+        display: grid;
+        gap: 8px;
+      }
+
+      .journey-step-button {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        padding: 12px;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .journey-step-button.active {
+        border-color: rgba(255, 196, 0, 0.55);
+        background: rgba(255, 196, 0, 0.11);
+      }
+
+      .journey-step-button small,
+      .journey-step-button span {
+        display: block;
+        color: var(--muted);
+      }
+
+      .journey-step-button b {
+        display: block;
+        margin: 3px 0;
+      }
+
+      .journey-stage {
+        display: none;
+      }
+
+      .journey-stage.active {
+        display: block;
+      }
+
+      .approval-checklist {
+        display: grid;
+        gap: 10px;
+      }
+
+      .approval-check {
+        display: grid;
+        grid-template-columns: 22px 1fr auto;
+        gap: 10px;
+        align-items: start;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .approval-check input {
+        margin-top: 3px;
+      }
+
+      .flow-line {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .flow-node {
+        min-height: 88px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        padding: 10px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+      }
+
+      .flow-node b,
+      .flow-node span {
+        display: block;
+      }
+
+      .flow-node span {
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.35;
+        margin-top: 4px;
+      }
+
+      .journey-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .case-card {
+        display: grid;
+        gap: 8px;
+      }
+
+      @media (max-width: 980px) {
+        .journey-hero,
+        .journey-map,
+        .flow-line {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="journey-shell">
+      <header class="journey-hero">
+        <div class="journey-brand">
+          <img src="/decision-data-logo.png" alt="Decision Data" />
+          <div>
+            <div class="eyebrow">Decision Data</div>
+            <h1>Journey de aprobacion preproduccion</h1>
+            <p class="sub">Caso de uso completo para recorrer portal cliente, portal admin, ingesta, consulta, BAC, facturacion postpago, API y Agent Workbench antes de salida a produccion.</p>
+          </div>
+        </div>
+        <div class="toolbar">
+          <a class="btn" href="/client">Portal cliente</a>
+          <a class="btn" href="/admin">Portal admin</a>
+          <a class="btn primary" href="/admin/agent-workbench">Agent Workbench</a>
+        </div>
+      </header>
+
+      <section class="grid cols-3" style="margin-bottom: 14px;">
+        <article class="panel metric"><div class="panel-body"><strong>MEGADATOS</strong><span>Cliente demo: telco / ISP</span></div></article>
+        <article class="panel metric"><div class="panel-body"><strong>96.8%</strong><span>Calidad simulada del bloque</span></div></article>
+        <article class="panel metric"><div class="panel-body"><strong>Postpago</strong><span>Modelo mensual, no prepago</span></div></article>
+      </section>
+
+      <section class="journey-map">
+        <aside class="panel">
+          <div class="panel-head"><h2>Recorrido</h2><span class="status warn" id="journey-counter">1 / 9</span></div>
+          <div class="panel-body journey-steps" id="journey-steps">
+            <button class="journey-step-button active" type="button" data-stage="0"><small>01 Cliente</small><b>Autorregistro</b><span>Solicitud pendiente de admin.</span></button>
+            <button class="journey-step-button" type="button" data-stage="1"><small>02 Admin</small><b>Aprobacion</b><span>Documentos, usuario y modalidad.</span></button>
+            <button class="journey-step-button" type="button" data-stage="2"><small>03 Cliente</small><b>Primer login</b><span>Clave temporal y cambio obligatorio.</span></button>
+            <button class="journey-step-button" type="button" data-stage="3"><small>04 Cliente</small><b>Bloque de informacion</b><span>Calidad 95% y duplicados.</span></button>
+            <button class="journey-step-button" type="button" data-stage="4"><small>05 Cliente</small><b>Consulta unificada</b><span>Cedula, RUC o codigo SB.</span></button>
+            <button class="journey-step-button" type="button" data-stage="5"><small>06 Backend</small><b>BAC y consentimiento</b><span>Trazabilidad obligatoria.</span></button>
+            <button class="journey-step-button" type="button" data-stage="6"><small>07 Finanzas</small><b>Decision Credits</b><span>Reglas visibles, sin prepago.</span></button>
+            <button class="journey-step-button" type="button" data-stage="7"><small>08 API</small><b>Consumo integracion</b><span>Rutas reservadas para Fase 7.</span></button>
+            <button class="journey-step-button" type="button" data-stage="8"><small>09 Mateo</small><b>Checklist aprobacion</b><span>Criterios antes de produccion.</span></button>
+          </div>
+        </aside>
+
+        <section class="panel">
+          <div class="panel-head"><h2 id="stage-title">Autorregistro cliente</h2><span class="status warn" id="stage-status">Demo Fase 1</span></div>
+          <div class="panel-body">
+            <article class="journey-stage active" data-stage-panel="0">
+              <div class="grid cols-2">
+                <div class="case-card">
+                  <h3>Entrada del cliente</h3>
+                  <table class="table">
+                    <tr><th>Campo</th><th>Valor demo</th></tr>
+                    <tr><td>RUC</td><td>0999999999001</td></tr>
+                    <tr><td>Razon social</td><td>MEGADATOS S.A.</td></tr>
+                    <tr><td>Sector</td><td>Telco / ISP</td></tr>
+                    <tr><td>Modalidad tentativa</td><td>Data Partner Founding</td></tr>
+                  </table>
+                </div>
+                <div class="notice">El cliente nunca ve el portal interno antes de tener usuario aprobado. Si no tiene clave, entra por autorregistro y queda pendiente de revision admin.</div>
+              </div>
+            </article>
+
+            <article class="journey-stage" data-stage-panel="1">
+              <div class="steps">
+                <div class="step"><span class="num">1</span><div>Admin revisa documentos, representante autorizado y sector permitido.</div><span class="status warn">visual</span></div>
+                <div class="step"><span class="num">2</span><div>Admin confirma modalidad sin cambiar pricing ni excepciones sin Mateo.</div><span class="status warn">decision</span></div>
+                <div class="step"><span class="num">3</span><div>Sistema prepara usuario, clave temporal y correo de bienvenida.</div><span class="status warn">Fase 2</span></div>
+              </div>
+            </article>
+
+            <article class="journey-stage" data-stage-panel="2">
+              <div class="grid cols-2">
+                <div class="notice">El primer ingreso exige cambio de contrasena. La sesion real, RBAC, expiracion y politicas de clave quedan para Fase 2.</div>
+                <table class="table">
+                  <tr><th>Elemento</th><th>Comportamiento esperado</th></tr>
+                  <tr><td>Clave temporal</td><td>Un solo uso</td></tr>
+                  <tr><td>Usuario</td><td>Correo corporativo aprobado</td></tr>
+                  <tr><td>Rol</td><td>Segun aprobacion admin</td></tr>
+                </table>
+              </div>
+            </article>
+
+            <article class="journey-stage" data-stage-panel="3">
+              <table class="table">
+                <tr><th>Validacion</th><th>Resultado demo</th><th>Regla</th></tr>
+                <tr><td>Registros recibidos</td><td>10,000</td><td>Bloque de informacion</td></tr>
+                <tr><td>Validos</td><td>9,680</td><td>Supera 95%</td></tr>
+                <tr><td>Duplicados</td><td>120 descartados</td><td>No error / no credits</td></tr>
+                <tr><td>Observados</td><td>200</td><td>Reporte descargable</td></tr>
+              </table>
+            </article>
+
+            <article class="journey-stage" data-stage-panel="4">
+              <div class="grid cols-2">
+                <div class="notice">La consulta debe aceptar cedula, RUC o codigo SB, y devolver reporte basico o completo segun producto seleccionado.</div>
+                <table class="table">
+                  <tr><th>Producto</th><th>Canales</th><th>Estado demo</th></tr>
+                  <tr><td>Reporte basico</td><td>Individual, bloque, API</td><td>Visual</td></tr>
+                  <tr><td>Reporte completo</td><td>Individual, bloque, API</td><td>Visual</td></tr>
+                </table>
+              </div>
+            </article>
+
+            <article class="journey-stage" data-stage-panel="5">
+              <table class="table">
+                <tr><th>Campo BAC</th><th>Ejemplo demo</th></tr>
+                <tr><td>BAC</td><td>BAC-2026-000001</td></tr>
+                <tr><td>Consentimiento</td><td>consentimiento_v1_aceptado</td></tr>
+                <tr><td>Usuario / canal / IP</td><td>miza@decisiondata.ec / portal / 127.0.0.1</td></tr>
+                <tr><td>Producto / tarifa / valor / estado</td><td>reporte_basico / tarifa_demo / 0.00 / simulado</td></tr>
+              </table>
+            </article>
+
+            <article class="journey-stage" data-stage-panel="6">
+              <div class="steps">
+                <div class="step"><span class="num">N</span><div>Cliente Normal no genera credits; paga tarifa normal.</div><span class="status warn">regla</span></div>
+                <div class="step"><span class="num">C</span><div>Contributor: 1:2 para consultas basicas; exceso a tarifa Cliente Normal.</div><span class="status warn">regla</span></div>
+                <div class="step"><span class="num">A</span><div>Active y Founding: 1:1 preferencial; exceso a tarifa Cliente Normal.</div><span class="status warn">regla</span></div>
+                <div class="step"><span class="num">$</span><div>Facturacion mensual postpago. Decision Credits no son prepago.</div><span class="status ok">guardrail</span></div>
+              </div>
+            </article>
+
+            <article class="journey-stage" data-stage-panel="7">
+              <table class="table">
+                <tr><th>Endpoint futuro</th><th>Uso</th><th>Fase</th></tr>
+                <tr><td>POST /api/v1/queries</td><td>Consulta individual</td><td>4</td></tr>
+                <tr><td>POST /api/v1/batch-queries</td><td>Consulta por bloque</td><td>5</td></tr>
+                <tr><td>GET /api/v1/usage</td><td>Consumo y cierre mensual</td><td>6</td></tr>
+                <tr><td>GET /api/v1/agent-workbench/events</td><td>Eventos admin</td><td>2+</td></tr>
+              </table>
+            </article>
+
+            <article class="journey-stage" data-stage-panel="8">
+              <div class="approval-checklist">
+                <label class="approval-check"><input type="checkbox" /><div><b>Separacion cliente/admin</b><span>El cliente no accede a Agent Workbench ni pantallas internas.</span></div><span class="status ok">visual</span></label>
+                <label class="approval-check"><input type="checkbox" /><div><b>Login primero</b><span>Ambos portales abren con login antes de navegar.</span></div><span class="status ok">visual</span></label>
+                <label class="approval-check"><input type="checkbox" /><div><b>Autorregistro y aprobacion</b><span>Cliente solicita acceso; admin aprueba usuario y modalidad.</span></div><span class="status warn">Fase 2 real</span></label>
+                <label class="approval-check"><input type="checkbox" /><div><b>Calidad de ingesta</b><span>95% minimo, duplicados descartados sin error ni credits.</span></div><span class="status warn">Fase 3 real</span></label>
+                <label class="approval-check"><input type="checkbox" /><div><b>Consulta y BAC</b><span>Consentimiento, usuario, canal, IP, producto, tarifa, valor y estado.</span></div><span class="status warn">Fase 4 real</span></label>
+                <label class="approval-check"><input type="checkbox" /><div><b>Facturacion</b><span>Monthly postpaid y Decision Credits segun modalidad.</span></div><span class="status warn">Fase 6 real</span></label>
+              </div>
+            </article>
+
+            <div class="flow-line" aria-label="Resumen del flujo">
+              <div class="flow-node"><b>Cliente</b><span>Autorregistro, login, bloque y consulta.</span></div>
+              <div class="flow-node"><b>Admin</b><span>Aprobacion, modalidad, usuarios y auditoria.</span></div>
+              <div class="flow-node"><b>Backend</b><span>Contratos, BAC, colas y reglas.</span></div>
+              <div class="flow-node"><b>Finanzas</b><span>Credits y cierre mensual postpago.</span></div>
+              <div class="flow-node"><b>Mateo</b><span>Aprueba decisiones sensibles y salida.</span></div>
+            </div>
+
+            <div class="journey-actions">
+              <button class="btn" type="button" id="prev-stage">Anterior</button>
+              <button class="btn primary" type="button" id="next-stage">Siguiente</button>
+              <a class="btn" href="/client">Abrir portal cliente</a>
+              <a class="btn" href="/admin">Abrir portal admin</a>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const titles = [
+        ["Autorregistro cliente", "Demo Fase 1"],
+        ["Aprobacion administrativa", "Demo Fase 1"],
+        ["Primer ingreso y clave", "Reservado Fase 2"],
+        ["Ingesta de bloque", "Reservado Fase 3"],
+        ["Consulta unificada", "Reservado Fase 4"],
+        ["BAC y consentimiento", "Reservado Fase 4"],
+        ["Decision Credits y facturacion", "Reservado Fase 6"],
+        ["Consumo via API", "Reservado Fase 7"],
+        ["Checklist de aprobacion", "Mateo"]
+      ];
+
+      const buttons = Array.from(document.querySelectorAll("[data-stage]"));
+      const panels = Array.from(document.querySelectorAll("[data-stage-panel]"));
+      const title = document.getElementById("stage-title");
+      const status = document.getElementById("stage-status");
+      const counter = document.getElementById("journey-counter");
+      let current = 0;
+
+      function showStage(index) {
+        current = Math.max(0, Math.min(index, panels.length - 1));
+        buttons.forEach((button) => button.classList.toggle("active", Number(button.dataset.stage) === current));
+        panels.forEach((panel) => panel.classList.toggle("active", Number(panel.dataset.stagePanel) === current));
+        title.textContent = titles[current][0];
+        status.textContent = titles[current][1];
+        counter.textContent = `${current + 1} / ${panels.length}`;
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => showStage(Number(button.dataset.stage)));
+      });
+
+      document.getElementById("prev-stage").addEventListener("click", () => showStage(current - 1));
+      document.getElementById("next-stage").addEventListener("click", () => showStage(current + 1));
+    </script>
+  </body>
+</html>

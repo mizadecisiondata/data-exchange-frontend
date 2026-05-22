@@ -5,7 +5,8 @@ const DEFAULTS = {
   NEXT_PUBLIC_API_BASE_URL: "http://localhost:4100",
   NEXT_PUBLIC_CLIENT_PORTAL_PATH: "/client",
   NEXT_PUBLIC_ADMIN_PORTAL_PATH: "/admin",
-  NEXT_PUBLIC_AGENT_WORKBENCH_PATH: "/admin/agent-workbench"
+  NEXT_PUBLIC_AGENT_WORKBENCH_PATH: "/admin/agent-workbench",
+  NEXT_PUBLIC_APPROVAL_JOURNEY_PATH: "/journey"
 };
 
 export function getFrontendConfig(env = process.env) {
@@ -22,7 +23,8 @@ export function getFrontendConfig(env = process.env) {
     apiBaseUrl: source.NEXT_PUBLIC_API_BASE_URL,
     clientPortalPath: source.NEXT_PUBLIC_CLIENT_PORTAL_PATH,
     adminPortalPath: source.NEXT_PUBLIC_ADMIN_PORTAL_PATH,
-    agentWorkbenchPath: source.NEXT_PUBLIC_AGENT_WORKBENCH_PATH
+    agentWorkbenchPath: source.NEXT_PUBLIC_AGENT_WORKBENCH_PATH,
+    approvalJourneyPath: source.NEXT_PUBLIC_APPROVAL_JOURNEY_PATH
   };
 }
 
@@ -37,7 +39,8 @@ export function buildFrontendHealth(config, now = new Date()) {
     portals: {
       client: config.clientPortalPath,
       admin: config.adminPortalPath,
-      agentWorkbench: config.agentWorkbenchPath
+      agentWorkbench: config.agentWorkbenchPath,
+      approvalJourney: config.approvalJourneyPath
     }
   };
 }

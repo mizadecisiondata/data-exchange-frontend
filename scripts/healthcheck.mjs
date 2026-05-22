@@ -9,7 +9,8 @@ const expected = [
   health.phase === "0",
   health.portals.client === "/client",
   health.portals.admin === "/admin",
-  health.portals.agentWorkbench === "/admin/agent-workbench"
+  health.portals.agentWorkbench === "/admin/agent-workbench",
+  health.portals.approvalJourney === "/journey"
 ];
 
 if (expected.some((value) => value !== true)) {
