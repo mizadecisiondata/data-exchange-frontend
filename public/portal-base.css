@@ -270,6 +270,30 @@ h1 {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.session-pill {
+  min-width: 180px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.session-pill span,
+.session-pill b {
+  display: block;
+}
+
+.session-pill span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.session-pill b {
+  color: var(--text);
+  font-size: 0.9rem;
 }
 
 .btn {

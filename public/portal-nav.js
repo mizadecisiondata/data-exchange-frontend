@@ -39,6 +39,22 @@ function enterPortal() {
   activateView(window.location.hash);
 }
 
+function exitPortal() {
+  const authGate = document.querySelector("[data-auth-gate]");
+  const appShell = document.querySelector("[data-app-shell]");
+
+  if (appShell) {
+    appShell.classList.add("is-hidden");
+  }
+
+  if (authGate) {
+    authGate.classList.remove("is-hidden");
+  }
+
+  showAuthPanel("login");
+  window.location.hash = "login";
+}
+
 function toggleExplain() {
   document.querySelectorAll("[data-explain-box]").forEach((box) => {
     box.classList.toggle("is-hidden");
@@ -55,6 +71,10 @@ document.querySelectorAll("[data-register-submit]").forEach((button) => {
 
 document.querySelectorAll("[data-login-action]").forEach((button) => {
   button.addEventListener("click", enterPortal);
+});
+
+document.querySelectorAll("[data-logout-action]").forEach((button) => {
+  button.addEventListener("click", exitPortal);
 });
 
 document.querySelectorAll("[data-toggle-explain]").forEach((button) => {

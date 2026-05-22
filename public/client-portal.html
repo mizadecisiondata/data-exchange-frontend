@@ -21,7 +21,7 @@
               <div class="trust-item">Consultas con consentimiento y trazabilidad BAC.</div>
             </div>
           </div>
-          <button class="btn help-button" type="button" data-toggle-explain>¿Que es Data Exchange?</button>
+          <button class="btn help-button" type="button" data-toggle-explain>Que es Data Exchange?</button>
           <div class="explain-box is-hidden" data-explain-box>
             <div class="notice">Es una plataforma de intercambio de informacion comercial-crediticia para empresas no bancarias que reportan bloques de informacion y consultan reportes basicos o completos.</div>
             <div class="notice">No reemplaza aprobaciones regulatorias ni decisiones comerciales de Mateo; aqui solo mostramos la experiencia visual de Fase 1.</div>
@@ -97,6 +97,7 @@
         </div>
         <nav class="nav" data-nav>
           <a href="#dashboard" class="active">Dashboard</a>
+          <a href="#usuarios">Usuarios</a>
           <a href="#ingesta">Bloques de informacion</a>
           <a href="#consultas">Consultas</a>
           <a href="#api">API</a>
@@ -118,8 +119,10 @@
             <p class="sub">Navegacion visible solo despues del login. No consume datos reales ni ejecuta consultas.</p>
           </div>
           <div class="toolbar">
-            <button class="btn help-button" type="button" data-toggle-explain>¿Que es Data Exchange?</button>
+            <div class="session-pill"><span>Sesion demo</span><b>Data Partner Founding</b></div>
+            <button class="btn help-button" type="button" data-toggle-explain>Que es Data Exchange?</button>
             <a class="btn" href="/admin">Portal admin</a>
+            <button class="btn" type="button" data-logout-action>Cerrar sesion</button>
           </div>
         </header>
         <div class="explain-box is-hidden" data-explain-box>
@@ -139,6 +142,21 @@
               <div class="step"><span class="num">2</span><div>Aprobacion admin y correo con clave temporal.</div><span class="status warn">Fase 2</span></div>
               <div class="step"><span class="num">3</span><div>Cambio de clave en primer ingreso.</div><span class="status warn">Fase 2</span></div>
               <div class="step"><span class="num">4</span><div>Uso del portal segun modalidad aprobada.</div><span class="status warn">Fase 3+</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section id="usuarios" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Usuarios autorizados</h2><span class="status warn">Visual Fase 1</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Alcance</th></tr>
+                <tr><td>miza@decisiondata.ec</td><td>Operador principal</td><td>Aprobado demo</td><td>Consultas, bloques y facturacion</td></tr>
+                <tr><td>analista@megadatos.demo</td><td>Analista</td><td>Pendiente Fase 2</td><td>Consultas con consentimiento</td></tr>
+                <tr><td>finanzas@megadatos.demo</td><td>Facturacion</td><td>Pendiente Fase 2</td><td>Consumo mensual postpago</td></tr>
+              </table>
+              <div class="notice">Alta, baja y cambio de rol deben quedar auditados. La aprobacion real y el correo con clave temporal se implementan en Fase 2.</div>
             </div>
           </article>
         </section>

@@ -54,6 +54,7 @@
         <nav class="nav" data-nav>
           <a href="#dashboard" class="active">Dashboard</a>
           <a href="#solicitudes">Solicitudes</a>
+          <a href="#usuarios">Usuarios y roles</a>
           <a href="#aprobacion">Aprobacion de accesos</a>
           <a href="#clientes">Clientes</a>
           <a href="#ingesta">Calidad de ingesta</a>
@@ -76,8 +77,10 @@
             <p class="sub">Revision documental, aprobacion de usuarios, modalidades, calidad, BAC y seguimiento de avance.</p>
           </div>
           <div class="toolbar">
+            <div class="session-pill"><span>Sesion demo</span><b>Admin Decision Data</b></div>
             <a class="btn" href="/client">Portal cliente</a>
             <a class="btn primary" href="/admin/agent-workbench">Agent Workbench</a>
+            <button class="btn" type="button" data-logout-action>Cerrar sesion</button>
           </div>
         </header>
 
@@ -93,6 +96,21 @@
               <div class="step"><span class="num">0</span><div>Setup repos, README, env y healthchecks</div><span class="status ok">cerrada</span></div>
               <div class="step"><span class="num">1</span><div>Login primero + navegacion cliente/admin</div><span class="status warn">actual</span></div>
               <div class="step"><span class="num">2</span><div>Auth real, roles, correo y cambio de clave temporal</div><span class="status warn">pendiente</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section id="usuarios" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Usuarios y roles admin</h2><span class="status warn">Visual Fase 1</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Permisos previstos</th></tr>
+                <tr><td>admin@decisiondata.ec</td><td>Super admin</td><td>Activo demo</td><td>Aprobaciones, clientes, BAC y Workbench</td></tr>
+                <tr><td>calidad@decisiondata.ec</td><td>Analista de calidad</td><td>Pendiente Fase 2</td><td>Revision de ingesta y errores bajo 95%</td></tr>
+                <tr><td>facturacion@decisiondata.ec</td><td>Facturacion</td><td>Pendiente Fase 2</td><td>Consumo, tarifas y cierre mensual postpago</td></tr>
+              </table>
+              <div class="notice">RBAC real, politicas de sesion y auditoria de cambios se implementan en Fase 2. Esta vista solo fija la experiencia esperada.</div>
             </div>
           </article>
         </section>
