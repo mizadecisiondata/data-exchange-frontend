@@ -956,15 +956,15 @@
 
       const actualProgress = {
         stateLabel: "F1 activa",
-        overallPercent: 38,
+        overallPercent: 44,
         activePhaseIndex: 1,
         completedPhaseIndexes: [0],
-        note: "Fase 1 en progreso: fuentes de Mateo integradas como contratos tecnicos."
+        note: "Fase 1 en progreso: onboarding documental y modulo admin unificado."
       };
 
       const agents = [
-        { name: "Frontend Agent", accent: "#62a8ff", progress: 76, status: "Fase 1 activa", task: "Journey muestra consentimiento, diccionario y pricing fuente." },
-        { name: "Backend Architect", accent: "#31d09b", progress: 22, status: "Contratos", task: "Subcontratos /consent, /data-partner-dictionary y /pricing agregados." },
+        { name: "Frontend Agent", accent: "#62a8ff", progress: 83, status: "Fase 1 activa", task: "Autorregistro documental y Onboarding clientes unificado." },
+        { name: "Backend Architect", accent: "#31d09b", progress: 28, status: "Contratos", task: "Contrato /onboarding agregado con checklist documental." },
         { name: "Data Ingestion Agent", accent: "#f4c95d", progress: 10, status: "Fuente recibida", task: "Diccionario Reporte convertido a contrato; ingesta real queda Fase 3." },
         { name: "Decision Credits Agent", accent: "#b38cff", progress: 9, status: "Fuente recibida", task: "Propuesta comercial convertida a contrato; motor real queda posterior." },
         { name: "BAC Audit Agent", accent: "#ff746d", progress: 12, status: "Fuente recibida", task: "Consentimiento dd-consent-v1 preparado como contrato no invasivo." },
@@ -991,6 +991,9 @@
         { agent: "Data Ingestion Agent", detail: "Mateo aporto Diccionario Reporte; se versionaron 57 campos y 21 obligatorios." },
         { agent: "Decision Credits Agent", detail: "Mateo aporto propuesta DD-COM-2026-017; se versiono matriz de tarifas y modalidades." },
         { agent: "PM Tracking Agent", detail: "Las tres preguntas abiertas pasaron a insumos cerrados con una suposicion operativa registrada." },
+        { agent: "Frontend Agent", detail: "Autorregistro ahora muestra contratos descargables y carga visual de documentos firmados." },
+        { agent: "Frontend Agent", detail: "Admin unifico Solicitudes, Aprobacion y Clientes en el modulo Onboarding clientes." },
+        { agent: "Backend Architect", detail: "Contrato Megadatos y NDA se registraron como fuentes para dd-onboarding-v1 sin publicar firmados." },
         { agent: "PM Tracking Agent", detail: "Se agrego seccion 'Que es Data Exchange?' en portal cliente como ayuda temporal." },
         { agent: "PM Tracking Agent", detail: "Ajuste solicitado: el progreso no sube a 100% automaticamente; refleja solo avances reales." },
         { agent: "Security Agent", detail: "Se mantiene el Workbench dentro de /admin/agent-workbench, separado del portal cliente." },
@@ -1005,7 +1008,9 @@
         { status: "Confirmada", title: "Texto legal consentimiento", body: "Fuente Red Clic auditada adaptada a Decision Data como dd-consent-v1 no invasivo." },
         { status: "Confirmada", title: "Diccionario de carga", body: "Pestana Diccionario Reporte convertida a contrato de 57 campos." },
         { status: "Confirmada", title: "Pricing base", body: "Propuesta comercial DD-COM-2026-017 usada como base de tarifas y modalidades." },
-        { status: "Abierta", title: "Supuesto bruto/basico", body: "La propuesta dice consultas brutas; el contrato las mapea a consultas basicas salvo correccion de Mateo." }
+        { status: "Abierta", title: "Supuesto bruto/basico", body: "La propuesta dice consultas brutas; el contrato las mapea a consultas basicas salvo correccion de Mateo." },
+        { status: "Confirmada", title: "Onboarding documental", body: "Autorregistro descarga contratos genericos, cliente carga firmados y admin revisa checklist en modulo unico." },
+        { status: "Confirmada", title: "Manual Empresa", body: "Se usa como guia UX para producto contratado, consulta, confirmacion, descarga e historial. Persona queda para otro diseno." }
       ];
 
       const officeStories = [

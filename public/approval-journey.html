@@ -178,8 +178,8 @@
         <aside class="panel">
           <div class="panel-head"><h2>Recorrido</h2><span class="status warn" id="journey-counter">1 / 9</span></div>
           <div class="panel-body journey-steps" id="journey-steps">
-            <button class="journey-step-button active" type="button" data-stage="0"><small>01 Cliente</small><b>Autorregistro</b><span>Solicitud pendiente de admin.</span></button>
-            <button class="journey-step-button" type="button" data-stage="1"><small>02 Admin</small><b>Aprobacion</b><span>Documentos, usuario y modalidad.</span></button>
+            <button class="journey-step-button active" type="button" data-stage="0"><small>01 Cliente</small><b>Autorregistro + contratos</b><span>Descarga, firma y carga documental.</span></button>
+            <button class="journey-step-button" type="button" data-stage="1"><small>02 Admin</small><b>Onboarding clientes</b><span>Expediente, checklist y modalidad.</span></button>
             <button class="journey-step-button" type="button" data-stage="2"><small>03 Cliente</small><b>Primer login</b><span>Clave temporal y cambio obligatorio.</span></button>
             <button class="journey-step-button" type="button" data-stage="3"><small>04 Cliente</small><b>Bloque de informacion</b><span>Calidad 95% y duplicados.</span></button>
             <button class="journey-step-button" type="button" data-stage="4"><small>05 Cliente</small><b>Consulta unificada</b><span>Cedula, RUC o codigo SB.</span></button>
@@ -205,15 +205,24 @@
                     <tr><td>Modalidad tentativa</td><td>Data Partner Founding</td></tr>
                   </table>
                 </div>
-                <div class="notice">El cliente nunca ve el portal interno antes de tener usuario aprobado. Si no tiene clave, entra por autorregistro y queda pendiente de revision admin.</div>
+                <div class="notice">El cliente nunca ve el portal interno antes de tener usuario aprobado. En autorregistro descarga NDA, contrato marco generico y anexo tecnico, los firma y carga con documentos habilitantes.</div>
+              </div>
+              <div class="document-grid" style="margin-top: 12px;">
+                <article class="document-card"><h3>NDA</h3><p>Descargable, firmado y cargado por cliente.</p><span class="status ok">template</span></article>
+                <article class="document-card"><h3>Contrato marco</h3><p>Generico por modalidad; aplica por anexo o caratula.</p><span class="status ok">template</span></article>
+                <article class="document-card"><h3>Anexo tecnico</h3><p>Define modalidad, carga, contactos y calidad 95%.</p><span class="status ok">template</span></article>
               </div>
             </article>
 
             <article class="journey-stage" data-stage-panel="1">
-              <div class="steps">
-                <div class="step"><span class="num">1</span><div>Admin revisa documentos, representante autorizado y sector permitido.</div><span class="status warn">visual</span></div>
-                <div class="step"><span class="num">2</span><div>Admin confirma modalidad sin cambiar pricing ni excepciones sin Mateo.</div><span class="status warn">decision</span></div>
-                <div class="step"><span class="num">3</span><div>Sistema prepara usuario, clave temporal y correo de bienvenida.</div><span class="status warn">Fase 2</span></div>
+              <div class="grid cols-2">
+                <div class="steps">
+                  <div class="step"><span class="num">1</span><div>Admin abre expediente MEGADATOS en Onboarding clientes.</div><span class="status warn">visual</span></div>
+                  <div class="step"><span class="num">2</span><div>Marca checklist de NDA, contrato, anexo, RUC, nombramiento, cedula, fuente de datos y contactos.</div><span class="status warn">admin</span></div>
+                  <div class="step"><span class="num">3</span><div>Confirma modalidad sin cambiar pricing ni excepciones sin Mateo.</div><span class="status warn">decision</span></div>
+                  <div class="step"><span class="num">4</span><div>Sistema prepara usuario, clave temporal y correo de bienvenida.</div><span class="status warn">Fase 2</span></div>
+                </div>
+                <div class="notice">El manual Empresa se usa como guia UX: login, producto contratado, consulta por identificacion, confirmacion, descarga e historial. El flujo Persona se disenara aparte.</div>
               </div>
             </article>
 
@@ -325,8 +334,8 @@
 
     <script>
       const titles = [
-        ["Autorregistro cliente", "Demo Fase 1"],
-        ["Aprobacion administrativa", "Demo Fase 1"],
+        ["Autorregistro y contratos", "Demo Fase 1"],
+        ["Onboarding administrativo", "Demo Fase 1"],
         ["Primer ingreso y clave", "Reservado Fase 2"],
         ["Ingesta de bloque", "Reservado Fase 3"],
         ["Consulta unificada", "Reservado Fase 4"],

@@ -58,6 +58,27 @@
               <div class="field"><label>Correo corporativo</label><input value="miza@decisiondata.ec" /></div>
               <div class="field"><label>Sector</label><select><option>Telco / ISP</option><option>Retail</option><option>Concesionario</option><option>Fintech</option><option>Cobranza / BPO</option><option>Industria / mayorista</option></select></div>
               <div class="field"><label>Modalidad tentativa</label><select><option>Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></select></div>
+              <div class="notice">Antes de aprobacion admin, el cliente descarga los documentos genericos, los firma y carga nuevamente los firmados junto con documentacion habilitante.</div>
+              <div class="document-grid">
+                <article class="document-card">
+                  <div><h3>NDA Decision Data</h3><p>Acuerdo de confidencialidad generico para iniciar revision.</p></div>
+                  <a class="btn" href="/contracts/decision-data-nda-template.txt" download>Descargar</a>
+                </article>
+                <article class="document-card">
+                  <div><h3>Contrato marco</h3><p>Contrato generico; la modalidad se configura por anexo o caratula.</p></div>
+                  <a class="btn" href="/contracts/decision-data-master-agreement-template.txt" download>Descargar</a>
+                </article>
+                <article class="document-card">
+                  <div><h3>Anexo tecnico</h3><p>Modalidad, contactos, carga, calidad 95% y canal operativo.</p></div>
+                  <a class="btn" href="/contracts/decision-data-technical-annex-template.txt" download>Descargar</a>
+                </article>
+              </div>
+              <div class="grid cols-2">
+                <div class="field"><label>NDA firmado</label><input type="file" /></div>
+                <div class="field"><label>Contrato marco firmado</label><input type="file" /></div>
+                <div class="field"><label>Anexo tecnico firmado</label><input type="file" /></div>
+                <div class="field"><label>RUC / nombramiento / cedula representante</label><input type="file" /></div>
+              </div>
               <div class="auth-actions">
                 <button class="btn primary" type="button" data-register-submit>Enviar solicitud visual</button>
                 <button class="auth-link" type="button" data-auth-switch="login">Ya tengo usuario</button>
@@ -72,8 +93,8 @@
               <p class="sub">Cuando administracion apruebe documentos, usuario y modalidad, el cliente recibe correo con claves temporales y debe cambiarlas en el primer ingreso.</p>
             </div>
             <div class="steps">
-              <div class="step"><span class="num">1</span><div>Cliente envia datos, modalidad tentativa y documentos.</div><span class="status ok">visual</span></div>
-              <div class="step"><span class="num">2</span><div>Admin revisa documentos bloqueantes y confirma modalidad.</div><span class="status warn">pendiente</span></div>
+              <div class="step"><span class="num">1</span><div>Cliente envia datos, modalidad tentativa, contratos firmados y documentos habilitantes.</div><span class="status ok">visual</span></div>
+              <div class="step"><span class="num">2</span><div>Admin revisa expediente documental en Onboarding clientes y confirma modalidad.</div><span class="status warn">pendiente</span></div>
               <div class="step"><span class="num">3</span><div>Sistema envia correo con usuario y clave temporal.</div><span class="status warn">Fase 2</span></div>
               <div class="step"><span class="num">4</span><div>Cliente cambia clave y accede a su portal.</div><span class="status warn">Fase 2</span></div>
             </div>

@@ -48,3 +48,7 @@ npm run test
 - `GET /admin`: portal admin visual de Fase 1 con login primero y navegacion administrativa posterior al acceso.
 - `GET /admin/agent-workbench`: vista viva local del Agent Workbench para visualizar avance simulado. No ejecuta agentes reales ni automatiza decisiones.
 - `GET /journey`: journey completo de aprobacion preproduccion para recorrer cliente, admin, ingesta, consulta, BAC, facturacion, API y checklist de Mateo.
+
+## Autorregistro documental
+
+El portal cliente incluye descarga visual de NDA, contrato marco generico y anexo tecnico/modalidad. El cliente firma esos documentos fuera de la plataforma y los carga junto con habilitantes para que administracion revise el expediente en `Onboarding clientes`.

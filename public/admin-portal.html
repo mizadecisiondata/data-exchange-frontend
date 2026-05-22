@@ -53,10 +53,8 @@
         </div>
         <nav class="nav" data-nav>
           <a href="#dashboard" class="active">Dashboard</a>
-          <a href="#solicitudes">Solicitudes</a>
+          <a href="#onboarding">Onboarding clientes</a>
           <a href="#usuarios">Usuarios y roles</a>
-          <a href="#aprobacion">Aprobacion de accesos</a>
-          <a href="#clientes">Clientes</a>
           <a href="#ingesta">Calidad de ingesta</a>
           <a href="#bac">BAC</a>
           <a href="#facturacion">Facturacion</a>
@@ -89,13 +87,13 @@
           <div class="grid cols-3">
             <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Clientes productivos reales</span></div></article>
             <article class="panel metric"><div class="panel-body"><strong>F1</strong><span>Fase visual en progreso</span></div></article>
-            <article class="panel metric"><div class="panel-body"><strong>2</strong><span>Preguntas abiertas</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>1</strong><span>Supuesto abierto</span></div></article>
           </div>
           <article class="panel" style="margin-top: 14px;">
             <div class="panel-head"><h2>Estado de construccion</h2><span class="status warn">En progreso</span></div>
             <div class="panel-body steps">
               <div class="step"><span class="num">0</span><div>Setup repos, README, env y healthchecks</div><span class="status ok">cerrada</span></div>
-              <div class="step"><span class="num">1</span><div>Login primero + navegacion cliente/admin</div><span class="status warn">actual</span></div>
+              <div class="step"><span class="num">1</span><div>Login primero + autorregistro documental + onboarding admin</div><span class="status warn">actual</span></div>
               <div class="step"><span class="num">2</span><div>Auth real, roles, correo y cambio de clave temporal</div><span class="status warn">pendiente</span></div>
             </div>
           </article>
@@ -116,43 +114,37 @@
           </article>
         </section>
 
-        <section id="solicitudes" class="view">
-          <article class="panel">
-            <div class="panel-head"><h2>Solicitudes de clientes</h2><span class="status warn">Visual</span></div>
-            <div class="panel-body">
-              <table class="table">
-                <tr><th>Empresa</th><th>Modalidad tentativa</th><th>Estado</th><th>SLA</th></tr>
-                <tr><td>MEGADATOS S.A. demo</td><td>Founding</td><td>Documentos por revisar</td><td>5 dias habiles</td></tr>
-                <tr><td>Retail Demo</td><td>Active</td><td>Solicitud nueva</td><td>5 dias habiles</td></tr>
-              </table>
-            </div>
-          </article>
-        </section>
-
-        <section id="aprobacion" class="view">
-          <article class="panel">
-            <div class="panel-head"><h2>Aprobacion de accesos</h2><span class="status warn">Workflow visual</span></div>
-            <div class="panel-body steps">
-              <div class="step"><span class="num">1</span><div>Revisar datos legales, documentos y representante autorizado.</div><span class="status warn">admin</span></div>
-              <div class="step"><span class="num">2</span><div>Confirmar modalidad: Cliente Normal, Contributor, Active o Founding.</div><span class="status warn">admin</span></div>
-              <div class="step"><span class="num">3</span><div>Aprobar usuario y generar clave temporal.</div><span class="status warn">Fase 2</span></div>
-              <div class="step"><span class="num">4</span><div>Enviar correo al cliente con usuario, clave temporal y obligacion de cambio.</div><span class="status warn">Fase 2</span></div>
-            </div>
-          </article>
-        </section>
-
-        <section id="clientes" class="view">
-          <article class="panel">
-            <div class="panel-head"><h2>Gestion de clientes</h2><span class="status warn">Fase 8 real</span></div>
-            <div class="panel-body grid cols-2">
-              <div class="notice">Cambios de modalidad, tarifas o excepciones comerciales requieren aprobacion de Mateo.</div>
-              <form class="form">
-                <div class="field"><label>Cliente</label><input value="MEGADATOS S.A. demo" /></div>
-                <div class="field"><label>Modalidad</label><select><option>Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></select></div>
-                <button class="btn primary" type="button">Guardar revision</button>
-              </form>
-            </div>
-          </article>
+        <section id="onboarding" class="view">
+          <div class="grid cols-2">
+            <article class="panel">
+              <div class="panel-head"><h2>Onboarding clientes</h2><span class="status warn">Modulo unico</span></div>
+              <div class="panel-body">
+                <table class="table">
+                  <tr><th>Empresa</th><th>Modalidad</th><th>Estado</th><th>Accion</th></tr>
+                  <tr><td>MEGADATOS S.A.</td><td>Data Partner Founding</td><td>Expediente en revision</td><td><a class="btn" href="#onboarding">Ver expediente</a></td></tr>
+                  <tr><td>Retail Demo</td><td>Data Partner Active</td><td>Documentos pendientes</td><td><a class="btn" href="#onboarding">Ver expediente</a></td></tr>
+                </table>
+                <div class="notice">Este modulo reemplaza visualmente Solicitudes, Aprobacion de accesos y Clientes. Aqui se revisa el expediente, se confirma modalidad y se aprueba el usuario.</div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Expediente MEGADATOS</h2><span class="status warn">Demo visual</span></div>
+              <div class="panel-body checklist">
+                <label class="check-row"><input type="checkbox" checked /><span>NDA firmado cargado</span><span class="status ok">ok</span></label>
+                <label class="check-row"><input type="checkbox" checked /><span>Contrato marco firmado cargado</span><span class="status ok">ok</span></label>
+                <label class="check-row"><input type="checkbox" checked /><span>Anexo tecnico / modalidad Founding</span><span class="status ok">ok</span></label>
+                <label class="check-row"><input type="checkbox" /><span>RUC actualizado</span><span class="status warn">pendiente</span></label>
+                <label class="check-row"><input type="checkbox" /><span>Nombramiento representante legal</span><span class="status warn">pendiente</span></label>
+                <label class="check-row"><input type="checkbox" /><span>Cedula representante legal</span><span class="status warn">pendiente</span></label>
+                <label class="check-row"><input type="checkbox" /><span>Declaracion de fuente y legitimacion de datos</span><span class="status warn">pendiente</span></label>
+                <label class="check-row"><input type="checkbox" /><span>Contacto tecnico, operativo y facturacion</span><span class="status warn">pendiente</span></label>
+                <div class="grid cols-2">
+                  <button class="btn" type="button">Observar expediente</button>
+                  <button class="btn primary" type="button">Aprobar usuario visual</button>
+                </div>
+              </div>
+            </article>
+          </div>
         </section>
 
         <section id="ingesta" class="view">

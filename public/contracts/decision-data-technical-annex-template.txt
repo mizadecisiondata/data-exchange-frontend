@@ -1,0 +1,14 @@
+DECISION DATA - ANEXO TECNICO Y MODALIDAD
+
+Plantilla generica para parametrizar modalidad, formato de carga y condiciones operativas.
+
+Debe incluir:
+- Modalidad: Cliente Normal, Contributor, Active o Founding.
+- Contacto tecnico.
+- Contacto operativo.
+- Contacto de facturacion postpago.
+- Frecuencia de carga.
+- Canal de integracion futuro: portal, SFTP o API.
+- Diccionario de carga aplicable.
+- Umbral minimo de calidad: 95%.
+- Politica de duplicados: se descartan sin error y sin Decision Credits.

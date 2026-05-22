@@ -1,0 +1,14 @@
+DECISION DATA - CONTRATO MARCO GENERICO
+
+Plantilla generica de contrato marco para Data Exchange.
+
+El contrato debe ser generico por modalidad. La modalidad comercial se parametriza en caratula,
+anexo o configuracion admin: Cliente Normal, Data Partner Contributor, Data Partner Active
+o Data Partner Founding.
+
+Flujo esperado:
+1. Cliente descarga contrato desde autorregistro.
+2. Cliente revisa y firma.
+3. Cliente carga contrato firmado.
+4. Administracion revisa checklist documental.
+5. Administracion aprueba usuario, modalidad y envio de clave temporal.

@@ -458,6 +458,54 @@ h1 {
   line-height: 1.4;
 }
 
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.document-card {
+  min-height: 138px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 12px;
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+}
+
+.document-card h3 {
+  font-size: 0.96rem;
+}
+
+.document-card p {
+  color: var(--muted);
+  line-height: 1.35;
+  font-size: 0.86rem;
+}
+
+.checklist {
+  display: grid;
+  gap: 8px;
+}
+
+.check-row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 9px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 9px;
+}
+
+.check-row input {
+  width: 16px;
+  height: 16px;
+}
+
 .state-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -646,6 +694,7 @@ h1 {
 
   .grid.cols-2,
   .grid.cols-3,
+  .document-grid,
   .state-grid {
     grid-template-columns: 1fr;
   }

@@ -1,0 +1,14 @@
+DECISION DATA - ACUERDO DE CONFIDENCIALIDAD
+
+Plantilla generica de descarga para autorregistro.
+
+Este documento debe ser reemplazado por el formato legal vigente antes de uso productivo.
+El cliente lo descarga, revisa, firma y carga nuevamente en el portal para revision admin.
+
+Campos esperados:
+- Razon social del cliente.
+- RUC.
+- Representante legal.
+- Fecha de firma.
+- Firma del cliente.
+- Firma de Decision Data.
