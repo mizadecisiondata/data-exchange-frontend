@@ -6,8 +6,43 @@
     <title>Data Exchange - Portal Admin</title>
     <link rel="stylesheet" href="/portal-base.css" />
   </head>
-  <body>
-    <div class="app-shell">
+  <body data-default-view="dashboard">
+    <section class="auth-gate" data-auth-gate>
+      <div class="auth-layout">
+        <aside class="auth-side">
+          <div>
+            <img class="auth-logo" src="/decision-data-logo.png" alt="Decision Data" />
+            <div class="eyebrow">Portal administrador</div>
+            <h1 class="auth-title">Centro de control Decision Data</h1>
+            <p class="auth-copy">El admin ingresa primero con usuario y contrasena. Solo despues se despliegan solicitudes, aprobaciones, modalidades, BAC, facturacion y Agent Workbench.</p>
+            <div class="trust-list">
+              <div class="trust-item">Aprobacion documental antes de habilitar consumo.</div>
+              <div class="trust-item">Cambios de modalidad y pricing no se automatizan sin decision autorizada.</div>
+              <div class="trust-item">Agent Workbench existe solo en el portal admin.</div>
+            </div>
+          </div>
+          <a class="btn" href="/client">Ir al portal cliente</a>
+        </aside>
+
+        <main class="auth-card">
+          <section class="auth-panel">
+            <div>
+              <div class="eyebrow">Acceso admin</div>
+              <h2>Ingresa como Decision Data</h2>
+              <p class="sub">Demo visual: al ingresar se despliega la navegacion administrativa.</p>
+            </div>
+            <form class="form">
+              <div class="field"><label>Usuario admin</label><input autocomplete="username" value="admin@decisiondata.ec" /></div>
+              <div class="field"><label>Contrasena</label><input autocomplete="current-password" type="password" value="admin-demo" /></div>
+              <button class="btn primary" type="button" data-login-action>Ingresar demo admin</button>
+            </form>
+            <div class="notice">En Fase 2 este login debe usar auth real, RBAC y sesiones seguras. Por ahora es una capa visual.</div>
+          </section>
+        </main>
+      </div>
+    </section>
+
+    <div class="app-shell is-hidden" data-app-shell>
       <aside class="sidebar">
         <div class="brand">
           <img src="/decision-data-logo.png" alt="Decision Data" />
@@ -19,6 +54,7 @@
         <nav class="nav" data-nav>
           <a href="#dashboard" class="active">Dashboard</a>
           <a href="#solicitudes">Solicitudes</a>
+          <a href="#aprobacion">Aprobacion de accesos</a>
           <a href="#clientes">Clientes</a>
           <a href="#ingesta">Calidad de ingesta</a>
           <a href="#bac">BAC</a>
@@ -35,7 +71,7 @@
           <div>
             <div class="eyebrow">Decision Data</div>
             <h1>Centro de control admin</h1>
-            <p class="sub">Revision documental, modalidades, calidad, BAC y seguimiento de avance.</p>
+            <p class="sub">Revision documental, aprobacion de usuarios, modalidades, calidad, BAC y seguimiento de avance.</p>
           </div>
           <div class="toolbar">
             <a class="btn" href="/client">Portal cliente</a>
@@ -53,8 +89,8 @@
             <div class="panel-head"><h2>Estado de construccion</h2><span class="status warn">En progreso</span></div>
             <div class="panel-body steps">
               <div class="step"><span class="num">0</span><div>Setup repos, README, env y healthchecks</div><span class="status ok">cerrada</span></div>
-              <div class="step"><span class="num">1</span><div>Frontend base + navegacion cliente/admin</div><span class="status warn">actual</span></div>
-              <div class="step"><span class="num">2</span><div>Auth, roles y onboarding real</div><span class="status warn">pendiente</span></div>
+              <div class="step"><span class="num">1</span><div>Login primero + navegacion cliente/admin</div><span class="status warn">actual</span></div>
+              <div class="step"><span class="num">2</span><div>Auth real, roles, correo y cambio de clave temporal</div><span class="status warn">pendiente</span></div>
             </div>
           </article>
         </section>
@@ -68,6 +104,18 @@
                 <tr><td>MEGADATOS S.A. demo</td><td>Founding</td><td>Documentos por revisar</td><td>5 dias habiles</td></tr>
                 <tr><td>Retail Demo</td><td>Active</td><td>Solicitud nueva</td><td>5 dias habiles</td></tr>
               </table>
+            </div>
+          </article>
+        </section>
+
+        <section id="aprobacion" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Aprobacion de accesos</h2><span class="status warn">Workflow visual</span></div>
+            <div class="panel-body steps">
+              <div class="step"><span class="num">1</span><div>Revisar datos legales, documentos y representante autorizado.</div><span class="status warn">admin</span></div>
+              <div class="step"><span class="num">2</span><div>Confirmar modalidad: Cliente Normal, Contributor, Active o Founding.</div><span class="status warn">admin</span></div>
+              <div class="step"><span class="num">3</span><div>Aprobar usuario y generar clave temporal.</div><span class="status warn">Fase 2</span></div>
+              <div class="step"><span class="num">4</span><div>Enviar correo al cliente con usuario, clave temporal y obligacion de cambio.</div><span class="status warn">Fase 2</span></div>
             </div>
           </article>
         </section>

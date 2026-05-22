@@ -6,8 +6,87 @@
     <title>Data Exchange - Portal Cliente</title>
     <link rel="stylesheet" href="/portal-base.css" />
   </head>
-  <body>
-    <div class="app-shell">
+  <body data-default-view="dashboard">
+    <section class="auth-gate" data-auth-gate>
+      <div class="auth-layout">
+        <aside class="auth-side">
+          <div>
+            <img class="auth-logo" src="/decision-data-logo.png" alt="Decision Data" />
+            <div class="eyebrow">Portal cliente</div>
+            <h1 class="auth-title">Data Exchange para clientes y Data Partners</h1>
+            <p class="auth-copy">Primero ingresas con usuario y contrasena. Si aun no tienes acceso, solicitas autorregistro, administracion revisa documentos y modalidad, y luego recibes claves temporales por correo.</p>
+            <div class="trust-list">
+              <div class="trust-item">Facturacion mensual postpago. Decision Credits no son prepago.</div>
+              <div class="trust-item">Carga de bloques de informacion con calidad minima 95%.</div>
+              <div class="trust-item">Consultas con consentimiento y trazabilidad BAC.</div>
+            </div>
+          </div>
+          <button class="btn help-button" type="button" data-toggle-explain>¿Que es Data Exchange?</button>
+          <div class="explain-box is-hidden" data-explain-box>
+            <div class="notice">Es una plataforma de intercambio de informacion comercial-crediticia para empresas no bancarias que reportan bloques de informacion y consultan reportes basicos o completos.</div>
+            <div class="notice">No reemplaza aprobaciones regulatorias ni decisiones comerciales de Mateo; aqui solo mostramos la experiencia visual de Fase 1.</div>
+          </div>
+        </aside>
+
+        <main class="auth-card">
+          <section class="auth-panel" data-auth-panel="login">
+            <div>
+              <div class="eyebrow">Acceso seguro</div>
+              <h2>Ingresa a tu cuenta</h2>
+              <p class="sub">Demo visual: al ingresar se despliega la navegacion del portal cliente.</p>
+            </div>
+            <form class="form">
+              <div class="field"><label>Correo corporativo</label><input autocomplete="username" value="operaciones@megadatos.demo" /></div>
+              <div class="field"><label>Contrasena</label><input autocomplete="current-password" type="password" value="demo1234" /></div>
+              <div class="auth-actions">
+                <button class="btn primary" type="button" data-login-action>Ingresar demo</button>
+                <button class="auth-link" type="button" data-auth-switch="register">No tengo usuario, quiero registrarme</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="auth-panel is-hidden" data-auth-panel="register">
+            <div>
+              <div class="eyebrow">Autorregistro</div>
+              <h2>Solicita acceso como cliente</h2>
+              <p class="sub">El acceso queda pendiente hasta que administracion apruebe documentos, usuario y modalidad.</p>
+            </div>
+            <form class="form">
+              <div class="field"><label>RUC</label><input value="0999999999001" /></div>
+              <div class="field"><label>Razon social</label><input value="MEGADATOS S.A. demo" /></div>
+              <div class="field"><label>Contacto autorizado</label><input value="Mateo Iza" /></div>
+              <div class="field"><label>Correo corporativo</label><input value="miza@decisiondata.ec" /></div>
+              <div class="field"><label>Sector</label><select><option>Telco / ISP</option><option>Retail</option><option>Concesionario</option><option>Fintech</option><option>Cobranza / BPO</option><option>Industria / mayorista</option></select></div>
+              <div class="field"><label>Modalidad tentativa</label><select><option>Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></select></div>
+              <div class="auth-actions">
+                <button class="btn primary" type="button" data-register-submit>Enviar solicitud visual</button>
+                <button class="auth-link" type="button" data-auth-switch="login">Ya tengo usuario</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="auth-panel is-hidden" data-auth-panel="pending">
+            <div>
+              <div class="eyebrow">Solicitud recibida</div>
+              <h2>Queda pendiente de aprobacion admin</h2>
+              <p class="sub">Cuando administracion apruebe documentos, usuario y modalidad, el cliente recibe correo con claves temporales y debe cambiarlas en el primer ingreso.</p>
+            </div>
+            <div class="steps">
+              <div class="step"><span class="num">1</span><div>Cliente envia datos, modalidad tentativa y documentos.</div><span class="status ok">visual</span></div>
+              <div class="step"><span class="num">2</span><div>Admin revisa documentos bloqueantes y confirma modalidad.</div><span class="status warn">pendiente</span></div>
+              <div class="step"><span class="num">3</span><div>Sistema envia correo con usuario y clave temporal.</div><span class="status warn">Fase 2</span></div>
+              <div class="step"><span class="num">4</span><div>Cliente cambia clave y accede a su portal.</div><span class="status warn">Fase 2</span></div>
+            </div>
+            <div class="auth-actions">
+              <button class="btn" type="button" data-auth-switch="login">Volver al login</button>
+              <button class="btn primary" type="button" data-login-action>Simular usuario aprobado</button>
+            </div>
+          </section>
+        </main>
+      </div>
+    </section>
+
+    <div class="app-shell is-hidden" data-app-shell>
       <aside class="sidebar">
         <div class="brand">
           <img src="/decision-data-logo.png" alt="Decision Data" />
@@ -17,16 +96,15 @@
           </div>
         </div>
         <nav class="nav" data-nav>
-          <a href="#login" class="active">Login</a>
-          <a href="#registro">Autorregistro</a>
-          <a href="#dashboard">Dashboard</a>
+          <a href="#dashboard" class="active">Dashboard</a>
           <a href="#ingesta">Bloques de informacion</a>
           <a href="#consultas">Consultas</a>
           <a href="#api">API</a>
           <a href="#facturacion">Facturacion</a>
+          <a href="#perfil">Perfil y clave</a>
         </nav>
         <div class="sidebar-footer">
-          Fase 1 visual. No consume datos reales ni ejecuta consultas.
+          Sesion visual aprobada. Backend real pendiente para Fase 2.
         </div>
       </aside>
 
@@ -35,63 +113,18 @@
           <div>
             <div class="eyebrow">Decision Data</div>
             <h1>Portal cliente / Data Partner</h1>
-            <p class="sub">Experiencia separada para registro, carga, consultas y consumo mensual postpago.</p>
+            <p class="sub">Navegacion visible solo despues del login. No consume datos reales ni ejecuta consultas.</p>
           </div>
           <div class="toolbar">
+            <button class="btn help-button" type="button" data-toggle-explain>¿Que es Data Exchange?</button>
             <a class="btn" href="/admin">Portal admin</a>
-            <a class="btn primary" href="/admin/agent-workbench">Agent Workbench</a>
           </div>
         </header>
+        <div class="explain-box is-hidden" data-explain-box>
+          <div class="notice">Por ahora este bloque diferencia el portal cliente: explica el producto, modalidades, Decision Credits y que la facturacion es mensual postpago.</div>
+        </div>
 
-        <section id="login" class="view active">
-          <div class="grid cols-2">
-            <article class="panel">
-              <div class="panel-head"><h2>Acceso cliente</h2><span class="status warn">Visual</span></div>
-              <div class="panel-body">
-                <form class="form">
-                  <div class="field"><label>Correo corporativo</label><input value="operaciones@megadatos.demo" /></div>
-                  <div class="field"><label>Contrasena</label><input type="password" value="demo1234" /></div>
-                  <button class="btn primary" type="button">Ingresar</button>
-                </form>
-              </div>
-            </article>
-            <article class="panel">
-              <div class="panel-head"><h2>Modalidades visibles</h2><span class="status ok">Separadas</span></div>
-              <div class="panel-body grid">
-                <div class="notice">Cliente Normal no reporta informacion ni genera Decision Credits.</div>
-                <div class="notice">Contributor: 1 sujeto valido completo = 2 consultas basicas.</div>
-                <div class="notice">Active y Founding: 1 sujeto valido completo = 1 Decision Credit preferencial.</div>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section id="registro" class="view">
-          <div class="grid cols-2">
-            <article class="panel">
-              <div class="panel-head"><h2>Autorregistro</h2><span class="status warn">Pendiente backend</span></div>
-              <div class="panel-body">
-                <form class="form">
-                  <div class="field"><label>RUC</label><input value="0999999999001" /></div>
-                  <div class="field"><label>Razon social</label><input value="MEGADATOS S.A. demo" /></div>
-                  <div class="field"><label>Sector</label><select><option>Telco / ISP</option><option>Retail</option><option>Fintech</option></select></div>
-                  <div class="field"><label>Modalidad tentativa</label><select><option>Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></select></div>
-                  <button class="btn primary" type="button">Enviar solicitud</button>
-                </form>
-              </div>
-            </article>
-            <article class="panel">
-              <div class="panel-head"><h2>Documentos requeridos</h2><span class="status warn">Visual</span></div>
-              <div class="panel-body steps">
-                <div class="step"><span class="num">1</span><div>RUC y datos legales</div><span class="status ok">listo</span></div>
-                <div class="step"><span class="num">2</span><div>Nombramiento representante legal</div><span class="status warn">pendiente</span></div>
-                <div class="step"><span class="num">3</span><div>Convenio y consentimiento operativo</div><span class="status warn">pendiente</span></div>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section id="dashboard" class="view">
+        <section id="dashboard" class="view active">
           <div class="grid cols-3">
             <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Consultas reales ejecutadas</span></div></article>
             <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Bloques reales cargados</span></div></article>
@@ -100,10 +133,10 @@
           <article class="panel" style="margin-top: 14px;">
             <div class="panel-head"><h2>Journey cliente</h2><span class="status warn">Visual Fase 1</span></div>
             <div class="panel-body steps">
-              <div class="step"><span class="num">1</span><div>Registro y seleccion tentativa de modalidad</div><span class="status ok">visual</span></div>
-              <div class="step"><span class="num">2</span><div>Aprobacion admin y documentos bloqueantes</div><span class="status warn">Fase 2</span></div>
-              <div class="step"><span class="num">3</span><div>Ingesta con calidad minima 95%</div><span class="status warn">Fase 3</span></div>
-              <div class="step"><span class="num">4</span><div>Consultas individual, bloque y API</div><span class="status warn">Fase 5+</span></div>
+              <div class="step"><span class="num">1</span><div>Login con usuario aprobado o autorregistro si no tiene cuenta.</div><span class="status ok">visual</span></div>
+              <div class="step"><span class="num">2</span><div>Aprobacion admin y correo con clave temporal.</div><span class="status warn">Fase 2</span></div>
+              <div class="step"><span class="num">3</span><div>Cambio de clave en primer ingreso.</div><span class="status warn">Fase 2</span></div>
+              <div class="step"><span class="num">4</span><div>Uso del portal segun modalidad aprobada.</div><span class="status warn">Fase 3+</span></div>
             </div>
           </article>
         </section>
@@ -154,6 +187,20 @@
             <div class="panel-head"><h2>Facturacion estimada</h2><span class="status ok">Postpago mensual</span></div>
             <div class="panel-body">
               <div class="notice">Decision Credits no son prepago. El exceso sobre credits se factura a tarifa Cliente Normal.</div>
+            </div>
+          </article>
+        </section>
+
+        <section id="perfil" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Perfil y cambio de clave</h2><span class="status warn">Visual Fase 2</span></div>
+            <div class="panel-body grid cols-2">
+              <div class="notice">Cuando el usuario reciba claves temporales por correo, el primer ingreso debe obligar cambio de contrasena.</div>
+              <form class="form">
+                <div class="field"><label>Clave temporal</label><input type="password" value="Temporal2026" /></div>
+                <div class="field"><label>Nueva clave</label><input type="password" value="MiClaveSegura2026" /></div>
+                <button class="btn primary" type="button">Cambiar clave</button>
+              </form>
             </div>
           </article>
         </section>

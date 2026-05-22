@@ -816,7 +816,7 @@
 
       <section class="kpis">
         <article class="panel kpi"><strong id="phase-kpi">F0</strong><span>Estado actual</span></article>
-        <article class="panel kpi"><strong id="progress-kpi">14%</strong><span>Avance real total</span></article>
+        <article class="panel kpi"><strong id="progress-kpi">18%</strong><span>Avance real total</span></article>
         <article class="panel kpi"><strong id="agents-kpi">7</strong><span>Agentes en tablero</span></article>
         <article class="panel kpi"><strong id="events-kpi">0</strong><span>Eventos registrados</span></article>
       </section>
@@ -952,14 +952,14 @@
 
       const actualProgress = {
         stateLabel: "F1 activa",
-        overallPercent: 14,
+        overallPercent: 18,
         activePhaseIndex: 1,
         completedPhaseIndexes: [0],
         note: "Fase 1 en progreso: frontend base y navegacion cliente/admin."
       };
 
       const agents = [
-        { name: "Frontend Agent", accent: "#62a8ff", progress: 32, status: "Fase 1 activa", task: "Construyendo portal cliente, portal admin y navegacion visual." },
+        { name: "Frontend Agent", accent: "#62a8ff", progress: 42, status: "Fase 1 activa", task: "Login primero, autorregistro cliente y navegacion posterior al acceso." },
         { name: "Backend Architect", accent: "#31d09b", progress: 9, status: "Fase 0 cerrada", task: "Backend bootstrap y healthcheck ya quedaron listos." },
         { name: "Data Ingestion Agent", accent: "#f4c95d", progress: 0, status: "Pendiente", task: "No inicia hasta confirmar diccionario y entrar a Fase 3." },
         { name: "Decision Credits Agent", accent: "#b38cff", progress: 0, status: "Pendiente", task: "Reglas comerciales protegidas; implementacion real queda para Fase 4." },
@@ -976,6 +976,9 @@
         { agent: "PM Tracking Agent", detail: "Fase 1 iniciada con validacion de Mateo: frontend base y navegacion cliente/admin." },
         { agent: "Frontend Agent", detail: "Portal cliente visual creado con login, autorregistro, dashboard, ingesta, consultas, API y facturacion." },
         { agent: "Frontend Agent", detail: "Portal admin visual creado con dashboard, solicitudes, clientes, calidad, BAC y facturacion." },
+        { agent: "Frontend Agent", detail: "Ajuste UX: cliente y admin abren primero en login; la navegacion aparece solo despues de ingresar." },
+        { agent: "Frontend Agent", detail: "Cliente ahora tiene autorregistro visual, flujo de aprobacion admin, claves temporales y cambio de clave." },
+        { agent: "PM Tracking Agent", detail: "Se agrego seccion '¿Que es Data Exchange?' en portal cliente como ayuda temporal." },
         { agent: "PM Tracking Agent", detail: "Ajuste solicitado: el progreso no sube a 100% automaticamente; refleja solo avances reales." },
         { agent: "Security Agent", detail: "Se mantiene el Workbench dentro de /admin/agent-workbench, separado del portal cliente." },
         { agent: "Backend Architect", detail: "Backend sigue en bootstrap de Fase 0; no se implementaron APIs funcionales de negocio." },
@@ -992,14 +995,14 @@
 
       const officeStories = [
         {
-          status: "Frontend ajusta el Workbench para reflejar avance real.",
-          bubble: "No marco 100%. Solo muestro lo que ya se construyo.",
-          desks: ["Vista admin en ajuste.", "Healthcheck listo.", "BAC documentado.", "Reglas protegidas."]
+          status: "Frontend ajusta los portales para login primero.",
+          bubble: "Primero autenticacion visual; despues se abre la navegacion.",
+          desks: ["Login primero.", "Healthcheck listo.", "BAC documentado.", "Reglas protegidas."]
         },
         {
-          status: "PM Tracking valida coherencia antes de avanzar a Fase 1.",
-          bubble: "Si aparece una pregunta, la registro aqui antes de seguir.",
-          desks: ["Fase 1 pendiente.", "API real pendiente.", "Preguntas visibles.", "Pricing sin tocar."]
+          status: "PM Tracking registra el flujo de autorregistro cliente.",
+          bubble: "La aprobacion admin y correo temporal quedan visibles, no funcionales.",
+          desks: ["Autorregistro visual.", "API real pendiente.", "Preguntas visibles.", "Pricing sin tocar."]
         },
         {
           status: "Decision Credits pide feedback antes de tocar pricing real.",
