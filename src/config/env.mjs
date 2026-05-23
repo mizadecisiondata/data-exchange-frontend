@@ -32,7 +32,7 @@ export function buildFrontendHealth(config, now = new Date()) {
   return {
     status: "ok",
     service: "data-exchange-frontend",
-    phase: "1",
+    phase: "2-design-system",
     environment: config.appEnv,
     timestamp: now.toISOString(),
     apiBaseUrl: config.apiBaseUrl,

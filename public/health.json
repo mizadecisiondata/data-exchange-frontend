@@ -1,7 +1,7 @@
 {
   "status": "ok",
   "service": "data-exchange-frontend",
-  "phase": "1",
+  "phase": "2-design-system",
   "portals": {
     "client": "reserved",
     "admin": "reserved",

@@ -1,0 +1,127 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+@import "@uppy/react/css/style.css";
+@import "@uppy/dashboard/css/style.min.css";
+
+:root {
+  color-scheme: dark;
+  --background: #03071c;
+  --foreground: #f7f9ff;
+  --card: #07122c;
+  --card-strong: #0d1b37;
+  --muted: #9fb0cc;
+  --border: rgba(255, 255, 255, 0.12);
+  --primary: #ffc400;
+  --primary-2: #ff6b1a;
+  --success: #31d09b;
+  --danger: #ff746d;
+  --info: #5b9dff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(3, 7, 28, 0.92), #03071c 54%),
+    radial-gradient(circle at 92% 8%, rgba(255, 196, 0, 0.18), transparent 27%),
+    radial-gradient(circle at 12% 14%, rgba(255, 107, 26, 0.13), transparent 24%);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.dd-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 286px minmax(0, 1fr);
+}
+
+.dd-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  border-right: 1px solid var(--border);
+  background: rgba(5, 9, 31, 0.88);
+  backdrop-filter: blur(18px);
+}
+
+.dd-surface {
+  border: 1px solid var(--border);
+  background: rgba(7, 18, 44, 0.82);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.22);
+}
+
+.dd-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+.uppy-Dashboard-inner,
+.uppy-Dashboard-AddFiles,
+.uppy-DashboardContent-bar {
+  background: #07122c !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f7f9ff !important;
+}
+
+.uppy-Dashboard-AddFiles-title,
+.uppy-DashboardContent-title {
+  color: #f7f9ff !important;
+}
+
+.react-flow {
+  background: transparent;
+}
+
+.react-flow__node {
+  border: 1px solid rgba(255, 196, 0, 0.28);
+  background: #07122c;
+  color: #f7f9ff;
+}
+
+@media (max-width: 1050px) {
+  .dd-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .dd-sidebar {
+    position: relative;
+    height: auto;
+  }
+}
