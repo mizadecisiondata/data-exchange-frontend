@@ -30,6 +30,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
+import { ReportHtmlViewer } from "@/components/report-html-viewer";
 import { ReportPreview } from "@/components/report-preview";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Select } from "@/components/ui";
 import { backendGet, backendPost, type DemoState, type QueryAudit, type SubUser } from "@/lib/backend-api";
@@ -463,7 +464,7 @@ function ConsultaIndividual({ product, onProductChange, onRun, loading, latest }
           {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${latest.product}, canal ${latest.channel}, tarifa ${latest.tariff}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
         </CardContent>
       </Card>
-      <ReportPreview />
+      <ReportHtmlViewer latest={latest} />
     </div>
   );
 }

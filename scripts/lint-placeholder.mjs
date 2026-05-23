@@ -17,6 +17,7 @@ const requiredFiles = [
   "src/components/app-shell.tsx",
   "src/components/backend-status.tsx",
   "src/components/query-provider.tsx",
+  "src/components/report-html-viewer.tsx",
   "src/components/ui.tsx",
   "src/features/client/client-portal.tsx",
   "src/features/admin/admin-portal.tsx",
@@ -35,6 +36,7 @@ const requiredFiles = [
   "public/decision-data-logo.png",
   "public/portal-base.css",
   "public/portal-nav.js",
+  "public/reports/reporte-ejemplo.html",
   ".env.example",
   "README.md"
 ];
