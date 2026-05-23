@@ -7,10 +7,10 @@ import { BrandMark } from "@/components/brand";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Progress } from "@/components/ui";
 
 const agents = [
-  { name: "Frontend Agent", icon: Code2, progress: 70, task: "Login, autorregistro, portal cliente y admin visual Next." },
-  { name: "Backend Architect", icon: Database, progress: 48, task: "Endpoints visuales de auth, solicitudes y aprobacion protegida." },
-  { name: "BAC Audit Agent", icon: ShieldCheck, progress: 24, task: "Contrato de trazabilidad BAC y consentimiento listo para Fase 3." },
-  { name: "PM Tracking Agent", icon: FileQuestion, progress: 34, task: "Sin preguntas bloqueantes; pricing reservado para Mateo." }
+  { name: "Frontend Agent", icon: Code2, progress: 78, task: "Cliente cero con carga, bloque, API, factura y auditoria visibles." },
+  { name: "Backend Architect", icon: Database, progress: 66, task: "Store sandbox funcional: aprobacion, ingesta, consultas y uso." },
+  { name: "BAC Audit Agent", icon: ShieldCheck, progress: 42, task: "Cada consulta sandbox registra BAC, consentimiento, canal, IP y tarifa." },
+  { name: "PM Tracking Agent", icon: FileQuestion, progress: 40, task: "Pricing queda como simulacion tecnica hasta aprobacion final." }
 ];
 
 const officePositions = [
@@ -33,7 +33,7 @@ export function DevMonitor() {
       </header>
       <section className="mb-4 grid gap-4 lg:grid-cols-4">
         <MetricCard label="Fase" value="2" tone="info" />
-        <MetricCard label="Avance real" value="66%" tone="warn" />
+        <MetricCard label="Avance real" value="74%" tone="warn" />
         <MetricCard label="Agentes" value="4" tone="ok" />
         <MetricCard label="Preguntas bloqueantes" value="0" tone="ok" />
       </section>
@@ -86,7 +86,8 @@ export function DevMonitor() {
             <Log text="Checkpoint de rollback creado en GitHub antes del rediseno Next." />
             <Log text="Fase 2 activa: primera capa login y autorregistro visual." />
             <Log text="Backend conectado desde frontend mediante /api/backend/health." />
-            <Log text="Admin revisa expediente y bloquea aprobacion si falta documentacion." />
+            <Log text="Sandbox funcional agregado: aprobar, cargar, consultar, bloquear, API y facturar." />
+            <Log text="Admin revisa expediente y emite outbox simulado de credenciales." />
             <Log text="Workbench sigue separado del producto admin." />
           </CardContent>
         </Card>

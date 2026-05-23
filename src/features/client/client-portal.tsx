@@ -3,6 +3,7 @@
 import Uppy from "@uppy/core";
 import Dashboard from "@uppy/react/dashboard";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMachine } from "@xstate/react";
 import { createMachine } from "xstate";
 import {
@@ -11,10 +12,11 @@ import {
   Bell,
   Blocks,
   Braces,
+  Download,
   FileCheck2,
   Home,
-  KeyRound,
   Lock,
+  Play,
   Search,
   ShieldCheck,
   UploadCloud,
@@ -27,6 +29,7 @@ import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
 import { ReportPreview } from "@/components/report-preview";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Select } from "@/components/ui";
+import { backendGet, backendPost, type DemoState, type QueryAudit } from "@/lib/backend-api";
 import {
   apiEndpoints,
   bacEvents,
@@ -88,11 +91,58 @@ const approvedOnly = new Set(["subusuarios", "consulta-individual", "consulta-bl
 export function ClientPortal() {
   const [state, send] = useMachine(clientMachine);
   const [active, setActive] = useState("inicio");
+  const [queryProduct, setQueryProduct] = useState("complete_report");
+  const queryClient = useQueryClient();
+  const demoState = useQuery({
+    queryKey: ["demo-state"],
+    queryFn: () => backendGet<DemoState>("/api/v1/demo/state"),
+    refetchInterval: 4_000
+  });
   const isPending = state.matches("pendingPortal");
-  const isApproved = state.matches("approvedPortal");
+  const isApproved = state.matches("approvedPortal") || demoState.data?.client.productionAccess === true;
   const isPortal = isPending || isApproved;
   const uppy = useMemo(() => new Uppy({ restrictions: { maxNumberOfFiles: 3 } }), []);
-  const nav = navBase.map((item) => ({ ...item, locked: isPending && approvedOnly.has(item.id) }));
+  const nav = navBase.map((item) => ({ ...item, locked: !isApproved && approvedOnly.has(item.id) }));
+  const refreshState = () => queryClient.invalidateQueries({ queryKey: ["demo-state"] });
+  const ingestion = useMutation({
+    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/ingestion/information-blocks"),
+    onSuccess: () => {
+      toast.success("Bloque de informacion procesado en sandbox.");
+      refreshState();
+    }
+  });
+  const individualQuery = useMutation({
+    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/queries", {
+      product: queryProduct,
+      channel: "portal",
+      identifierType: "cedula",
+      identifier: "0923048581"
+    }),
+    onSuccess: () => {
+      toast.success("Consulta registrada con BAC y consentimiento.");
+      refreshState();
+    }
+  });
+  const batchQuery = useMutation({
+    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/batch-queries"),
+    onSuccess: () => {
+      toast.success("Consulta por bloque procesada.");
+      refreshState();
+    }
+  });
+  const apiQuery = useMutation({
+    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/queries", {
+      product: "complete_report",
+      channel: "api",
+      identifierType: "ruc",
+      identifier: "0999999999001",
+      user: "api-key:megadatos-demo"
+    }),
+    onSuccess: () => {
+      toast.success("Consumo API simulado y facturable.");
+      refreshState();
+    }
+  });
   const registrationForm = useForm<RegistrationInput>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -106,7 +156,7 @@ export function ClientPortal() {
   });
 
   function selectSection(id: string) {
-    if (isPending && approvedOnly.has(id)) {
+    if (!isApproved && approvedOnly.has(id)) {
       setActive("estado");
       return;
     }
@@ -137,7 +187,7 @@ export function ClientPortal() {
                   <div>
                     <Badge tone="info">Acceso seguro</Badge>
                     <h2 className="mt-3 text-2xl font-black">Ingresa a tu cuenta</h2>
-                    <p className="mt-2 text-sm text-muted">Puedes probar el journey como cliente pendiente o aprobado.</p>
+                    <p className="mt-2 text-sm text-muted">Cliente cero: MEGADATOS S.A. / Data Partner Founding sandbox.</p>
                   </div>
                   <Field label="Correo corporativo">
                     <Input defaultValue="operaciones@megadatos.demo" />
@@ -146,8 +196,7 @@ export function ClientPortal() {
                     <Input type="password" defaultValue="demo1234" />
                   </Field>
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="primary" onClick={() => send({ type: "APPROVED" })}>Ingresar aprobado</Button>
-                    <Button onClick={() => send({ type: "PENDING" })}>Ver pendiente</Button>
+                    <Button variant="primary" onClick={() => send({ type: demoState.data?.client.productionAccess ? "APPROVED" : "PENDING" })}>Ingresar cliente cero</Button>
                     <Button variant="ghost" onClick={() => send({ type: "REGISTER" })}>No tengo usuario</Button>
                   </div>
                 </div>
@@ -210,10 +259,11 @@ export function ClientPortal() {
       nav={nav}
       active={active}
       onSelect={selectSection}
+      portalLinks={false}
       aside={
         <>
-          <b className="text-foreground">{isPending ? "Cliente pendiente" : "Cliente aprobado"}</b>
-          <p className="mt-1">{isPending ? "Solo estado, documentos y carga no productiva." : "Modulos abiertos segun modalidad demo."}</p>
+          <b className="text-foreground">{isApproved ? "Cliente aprobado" : "Cliente pendiente"}</b>
+          <p className="mt-1">{isApproved ? "Modulos abiertos para cliente cero sandbox." : "Solo estado, documentos y carga no productiva."}</p>
           <Button className="mt-3 w-full" size="sm" onClick={() => send({ type: "LOGOUT" })}>Cerrar sesion</Button>
         </>
       }
@@ -223,17 +273,17 @@ export function ClientPortal() {
           Cuenta pendiente: las funciones productivas quedan bloqueadas hasta aprobar documentos habilitantes. Puedes cargar informacion no productiva.
         </div>
       ) : null}
-      {active === "inicio" && <Inicio isPending={isPending} />}
-      {active === "estado" && <Estado />}
+      {active === "inicio" && <Inicio isPending={!isApproved} demoState={demoState.data} />}
+      {active === "estado" && <Estado demoState={demoState.data} />}
       {active === "documentos" && <Documentos />}
       {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios /></LockedAware>}
-      {active === "carga" && <Carga uppy={uppy} isPending={isPending} />}
-      {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual /></LockedAware>}
-      {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque /></LockedAware>}
-      {active === "api" && <LockedAware enabled={isApproved}><Api /></LockedAware>}
-      {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion /></LockedAware>}
-      {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria /></LockedAware>}
-      {active === "notificaciones" && <Notificaciones />}
+      {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={demoState.data} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
+      {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={demoState.data?.queries[0]} /></LockedAware>}
+      {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={demoState.data} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
+      {active === "api" && <LockedAware enabled={isApproved}><Api onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
+      {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion demoState={demoState.data} /></LockedAware>}
+      {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria events={demoState.data?.queries ?? bacEvents} /></LockedAware>}
+      {active === "notificaciones" && <Notificaciones demoState={demoState.data} />}
     </AppShell>
   );
 }
@@ -255,13 +305,13 @@ function LockedAware({ enabled, children }: { enabled: boolean; children: React.
   return children;
 }
 
-function Inicio({ isPending }: { isPending: boolean }) {
+function Inicio({ isPending, demoState }: { isPending: boolean; demoState?: DemoState }) {
   return (
     <div className="grid gap-4">
       <div className="grid gap-4 lg:grid-cols-3">
-        <MetricCard label="Consultas productivas" value={isPending ? "0" : "128"} tone={isPending ? "warn" : "ok"} />
-        <MetricCard label="Umbral calidad" value="95%" tone="ok" />
-        <MetricCard label="Modelo facturacion" value="Postpago" tone="info" />
+        <MetricCard label="Consultas del mes" value={String((demoState?.usage.basicReports ?? 0) + (demoState?.usage.completeReports ?? 0))} tone={isPending ? "warn" : "ok"} />
+        <MetricCard label="Creditos disponibles" value={String(demoState?.client.creditsBalance ?? 0)} tone="ok" />
+        <MetricCard label="Factura estimada" value={`$${(demoState?.invoicePreview.total ?? 0).toFixed(2)}`} tone="info" />
       </div>
       <div className="grid gap-4 xl:grid-cols-[.85fr_1.15fr]">
         <BackendStatusCard />
@@ -284,14 +334,14 @@ function Inicio({ isPending }: { isPending: boolean }) {
   );
 }
 
-function Estado() {
+function Estado({ demoState }: { demoState?: DemoState }) {
   return (
     <Card>
       <CardHeader><CardTitle>Estado de cuenta</CardTitle><Badge tone="warn">Centro unico</Badge></CardHeader>
       <CardContent className="grid gap-3 lg:grid-cols-3">
-        <Info title="Modalidad solicitada" text="Data Partner Founding pendiente de aprobacion admin." tone="warn" />
-        <Info title="Documentos bloqueantes" text="RUC actualizado, nombramiento y cedula representante." tone="danger" />
-        <Info title="Carga sandbox" text="Permitida para validar formato y diccionario." tone="ok" />
+        <Info title="Modalidad" text={demoState?.client.mode ?? "Data Partner Founding"} tone="warn" />
+        <Info title="Estado de aprobacion" text={demoState?.client.productionAccess ? "Aprobado para sandbox productivo." : "Pendiente de aprobacion documental admin."} tone={demoState?.client.productionAccess ? "ok" : "danger"} />
+        <Info title="Carga sandbox" text="Permitida para validar formato, calidad, duplicados y consumo simulado." tone="ok" />
       </CardContent>
     </Card>
   );
@@ -304,6 +354,14 @@ function Documentos() {
         <CardHeader><CardTitle>Documentos descargables</CardTitle><Badge tone="info">Templates</Badge></CardHeader>
         <CardContent className="grid gap-3">
           {["NDA Decision Data", "Contrato marco", "Anexo tecnico"].map((item) => <Info key={item} title={item} text="Descargable, firma externa y carga para revision." tone="neutral" />)}
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <a href="/api/backend/api/v1/templates/information-block.csv" download><Download className="size-4" /> Template carga informacion</a>
+            </Button>
+            <Button asChild>
+              <a href="/api/backend/api/v1/templates/batch-query.csv" download><Download className="size-4" /> Template consulta bloque</a>
+            </Button>
+          </div>
         </CardContent>
       </Card>
       <Card>
@@ -321,7 +379,9 @@ function Documentos() {
   );
 }
 
-function Carga({ uppy, isPending }: { uppy: Uppy; isPending: boolean }) {
+function Carga({ uppy, isPending, demoState, onSimulate, loading }: { uppy: Uppy; isPending: boolean; demoState?: DemoState; onSimulate: () => void; loading: boolean }) {
+  const latest = demoState?.uploads[0];
+
   return (
     <div className="grid gap-4 xl:grid-cols-[.85fr_1.15fr]">
       <Card>
@@ -329,6 +389,19 @@ function Carga({ uppy, isPending }: { uppy: Uppy; isPending: boolean }) {
         <CardContent className="grid gap-3 text-sm text-muted">
           <p>Regla: bloques de informacion, umbral minimo 95%, duplicados descartados sin error y sin Decision Credits.</p>
           <p>{isPending ? "Como cliente pendiente, esta carga no genera consumo ni facturacion." : "Como cliente aprobado, queda lista para control productivo y BAC."}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <a href="/api/backend/api/v1/templates/information-block.csv" download><Download className="size-4" /> Descargar template CSV</a>
+            </Button>
+            <Button variant="primary" onClick={onSimulate} disabled={loading}><UploadCloud className="size-4" /> Simular carga MEGADATOS</Button>
+          </div>
+          {latest ? (
+            <div className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+              <b className="text-foreground">Ultima carga: {latest.id}</b>
+              <span>Filas recibidas: {latest.rowsReceived} / aceptadas: {latest.acceptedRows} / duplicadas: {latest.duplicateRows} / errores: {latest.errorRows}</span>
+              <span>Calidad: {Math.round(latest.qualityScore * 100)}% / creditos generados: {latest.creditsGenerated}</span>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
       <Card>
@@ -340,16 +413,22 @@ function Carga({ uppy, isPending }: { uppy: Uppy; isPending: boolean }) {
   );
 }
 
-function ConsultaIndividual() {
+function ConsultaIndividual({ product, onProductChange, onRun, loading, latest }: { product: string; onProductChange: (value: string) => void; onRun: () => void; loading: boolean; latest?: QueryAudit }) {
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <Card>
         <CardHeader><CardTitle>Consulta individual</CardTitle><Badge tone="warn">BAC obligatorio</Badge></CardHeader>
         <CardContent className="grid gap-3">
           <Field label="Cedula, RUC o codigo SB"><Input defaultValue="0923048581" /></Field>
-          <Field label="Producto"><Select><option>Reporte completo</option><option>Reporte basico</option></Select></Field>
-          <Info title="Valor estimado" text="Founding tramo ejemplo: $0.50. Toda consulta registra consentimiento, IP, canal, producto, tarifa y estado." tone="ok" />
-          <Button variant="primary">Consultar con consentimiento</Button>
+          <Field label="Producto">
+            <Select value={product} onChange={(event) => onProductChange(event.target.value)}>
+              <option value="complete_report">Reporte completo</option>
+              <option value="basic_report">Reporte basico</option>
+            </Select>
+          </Field>
+          <Info title="Valor estimado" text="Founding usa beneficios 1:1 en sandbox; si no hay creditos aplica exceso a Cliente Normal." tone="ok" />
+          <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Consultar con consentimiento</Button>
+          {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${latest.product}, canal ${latest.channel}, tarifa ${latest.tariff}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
         </CardContent>
       </Card>
       <ReportPreview />
@@ -357,14 +436,44 @@ function ConsultaIndividual() {
   );
 }
 
-function ConsultaBloque() {
-  return <Info title="Consulta por bloque" text="Prevalidacion de identificadores, consentimiento, producto, tarifa y BAC por cada fila." tone="info" />;
+function ConsultaBloque({ demoState, onRun, loading }: { demoState?: DemoState; onRun: () => void; loading: boolean }) {
+  const latest = demoState?.batchQueries[0];
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Consulta por bloque</CardTitle><Badge tone="info">CSV sandbox</Badge></CardHeader>
+      <CardContent className="grid gap-3">
+        <p className="text-sm text-muted">Carga un bloque de identificadores. Cada fila registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado.</p>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild>
+            <a href="/api/backend/api/v1/templates/batch-query.csv" download><Download className="size-4" /> Descargar template CSV</a>
+          </Button>
+          <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Procesar bloque demo</Button>
+        </div>
+        {latest ? <Info title={`Bloque ${latest.id}`} text={`${latest.rowsProcessed}/${latest.rowsReceived} filas procesadas. Subtotal estimado $${latest.estimatedSubtotal.toFixed(2)}.`} tone="ok" /> : null}
+      </CardContent>
+    </Card>
+  );
 }
 
-function Api() {
+function Api({ onRun, loading }: { onRun: () => void; loading: boolean }) {
   return (
     <div className="grid gap-3">
       <Info title="API keys" text="Scopes, rotacion y vencimiento solo para clientes aprobados." tone="warn" />
+      <Card>
+        <CardHeader><CardTitle>Ejemplo para desarrolladores</CardTitle><Badge tone="info">Sandbox</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          <pre className="overflow-auto rounded-lg border border-white/10 bg-black/30 p-3 text-xs text-slate-200">{`POST /api/v1/queries
+Authorization: Bearer dd_sandbox_key
+{
+  "identifierType": "ruc",
+  "identifier": "0999999999001",
+  "product": "complete_report",
+  "channel": "api"
+}`}</pre>
+          <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Simular llamada API</Button>
+        </CardContent>
+      </Card>
       <div className="grid gap-2">
         {apiEndpoints.map((endpoint) => (
           <div key={endpoint.path} className="grid gap-2 rounded-lg border border-white/10 bg-black/20 p-3 text-sm lg:grid-cols-[90px_1fr_180px]">
@@ -378,23 +487,42 @@ function Api() {
   );
 }
 
-function Facturacion() {
-  return <Info title="Facturacion mensual postpago" text="Contributor 1:2 para reporte basico; Active y Founding 1:1 preferencial; exceso a tarifa Cliente Normal." tone="ok" />;
+function Facturacion({ demoState }: { demoState?: DemoState }) {
+  const invoice = demoState?.invoicePreview;
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Facturacion mensual postpago</CardTitle><Badge tone="ok">Dinamica sandbox</Badge></CardHeader>
+      <CardContent className="grid gap-3 lg:grid-cols-4">
+        <MetricCard label="Basicos" value={String(demoState?.usage.basicReports ?? 0)} tone="info" />
+        <MetricCard label="Completos" value={String(demoState?.usage.completeReports ?? 0)} tone="warn" />
+        <MetricCard label="API calls" value={String(demoState?.usage.apiCalls ?? 0)} tone="neutral" />
+        <MetricCard label="Total estimado" value={`$${(invoice?.total ?? 0).toFixed(2)}`} tone="ok" />
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-4">
+          <Badge tone="ok">Decision Credits</Badge>
+          <p className="mt-3 text-sm leading-6 text-muted">
+            Generados: {invoice?.creditsGenerated ?? 0}. Usados: {invoice?.creditsUsed ?? 0}. Saldo: {invoice?.creditsBalance ?? 0}. Modelo: postpago mensual.
+          </p>
+          <p className="mt-2 text-xs text-muted">{invoice?.note}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-function Auditoria() {
+function Auditoria({ events }: { events: QueryAudit[] | typeof bacEvents }) {
   return (
     <Card>
       <CardHeader><CardTitle>Auditoria BAC</CardTitle><Badge tone="info">Append-only</Badge></CardHeader>
       <CardContent className="grid gap-3">
         <Info title="Contrato obligatorio" text="Cada consulta registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado." tone="info" />
         <div className="overflow-hidden rounded-lg border border-white/10">
-          {bacEvents.map((event) => (
-            <div key={`${event.date}-${event.product}`} className="grid gap-2 border-b border-white/10 p-3 text-sm last:border-b-0 lg:grid-cols-[150px_1fr_110px_110px_100px]">
-              <span className="text-muted">{event.date}</span>
-              <span>{event.actor}</span>
+          {events.map((event) => (
+            <div key={"id" in event ? event.id : `${event.date}-${event.product}`} className="grid gap-2 border-b border-white/10 p-3 text-sm last:border-b-0 lg:grid-cols-[170px_1fr_110px_130px_100px]">
+              <span className="text-muted">{"createdAt" in event ? event.createdAt.slice(0, 19).replace("T", " ") : event.date}</span>
+              <span>{"user" in event ? `${event.user} / ${event.identifier}` : event.actor}</span>
               <span>{event.channel}</span>
-              <span>{event.value}</span>
+              <span>{"estimatedValue" in event ? `$${event.estimatedValue.toFixed(2)}` : event.value}</span>
               <Badge tone="ok">{event.status}</Badge>
             </div>
           ))}
@@ -408,12 +536,13 @@ function Subusuarios() {
   return <Info title="Subusuarios" text="Roles sugeridos: operador principal, analista de consultas, integrador API y facturacion." tone="info" />;
 }
 
-function Notificaciones() {
+function Notificaciones({ demoState }: { demoState?: DemoState }) {
   return (
     <div className="grid gap-3">
       <Info title="Observacion documental" text="Falta nombramiento actualizado del representante legal." tone="warn" />
       <Info title="Sandbox listo" text="La plantilla de carga no productiva esta disponible." tone="ok" />
       <Info title="Consulta bloqueada" text="Cuenta pendiente de aprobacion documental completa." tone="danger" />
+      {demoState?.outbox.map((email) => <Info key={email.id} title={email.subject} text={`${email.to} - ${email.status}`} tone="info" />)}
     </div>
   );
 }

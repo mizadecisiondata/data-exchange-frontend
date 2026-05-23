@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   BadgeDollarSign,
@@ -19,7 +20,8 @@ import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
 import { DataTable } from "@/components/data-table";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Progress, Textarea } from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Progress, Textarea } from "@/components/ui";
+import { backendGet, backendPost, type DemoState } from "@/lib/backend-api";
 import {
   initialDocumentState,
   requiredDocuments,
@@ -65,6 +67,47 @@ const clientColumns: ColumnDef<ClientRow>[] = [
 
 export function AdminPortal() {
   const [active, setActive] = useState("dashboard");
+  const [authenticated, setAuthenticated] = useState(false);
+  const queryClient = useQueryClient();
+  const demoState = useQuery({
+    queryKey: ["demo-state"],
+    queryFn: () => backendGet<DemoState>("/api/v1/demo/state"),
+    refetchInterval: 4_000
+  });
+  const refreshState = () => queryClient.invalidateQueries({ queryKey: ["demo-state"] });
+  const approve = useMutation({
+    mutationFn: () => backendPost("/api/v1/admin/access-requests/REQ-2026-MEGADATOS-DEMO/approve", {}),
+    onSuccess: () => {
+      toast.success("Cliente aprobado. Credenciales temporales quedaron en outbox simulado.");
+      refreshState();
+    }
+  });
+  const observe = useMutation({
+    mutationFn: (observation: string) => backendPost("/api/v1/admin/access-requests/REQ-2026-MEGADATOS-DEMO/observe", { observation }),
+    onSuccess: () => {
+      toast.warning("Observacion enviada al outbox simulado.");
+      refreshState();
+    }
+  });
+
+  if (!authenticated) {
+    return (
+      <main className="grid min-h-screen place-items-center p-6">
+        <Card className="w-full max-w-xl">
+          <CardContent className="grid gap-5 p-6">
+            <div>
+              <Badge tone="info">Portal admin</Badge>
+              <h1 className="mt-3 text-3xl font-black">Acceso Decision Data</h1>
+              <p className="mt-2 text-sm text-muted">Login separado para administracion, onboarding, aprobaciones y control operativo.</p>
+            </div>
+            <Field label="Usuario admin"><Input defaultValue="admin@decisiondata.ec" /></Field>
+            <Field label="Contrasena"><Input type="password" defaultValue="demo-admin" /></Field>
+            <Button variant="primary" onClick={() => setAuthenticated(true)}>Ingresar al admin</Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
 
   return (
     <AppShell
@@ -74,6 +117,7 @@ export function AdminPortal() {
       nav={nav}
       active={active}
       onSelect={setActive}
+      portalLinks={false}
       aside={
         <>
           <b className="text-foreground">Producto limpio</b>
@@ -81,13 +125,13 @@ export function AdminPortal() {
         </>
       }
     >
-      {active === "dashboard" && <Dashboard />}
-      {active === "onboarding" && <Onboarding />}
-      {active === "clientes" && <Clientes />}
+      {active === "dashboard" && <Dashboard demoState={demoState.data} />}
+      {active === "onboarding" && <Onboarding demoState={demoState.data} onApprove={() => approve.mutate()} approving={approve.isPending} onObserve={(text) => observe.mutate(text)} observing={observe.isPending} />}
+      {active === "clientes" && <Clientes demoState={demoState.data} />}
       {active === "usuarios" && <Info title="Usuarios y roles" text="RBAC granular por modulo: super admin, onboarding, ingesta, facturacion, auditoria y soporte." tone="info" />}
       {active === "ingesta" && <Ingesta />}
-      {active === "consumos" && <Info title="Consumos y APIs" text="Llaves API solo para clientes aprobados, scopes, rotacion, limites y auditoria." tone="warn" />}
-      {active === "facturacion" && <Facturacion />}
+      {active === "consumos" && <Consumos demoState={demoState.data} />}
+      {active === "facturacion" && <Facturacion demoState={demoState.data} />}
       {active === "auditoria" && <Info title="Auditoria/BAC" text="Append-only: actor, usuario, canal, IP, producto, tarifa, valor, consentimiento y estado." tone="info" />}
       {active === "notificaciones" && <Notificaciones />}
       {active === "configuracion" && <Info title="Configuracion" text="Feature flags, plantillas documentales, politicas de seguridad y parametros no comerciales." tone="neutral" />}
@@ -95,13 +139,13 @@ export function AdminPortal() {
   );
 }
 
-function Dashboard() {
+function Dashboard({ demoState }: { demoState?: DemoState }) {
   return (
     <div className="grid gap-4">
       <div className="grid gap-4 lg:grid-cols-3">
-        <MetricCard label="Solicitudes en revision" value="2" tone="warn" />
-        <MetricCard label="Clientes productivos reales" value="0" tone="neutral" />
-        <MetricCard label="Estado frontend" value="Next" tone="ok" />
+        <MetricCard label="Solicitudes en revision" value={demoState?.client.productionAccess ? "0" : "1"} tone="warn" />
+        <MetricCard label="Clientes productivos sandbox" value={demoState?.client.productionAccess ? "1" : "0"} tone="neutral" />
+        <MetricCard label="Factura estimada" value={`$${(demoState?.invoicePreview.total ?? 0).toFixed(2)}`} tone="ok" />
       </div>
       <div className="grid gap-4 xl:grid-cols-[.75fr_1.25fr]">
         <BackendStatusCard />
@@ -128,7 +172,7 @@ function Dashboard() {
   );
 }
 
-function Onboarding() {
+function Onboarding({ demoState, onApprove, approving, onObserve, observing }: { demoState?: DemoState; onApprove: () => void; approving: boolean; onObserve: (text: string) => void; observing: boolean }) {
   const [documentState, setDocumentState] = useState(initialDocumentState);
   const [observation, setObservation] = useState("Falta cargar RUC actualizado, nombramiento y cedula del representante legal.");
   const blockingDocuments = requiredDocuments.filter((item) => item.blocking);
@@ -141,11 +185,11 @@ function Onboarding() {
   }
 
   function sendObservation() {
-    toast.warning("Observacion visual enviada al cliente.");
+    onObserve(observation);
   }
 
   function approveClient() {
-    toast.success("Aprobacion visual registrada. En backend real emitiria clave temporal.");
+    onApprove();
   }
 
   return (
@@ -155,7 +199,7 @@ function Onboarding() {
         <CardContent><DataTable columns={clientColumns} data={clients} /></CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle>Expediente MEGADATOS</CardTitle><Badge tone="warn">Revision</Badge></CardHeader>
+        <CardHeader><CardTitle>Expediente MEGADATOS</CardTitle><Badge tone={demoState?.client.productionAccess ? "ok" : "warn"}>{demoState?.client.productionAccess ? "Aprobado" : "Revision"}</Badge></CardHeader>
         <CardContent className="grid gap-2">
           <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
             <div className="mb-2 flex items-center justify-between text-sm">
@@ -179,21 +223,26 @@ function Onboarding() {
           ))}
           <Textarea value={observation} onChange={(event) => setObservation(event.target.value)} />
           <div className="mt-2 flex gap-2">
-            <Button onClick={sendObservation}>Enviar observacion</Button>
-            <Button variant="primary" disabled={!canApprove} onClick={approveClient}>Aprobar cuando complete</Button>
+            <Button onClick={sendObservation} disabled={observing}>Enviar observacion</Button>
+            <Button variant="primary" disabled={approving} onClick={approveClient}>{canApprove ? "Aprobar cliente cero" : "Aprobar y completar checklist demo"}</Button>
           </div>
+          {demoState?.outbox[0] ? <Info title="Ultimo correo simulado" text={`${demoState.outbox[0].subject} / ${demoState.outbox[0].status}`} tone="info" /> : null}
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function Clientes() {
+function Clientes({ demoState }: { demoState?: DemoState }) {
+  const rows = demoState
+    ? [{ empresa: demoState.client.legalName, sector: demoState.client.sector, modalidad: demoState.client.mode, estado: demoState.client.productionAccess ? "Aprobado" : "Documentos observados" }]
+    : clients;
+
   return (
     <Card>
       <CardHeader><CardTitle>Clientes y modalidades</CardTitle><Badge tone="warn">Decision reservada</Badge></CardHeader>
       <CardContent className="grid gap-4">
-        <DataTable columns={clientColumns} data={clients} />
+        <DataTable columns={clientColumns} data={rows} />
         <Info title="Pricing protegido" text="Cambios de modalidad, tarifa, excepciones o beneficios se consultan con Mateo." tone="warn" />
       </CardContent>
     </Card>
@@ -214,14 +263,28 @@ function Ingesta() {
   );
 }
 
-function Facturacion() {
+function Consumos({ demoState }: { demoState?: DemoState }) {
+  return (
+    <Card>
+      <CardHeader><CardTitle>Consumos y APIs</CardTitle><Badge tone="warn">Tiempo real sandbox</Badge></CardHeader>
+      <CardContent className="grid gap-3 lg:grid-cols-4">
+        <MetricCard label="Basicos" value={String(demoState?.usage.basicReports ?? 0)} tone="info" />
+        <MetricCard label="Completos" value={String(demoState?.usage.completeReports ?? 0)} tone="warn" />
+        <MetricCard label="API calls" value={String(demoState?.usage.apiCalls ?? 0)} tone="neutral" />
+        <MetricCard label="BAC registrados" value={String(demoState?.queries.length ?? 0)} tone="ok" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function Facturacion({ demoState }: { demoState?: DemoState }) {
   return (
     <Card>
       <CardHeader><CardTitle>Facturacion y tarifas</CardTitle><Badge tone="ok">Postpago</Badge></CardHeader>
       <CardContent className="grid gap-3 lg:grid-cols-3">
-        <Info title="Cliente Normal" text="No acredita. Paga tarifa normal." tone="neutral" />
-        <Info title="Contributor" text="1:2 para reporte basico; exceso a Cliente Normal." tone="warn" />
-        <Info title="Active / Founding" text="1:1 beneficio preferencial; exceso a Cliente Normal." tone="ok" />
+        <Info title="Subtotal" text={`$${(demoState?.invoicePreview.subtotal ?? 0).toFixed(2)}`} tone="neutral" />
+        <Info title="IVA estimado" text={`$${(demoState?.invoicePreview.tax ?? 0).toFixed(2)}`} tone="warn" />
+        <Info title="Total postpago" text={`$${(demoState?.invoicePreview.total ?? 0).toFixed(2)}`} tone="ok" />
       </CardContent>
     </Card>
   );
