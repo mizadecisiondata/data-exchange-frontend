@@ -65,6 +65,12 @@ const server = http.createServer((request, response) => {
   }
 
   if (request.method === "GET" && url.pathname === "/admin/agent-workbench") {
+    response.writeHead(302, { location: "/internal/dev-monitor" });
+    response.end();
+    return;
+  }
+
+  if (request.method === "GET" && (url.pathname === "/internal/dev-monitor" || url.pathname === "/dev-monitor")) {
     const workbenchHtml = readFileSync(join(publicDir, "agent-workbench-live.html"), "utf8");
     write(response, 200, "text/html; charset=utf-8", workbenchHtml);
     return;

@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 const requiredFiles = [
   "src/app/client/README.md",
   "src/app/admin/README.md",
-  "src/app/admin/agent-workbench/README.md",
+  "src/app/internal/dev-monitor/README.md",
   "src/config/env.mjs",
   "public/admin-portal.html",
   "public/approval-journey.html",

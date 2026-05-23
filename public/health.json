@@ -1,10 +1,10 @@
 {
   "status": "ok",
   "service": "data-exchange-frontend",
-  "phase": "0",
+  "phase": "1",
   "portals": {
     "client": "reserved",
     "admin": "reserved",
-    "agentWorkbench": "admin_only_reserved"
+    "devMonitor": "external_reserved"
   }
 }

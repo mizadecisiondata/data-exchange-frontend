@@ -14,11 +14,11 @@
             <img class="auth-logo" src="/decision-data-logo.png" alt="Decision Data" />
             <div class="eyebrow">Portal administrador</div>
             <h1 class="auth-title">Centro de control Decision Data</h1>
-            <p class="auth-copy">El admin ingresa primero con usuario y contrasena. Solo despues se despliegan solicitudes, aprobaciones, modalidades, BAC, facturacion y Agent Workbench.</p>
+            <p class="auth-copy">El admin ingresa primero con usuario y contrasena. Despues gestiona onboarding, clientes, modalidades, usuarios, ingesta, consumos, facturacion, BAC y configuracion.</p>
             <div class="trust-list">
-              <div class="trust-item">Aprobacion documental antes de habilitar consumo.</div>
-              <div class="trust-item">Cambios de modalidad y pricing no se automatizan sin decision autorizada.</div>
-              <div class="trust-item">Agent Workbench existe solo en el portal admin.</div>
+              <div class="trust-item">Aprobacion documental completa antes de habilitar productivo.</div>
+              <div class="trust-item">Cambios comerciales, regulatorios o de pricing requieren decision autorizada.</div>
+              <div class="trust-item">El visor de agentes queda fuera del producto y separado de admin.</div>
             </div>
           </div>
           <a class="btn" href="/client">Ir al portal cliente</a>
@@ -52,18 +52,19 @@
           </div>
         </div>
         <nav class="nav" data-nav>
-          <a href="#dashboard" class="active">Dashboard</a>
-          <a href="#onboarding">Onboarding clientes</a>
+          <a href="#dashboard" class="active">Dashboard ejecutivo</a>
+          <a href="#onboarding">Onboarding y revision</a>
+          <a href="#clientes">Clientes y modalidades</a>
           <a href="#usuarios">Usuarios y roles</a>
-          <a href="#ingesta">Calidad de ingesta</a>
-          <a href="#bac">BAC</a>
-          <a href="#facturacion">Facturacion</a>
-          <a href="#estados">Estados UI</a>
-          <a href="#notificaciones">Notificaciones</a>
-          <a href="/admin/agent-workbench">Agent Workbench</a>
+          <a href="#ingesta">Control de ingesta</a>
+          <a href="#consumos">Consumos y APIs</a>
+          <a href="#facturacion">Facturacion y tarifas</a>
+          <a href="#auditoria">Auditoria/BAC</a>
+          <a href="#notificaciones">Notificaciones globales</a>
+          <a href="#configuracion">Configuracion</a>
         </nav>
         <div class="sidebar-footer">
-          Vista admin separada del portal cliente. Fase 1 visual.
+          Portal productivo sin Agent Workbench. El visor externo vive en una ruta interna de desarrollo.
         </div>
       </aside>
 
@@ -72,63 +73,57 @@
           <div>
             <div class="eyebrow">Decision Data</div>
             <h1>Centro de control admin</h1>
-            <p class="sub">Revision documental, aprobacion de usuarios, modalidades, calidad, BAC y seguimiento de avance.</p>
+            <p class="sub">Gestion documental, clientes, modalidades, ingesta, consumos, facturacion postpago, BAC y configuracion.</p>
           </div>
           <div class="toolbar">
             <div class="session-pill"><span>Sesion demo</span><b>Admin Decision Data</b></div>
             <a class="btn" href="/client">Portal cliente</a>
             <a class="btn" href="/journey">Journey aprobacion</a>
-            <a class="btn primary" href="/admin/agent-workbench">Agent Workbench</a>
             <button class="btn" type="button" data-logout-action>Cerrar sesion</button>
           </div>
         </header>
 
         <section id="dashboard" class="view active">
           <div class="grid cols-3">
+            <article class="panel metric"><div class="panel-body"><strong>2</strong><span>Solicitudes en revision</span></div></article>
             <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Clientes productivos reales</span></div></article>
-            <article class="panel metric"><div class="panel-body"><strong>F1</strong><span>Fase visual en progreso</span></div></article>
-            <article class="panel metric"><div class="panel-body"><strong>1</strong><span>Supuesto abierto</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>F1</strong><span>Journey visual en ajuste</span></div></article>
           </div>
-          <article class="panel" style="margin-top: 14px;">
-            <div class="panel-head"><h2>Estado de construccion</h2><span class="status warn">En progreso</span></div>
-            <div class="panel-body steps">
-              <div class="step"><span class="num">0</span><div>Setup repos, README, env y healthchecks</div><span class="status ok">cerrada</span></div>
-              <div class="step"><span class="num">1</span><div>Login primero + autorregistro documental + onboarding admin</div><span class="status warn">actual</span></div>
-              <div class="step"><span class="num">2</span><div>Auth real, roles, correo y cambio de clave temporal</div><span class="status warn">pendiente</span></div>
-            </div>
-          </article>
-        </section>
-
-        <section id="usuarios" class="view">
-          <article class="panel">
-            <div class="panel-head"><h2>Usuarios y roles admin</h2><span class="status warn">Visual Fase 1</span></div>
-            <div class="panel-body">
-              <table class="table">
-                <tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Permisos previstos</th></tr>
-                <tr><td>admin@decisiondata.ec</td><td>Super admin</td><td>Activo demo</td><td>Aprobaciones, clientes, BAC y Workbench</td></tr>
-                <tr><td>calidad@decisiondata.ec</td><td>Analista de calidad</td><td>Pendiente Fase 2</td><td>Revision de ingesta y errores bajo 95%</td></tr>
-                <tr><td>facturacion@decisiondata.ec</td><td>Facturacion</td><td>Pendiente Fase 2</td><td>Consumo, tarifas y cierre mensual postpago</td></tr>
-              </table>
-              <div class="notice">RBAC real, politicas de sesion y auditoria de cambios se implementan en Fase 2. Esta vista solo fija la experiencia esperada.</div>
-            </div>
-          </article>
+          <div class="grid cols-2" style="margin-top: 14px;">
+            <article class="panel">
+              <div class="panel-head"><h2>Prioridades operativas</h2><span class="status warn">Fase 1</span></div>
+              <div class="panel-body status-rail">
+                <div class="step"><span class="num">1</span><div>Revisar documentos MEGADATOS y emitir observaciones si faltan habilitantes.</div><span class="status warn">pendiente</span></div>
+                <div class="step"><span class="num">2</span><div>Confirmar modalidad sin automatizar pricing ni excepciones.</div><span class="status warn">decision</span></div>
+                <div class="step"><span class="num">3</span><div>Habilitar usuario productivo solo con expediente completo.</div><span class="status warn">bloqueante</span></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Guardrails activos</h2><span class="status ok">Confirmados</span></div>
+              <div class="panel-body module-list">
+                <div class="module-row"><div><b>Postpago mensual</b><span>Decision Credits se liquidan en cierre mensual; no prepago.</span></div><span class="status ok">ok</span></div>
+                <div class="module-row"><div><b>Calidad 95%</b><span>Bloques bajo umbral se observan; duplicados no son error ni credits.</span></div><span class="status ok">ok</span></div>
+                <div class="module-row"><div><b>Consulta trazada</b><span>BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor y estado.</span></div><span class="status ok">ok</span></div>
+              </div>
+            </article>
+          </div>
         </section>
 
         <section id="onboarding" class="view">
           <div class="grid cols-2">
             <article class="panel">
-              <div class="panel-head"><h2>Onboarding clientes</h2><span class="status warn">Modulo unico</span></div>
+              <div class="panel-head"><h2>Onboarding y revision</h2><span class="status warn">Modulo unico</span></div>
               <div class="panel-body">
                 <table class="table">
-                  <tr><th>Empresa</th><th>Modalidad</th><th>Estado</th><th>Accion</th></tr>
-                  <tr><td>MEGADATOS S.A.</td><td>Data Partner Founding</td><td>Expediente en revision</td><td><a class="btn" href="#onboarding">Ver expediente</a></td></tr>
-                  <tr><td>Retail Demo</td><td>Data Partner Active</td><td>Documentos pendientes</td><td><a class="btn" href="#onboarding">Ver expediente</a></td></tr>
+                  <tr><th>Empresa</th><th>Modalidad tentativa</th><th>Estado</th><th>Accion</th></tr>
+                  <tr><td>MEGADATOS S.A.</td><td>Data Partner Founding</td><td>Documentos observados</td><td><a class="btn" href="#onboarding">Revisar</a></td></tr>
+                  <tr><td>Retail Demo</td><td>Data Partner Active</td><td>Sin contratos firmados</td><td><a class="btn" href="#onboarding">Revisar</a></td></tr>
                 </table>
-                <div class="notice">Este modulo reemplaza visualmente Solicitudes, Aprobacion de accesos y Clientes. Aqui se revisa el expediente, se confirma modalidad y se aprueba el usuario.</div>
+                <div class="notice">Este modulo consolida solicitudes, aprobacion de accesos y vista de cliente. No se aprueba sin checklist completo.</div>
               </div>
             </article>
             <article class="panel">
-              <div class="panel-head"><h2>Expediente MEGADATOS</h2><span class="status warn">Demo visual</span></div>
+              <div class="panel-head"><h2>Expediente MEGADATOS</h2><span class="status warn">Revision</span></div>
               <div class="panel-body checklist">
                 <label class="check-row"><input type="checkbox" checked /><span>NDA firmado cargado</span><span class="status ok">ok</span></label>
                 <label class="check-row"><input type="checkbox" checked /><span>Contrato marco firmado cargado</span><span class="status ok">ok</span></label>
@@ -137,86 +132,98 @@
                 <label class="check-row"><input type="checkbox" /><span>Nombramiento representante legal</span><span class="status warn">pendiente</span></label>
                 <label class="check-row"><input type="checkbox" /><span>Cedula representante legal</span><span class="status warn">pendiente</span></label>
                 <label class="check-row"><input type="checkbox" /><span>Declaracion de fuente y legitimacion de datos</span><span class="status warn">pendiente</span></label>
-                <label class="check-row"><input type="checkbox" /><span>Contacto tecnico, operativo y facturacion</span><span class="status warn">pendiente</span></label>
                 <div class="grid cols-2">
-                  <button class="btn" type="button">Observar expediente</button>
-                  <button class="btn primary" type="button">Aprobar usuario visual</button>
+                  <button class="btn" type="button">Enviar observacion</button>
+                  <button class="btn primary disabled" type="button" disabled>Aprobar cuando complete</button>
                 </div>
               </div>
             </article>
           </div>
         </section>
 
-        <section id="ingesta" class="view">
+        <section id="clientes" class="view">
           <article class="panel">
-            <div class="panel-head"><h2>Calidad de ingesta</h2><span class="status warn">Pendiente Fase 3</span></div>
+            <div class="panel-head"><h2>Clientes y modalidades</h2><span class="status warn">Control comercial</span></div>
             <div class="panel-body">
               <table class="table">
-                <tr><th>Regla</th><th>Valor</th><th>Estado</th></tr>
-                <tr><td>Calidad minima</td><td>95%</td><td>Guardrail</td></tr>
-                <tr><td>Duplicados</td><td>No error / no credits</td><td>Guardrail</td></tr>
-                <tr><td>Tipo de carga</td><td>Bloques de informacion</td><td>Guardrail</td></tr>
+                <tr><th>Cliente</th><th>Tipo</th><th>Modalidad</th><th>Estado</th><th>Decision credits</th></tr>
+                <tr><td>MEGADATOS S.A.</td><td>Telco / ISP</td><td>Founding tentativa</td><td>Pendiente docs</td><td>1:1 preferencial cuando apruebe</td></tr>
+                <tr><td>Retail Demo</td><td>Retail</td><td>Active tentativa</td><td>Autorregistro</td><td>1:1 preferencial cuando apruebe</td></tr>
+                <tr><td>Cliente Normal Demo</td><td>Casa comercial</td><td>Cliente Normal</td><td>No productivo</td><td>No acredita</td></tr>
+              </table>
+              <div class="notice">Cambiar modalidad, tarifa, excepciones o beneficios es decision comercial reservada para Mateo.</div>
+            </div>
+          </article>
+        </section>
+
+        <section id="usuarios" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Usuarios y roles</h2><span class="status warn">RBAC Fase 2</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Permisos previstos</th></tr>
+                <tr><td>admin@decisiondata.ec</td><td>Super admin</td><td>Activo demo</td><td>Todos los modulos admin</td></tr>
+                <tr><td>calidad@decisiondata.ec</td><td>Analista de ingesta</td><td>Pendiente Fase 2</td><td>Control de calidad y observaciones</td></tr>
+                <tr><td>facturacion@decisiondata.ec</td><td>Facturacion</td><td>Pendiente Fase 2</td><td>Consumos, tarifas y cierre mensual</td></tr>
               </table>
             </div>
           </article>
         </section>
 
-        <section id="bac" class="view">
+        <section id="ingesta" class="view">
           <article class="panel">
-            <div class="panel-head"><h2>BAC</h2><span class="status warn">Diseno base</span></div>
+            <div class="panel-head"><h2>Control de ingesta</h2><span class="status warn">Separado de consulta por bloque</span></div>
             <div class="panel-body">
-              <div class="notice">Toda accion relevante debe registrar actor, usuario, canal, IP, producto, tarifa, valor estimado, consentimiento cuando aplique y estado.</div>
+              <table class="table">
+                <tr><th>Regla</th><th>Valor</th><th>Estado</th></tr>
+                <tr><td>Tipo de carga</td><td>Bloques de informacion</td><td>Guardrail</td></tr>
+                <tr><td>Calidad minima</td><td>95%</td><td>Guardrail</td></tr>
+                <tr><td>Duplicados</td><td>Descartar, no error, no credits</td><td>Guardrail</td></tr>
+                <tr><td>Reportantes permitidos</td><td>Casas comerciales, telcos, retail, concesionarios, fintechs, cobranza/BPO, industria, mayoristas</td><td>Guardrail</td></tr>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section id="consumos" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Consumos y APIs</h2><span class="status warn">Pendiente real</span></div>
+            <div class="panel-body grid cols-2">
+              <div class="module-list">
+                <div class="module-row"><div><b>Consulta individual</b><span>POST /api/v1/queries con BAC y consentimiento.</span></div><span class="status warn">reservado</span></div>
+                <div class="module-row"><div><b>Consulta por bloque</b><span>POST /api/v1/batch-queries con validacion por fila.</span></div><span class="status warn">reservado</span></div>
+                <div class="module-row"><div><b>Uso mensual</b><span>GET /api/v1/usage para facturacion postpago.</span></div><span class="status warn">reservado</span></div>
+              </div>
+              <div class="notice">Las llaves API se emiten solo a clientes aprobados y deben tener scopes, vencimiento, rotacion y auditoria.</div>
             </div>
           </article>
         </section>
 
         <section id="facturacion" class="view">
           <article class="panel">
-            <div class="panel-head"><h2>Facturacion mensual</h2><span class="status ok">Postpago</span></div>
+            <div class="panel-head"><h2>Facturacion y tarifas</h2><span class="status ok">Postpago</span></div>
             <div class="panel-body">
               <table class="table">
-                <tr><th>Modalidad</th><th>Decision Credits</th><th>Exceso</th></tr>
-                <tr><td>Cliente Normal</td><td>No acredita</td><td>Tarifa normal</td></tr>
-                <tr><td>Contributor</td><td>1:2 basico</td><td>Tarifa normal</td></tr>
-                <tr><td>Active / Founding</td><td>1:1 preferencial</td><td>Tarifa normal</td></tr>
+                <tr><th>Modalidad</th><th>Decision Credits</th><th>Exceso</th><th>Decision</th></tr>
+                <tr><td>Cliente Normal</td><td>No acredita</td><td>Tarifa normal</td><td>Base</td></tr>
+                <tr><td>Contributor</td><td>1:2 reporte basico</td><td>Tarifa normal</td><td>Confirmado operativo</td></tr>
+                <tr><td>Active / Founding</td><td>1:1 beneficios preferenciales</td><td>Tarifa normal</td><td>Confirmado operativo</td></tr>
               </table>
+              <div class="notice">Cualquier cambio de precio, modalidad o excepcion queda bloqueado hasta decision de Mateo.</div>
             </div>
           </article>
         </section>
 
-        <section id="estados" class="view">
+        <section id="auditoria" class="view">
           <article class="panel">
-            <div class="panel-head"><h2>Estados administrativos</h2><span class="status warn">Fase 1 visual</span></div>
-            <div class="panel-body state-grid">
-              <div class="state-card">
-                <div>
-                  <div class="state-icon">0</div>
-                  <h3>Sin solicitudes nuevas</h3>
-                  <p>Estado para bandeja limpia sin pendientes de aprobacion.</p>
-                </div>
-              </div>
-              <div class="state-card">
-                <div>
-                  <div class="state-icon">...</div>
-                  <h3>Cargando BAC</h3>
-                  <p>El admin ve una espera clara mientras se consulta auditoria.</p>
-                  <div class="skeleton"><span></span><span></span><span></span></div>
-                </div>
-              </div>
-              <div class="state-card error">
-                <div>
-                  <div class="state-icon">!</div>
-                  <h3>Revision bloqueada</h3>
-                  <p>Si falta documento bloqueante, el admin no aprueba acceso.</p>
-                </div>
-              </div>
-              <div class="state-card success">
-                <div>
-                  <div class="state-icon">OK</div>
-                  <h3>Usuario aprobado</h3>
-                  <p>El sistema debe preparar correo con clave temporal en Fase 2.</p>
-                </div>
-              </div>
+            <div class="panel-head"><h2>Auditoria/BAC</h2><span class="status warn">Diseno base</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Evento</th><th>Debe registrar</th><th>Estado</th></tr>
+                <tr><td>Consulta</td><td>BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado, estado</td><td>Guardrail</td></tr>
+                <tr><td>Cambio modalidad</td><td>Actor, aprobador, motivo, antes/despues</td><td>Reservado</td></tr>
+                <tr><td>Documento observado</td><td>Admin, fecha, comentario, archivo afectado</td><td>Reservado</td></tr>
+              </table>
             </div>
           </article>
         </section>
@@ -224,22 +231,33 @@
         <section id="notificaciones" class="view">
           <div class="grid cols-2">
             <article class="panel">
-              <div class="panel-head"><h2>Notificaciones admin</h2><span class="status warn">Visual Fase 1</span></div>
+              <div class="panel-head"><h2>Notificaciones globales</h2><span class="status warn">Centro unico</span></div>
               <div class="panel-body notification-stack">
-                <div class="notification"><b>Nueva solicitud de cliente</b><p>Admin debe revisar documentos, usuario y modalidad tentativa.</p></div>
-                <div class="notification ok"><b>Usuario aprobado</b><p>En Fase 2 se generara clave temporal y correo de bienvenida.</p></div>
-                <div class="notification error"><b>Decision reservada</b><p>Cambios comerciales, pricing o excepciones se consultan con Mateo.</p></div>
+                <div class="notification"><b>Nueva solicitud</b><p>MEGADATOS tiene documentos faltantes para aprobar.</p></div>
+                <div class="notification ok"><b>Guardrail activo</b><p>Agent Workbench fue retirado del producto admin.</p></div>
+                <div class="notification error"><b>Decision reservada</b><p>No automatizar pricing, regulatorio ni excepciones.</p></div>
               </div>
             </article>
             <article class="panel">
-              <div class="panel-head"><h2>Actividad administrativa</h2><span class="status warn">Demo visual</span></div>
+              <div class="panel-head"><h2>Actividad administrativa</h2><span class="status warn">Visual</span></div>
               <div class="panel-body activity-list">
-                <div class="activity-item"><span class="activity-time">Hoy 00:34</span><div><b>Login admin</b><span>Navegacion administrativa habilitada visualmente.</span></div><span class="status ok">visual</span></div>
-                <div class="activity-item"><span class="activity-time">Hoy 00:29</span><div><b>Revision pendiente</b><span>MEGADATOS S.A. demo requiere aprobacion documental.</span></div><span class="status warn">pendiente</span></div>
-                <div class="activity-item"><span class="activity-time">Hoy 00:20</span><div><b>Guardrail</b><span>Agent Workbench separado del portal cliente.</span></div><span class="status ok">listo</span></div>
+                <div class="activity-item"><span class="activity-time">Hoy 11:20</span><div><b>Workbench movido</b><span>Visor externo separado de la plataforma.</span></div><span class="status ok">hecho</span></div>
+                <div class="activity-item"><span class="activity-time">Hoy 11:12</span><div><b>Onboarding</b><span>Modulo unico con checklist documental.</span></div><span class="status ok">hecho</span></div>
+                <div class="activity-item"><span class="activity-time">Hoy 11:06</span><div><b>Menu admin</b><span>Alineado a la orden Journey Review.</span></div><span class="status ok">hecho</span></div>
               </div>
             </article>
           </div>
+        </section>
+
+        <section id="configuracion" class="view">
+          <article class="panel">
+            <div class="panel-head"><h2>Configuracion</h2><span class="status warn">Fase futura</span></div>
+            <div class="panel-body module-list">
+              <div class="module-row"><div><b>Feature flags</b><span>Controlar rutas internas, ambientes, API y reportes.</span></div><span class="status warn">reservado</span></div>
+              <div class="module-row"><div><b>Plantillas documentales</b><span>NDA, contrato marco, anexos y observaciones.</span></div><span class="status warn">reservado</span></div>
+              <div class="module-row"><div><b>Parametros de seguridad</b><span>Sesion, claves temporales, MFA y rotacion API.</span></div><span class="status warn">reservado</span></div>
+            </div>
+          </article>
         </section>
       </main>
     </div>

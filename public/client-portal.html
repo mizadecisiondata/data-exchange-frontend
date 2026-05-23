@@ -6,25 +6,25 @@
     <title>Data Exchange - Portal Cliente</title>
     <link rel="stylesheet" href="/portal-base.css" />
   </head>
-  <body data-default-view="dashboard">
+  <body data-default-view="inicio">
     <section class="auth-gate" data-auth-gate>
       <div class="auth-layout">
         <aside class="auth-side">
           <div>
             <img class="auth-logo" src="/decision-data-logo.png" alt="Decision Data" />
             <div class="eyebrow">Portal cliente</div>
-            <h1 class="auth-title">Data Exchange para clientes y Data Partners</h1>
-            <p class="auth-copy">Primero ingresas con usuario y contrasena. Si aun no tienes acceso, solicitas autorregistro, administracion revisa documentos y modalidad, y luego recibes claves temporales por correo.</p>
+            <h1 class="auth-title">Acceso empresarial a Data Exchange</h1>
+            <p class="auth-copy">La primera capa es login. Si una empresa no tiene usuario, se autorregistra, confirma correo, carga documentos firmados y espera aprobacion de Decision Data antes de operar en productivo.</p>
             <div class="trust-list">
-              <div class="trust-item">Facturacion mensual postpago. Decision Credits no son prepago.</div>
-              <div class="trust-item">Carga de bloques de informacion con calidad minima 95%.</div>
-              <div class="trust-item">Consultas con consentimiento y trazabilidad BAC.</div>
+              <div class="trust-item">Cliente pendiente: solo estado, documentos y carga no productiva.</div>
+              <div class="trust-item">Cliente aprobado: consultas, API, facturacion postpago y auditoria BAC.</div>
+              <div class="trust-item">Reportes basico y completo con consentimiento estrategico y no invasivo.</div>
             </div>
           </div>
           <button class="btn help-button" type="button" data-toggle-explain>Que es Data Exchange?</button>
           <div class="explain-box is-hidden" data-explain-box>
-            <div class="notice">Es una plataforma de intercambio de informacion comercial-crediticia para empresas no bancarias que reportan bloques de informacion y consultan reportes basicos o completos.</div>
-            <div class="notice">No reemplaza aprobaciones regulatorias ni decisiones comerciales de Mateo; aqui solo mostramos la experiencia visual de Fase 1.</div>
+            <div class="notice">Plataforma Decision Data para intercambio y consulta de informacion comercial-crediticia de empresas no bancarias autorizadas.</div>
+            <div class="notice">Los Decision Credits se liquidan en facturacion mensual postpago; no son prepago.</div>
           </div>
         </aside>
 
@@ -32,45 +32,48 @@
           <section class="auth-panel" data-auth-panel="login">
             <div>
               <div class="eyebrow">Acceso seguro</div>
-              <h2>Ingresa a tu cuenta</h2>
-              <p class="sub">Demo visual: al ingresar se despliega la navegacion del portal cliente.</p>
+              <h2>Ingresa con tu usuario</h2>
+              <p class="sub">Demo visual: el usuario aprobado abre la plataforma completa. El usuario pendiente queda limitado al entorno no productivo.</p>
             </div>
             <form class="form">
               <div class="field"><label>Correo corporativo</label><input autocomplete="username" value="operaciones@megadatos.demo" /></div>
               <div class="field"><label>Contrasena</label><input autocomplete="current-password" type="password" value="demo1234" /></div>
               <div class="auth-actions">
-                <button class="btn primary" type="button" data-login-action>Ingresar demo</button>
-                <button class="auth-link" type="button" data-auth-switch="register">No tengo usuario, quiero registrarme</button>
+                <button class="btn primary" type="button" data-login-action data-account-mode="approved">Ingresar demo aprobado</button>
+                <button class="btn" type="button" data-login-action data-account-mode="pending">Ver demo pendiente</button>
+                <button class="auth-link" type="button" data-auth-switch="register">No tengo usuario</button>
               </div>
             </form>
           </section>
 
           <section class="auth-panel is-hidden" data-auth-panel="register">
             <div>
-              <div class="eyebrow">Autorregistro</div>
-              <h2>Solicita acceso como cliente</h2>
-              <p class="sub">El acceso queda pendiente hasta que administracion apruebe documentos, usuario y modalidad.</p>
+              <div class="eyebrow">Autorregistro empresarial</div>
+              <h2>Solicita acceso como cliente o Data Partner</h2>
+              <p class="sub">La modalidad es tentativa hasta que el admin revise documentos, perfil y decision comercial autorizada.</p>
             </div>
             <form class="form">
-              <div class="field"><label>RUC</label><input value="0999999999001" /></div>
-              <div class="field"><label>Razon social</label><input value="MEGADATOS S.A. demo" /></div>
-              <div class="field"><label>Contacto autorizado</label><input value="Mateo Iza" /></div>
-              <div class="field"><label>Correo corporativo</label><input value="miza@decisiondata.ec" /></div>
-              <div class="field"><label>Sector</label><select><option>Telco / ISP</option><option>Retail</option><option>Concesionario</option><option>Fintech</option><option>Cobranza / BPO</option><option>Industria / mayorista</option></select></div>
-              <div class="field"><label>Modalidad tentativa</label><select><option>Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></select></div>
-              <div class="notice">Antes de aprobacion admin, el cliente descarga los documentos genericos, los firma y carga nuevamente los firmados junto con documentacion habilitante.</div>
+              <div class="grid cols-2">
+                <div class="field"><label>RUC</label><input value="0999999999001" /></div>
+                <div class="field"><label>Razon social</label><input value="MEGADATOS S.A. demo" /></div>
+                <div class="field"><label>Representante / contacto autorizado</label><input value="Mateo Iza" /></div>
+                <div class="field"><label>Correo corporativo</label><input value="miza@decisiondata.ec" /></div>
+                <div class="field"><label>Sector reportante</label><select><option>Telco / ISP</option><option>Retail</option><option>Casa comercial</option><option>Concesionario</option><option>Fintech</option><option>Cobranza / BPO</option><option>Industria / mayorista</option></select></div>
+                <div class="field"><label>Modalidad tentativa</label><select><option>Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></select></div>
+              </div>
+              <div class="notice">Decision Data no habilita productivo hasta aprobar documentos habilitantes. Bancos y entidades con reporte obligatorio SB no son reportantes objetivo.</div>
               <div class="document-grid">
                 <article class="document-card">
-                  <div><h3>NDA Decision Data</h3><p>Acuerdo de confidencialidad generico para iniciar revision.</p></div>
+                  <div><h3>NDA Decision Data</h3><p>Acuerdo de confidencialidad generico para revision inicial.</p></div>
                   <a class="btn" href="/contracts/decision-data-nda-template.txt" download>Descargar</a>
                 </article>
                 <article class="document-card">
-                  <div><h3>Contrato marco</h3><p>Contrato generico; la modalidad se configura por anexo o caratula.</p></div>
+                  <div><h3>Contrato marco</h3><p>Contrato generico; la modalidad se define por anexo o caratula.</p></div>
                   <a class="btn" href="/contracts/decision-data-master-agreement-template.txt" download>Descargar</a>
                 </article>
                 <article class="document-card">
-                  <div><h3>Anexo tecnico</h3><p>Modalidad, contactos, carga, calidad 95% y canal operativo.</p></div>
-                  <a class="btn" href="/contracts/decision-data-technical-annex-template.txt" download>Descargar</a>
+                  <div><h3>Anexo tecnico</h3><p>Calidad 95%, bloques de informacion, contactos y canal operativo.</p></div>
+                  <a class="btn" href="/contracts/decision-data-technical-annex-template.txt" download>Anexo</a>
                 </article>
               </div>
               <div class="grid cols-2">
@@ -89,18 +92,17 @@
           <section class="auth-panel is-hidden" data-auth-panel="pending">
             <div>
               <div class="eyebrow">Solicitud recibida</div>
-              <h2>Queda pendiente de aprobacion admin</h2>
-              <p class="sub">Cuando administracion apruebe documentos, usuario y modalidad, el cliente recibe correo con claves temporales y debe cambiarlas en el primer ingreso.</p>
+              <h2>Cuenta pendiente de aprobacion</h2>
+              <p class="sub">Mientras Decision Data revisa, el cliente solo puede revisar estado, corregir documentos y preparar cargas no productivas.</p>
             </div>
             <div class="steps">
-              <div class="step"><span class="num">1</span><div>Cliente envia datos, modalidad tentativa, contratos firmados y documentos habilitantes.</div><span class="status ok">visual</span></div>
-              <div class="step"><span class="num">2</span><div>Admin revisa expediente documental en Onboarding clientes y confirma modalidad.</div><span class="status warn">pendiente</span></div>
-              <div class="step"><span class="num">3</span><div>Sistema envia correo con usuario y clave temporal.</div><span class="status warn">Fase 2</span></div>
-              <div class="step"><span class="num">4</span><div>Cliente cambia clave y accede a su portal.</div><span class="status warn">Fase 2</span></div>
+              <div class="step"><span class="num">1</span><div>Correo de confirmacion registrado para validar titularidad del contacto.</div><span class="status warn">Fase 2</span></div>
+              <div class="step"><span class="num">2</span><div>Admin revisa documentos, checklist y modalidad.</div><span class="status warn">pendiente</span></div>
+              <div class="step"><span class="num">3</span><div>Si aprueba, se emite usuario y clave temporal por correo.</div><span class="status warn">Fase 2</span></div>
             </div>
             <div class="auth-actions">
+              <button class="btn primary" type="button" data-login-action data-account-mode="pending">Entrar al entorno pendiente</button>
               <button class="btn" type="button" data-auth-switch="login">Volver al login</button>
-              <button class="btn primary" type="button" data-login-action>Simular usuario aprobado</button>
             </div>
           </section>
         </main>
@@ -117,18 +119,21 @@
           </div>
         </div>
         <nav class="nav" data-nav>
-          <a href="#dashboard" class="active">Dashboard</a>
-          <a href="#usuarios">Usuarios</a>
-          <a href="#ingesta">Bloques de informacion</a>
-          <a href="#consultas">Consultas</a>
-          <a href="#api">API</a>
-          <a href="#facturacion">Facturacion</a>
-          <a href="#estados">Estados</a>
+          <a href="#inicio" class="active">Inicio</a>
+          <a href="#estado">Estado de cuenta</a>
+          <a href="#documentos">Documentos y habilitacion</a>
+          <a href="#subusuarios" data-nav-requires-approved>Subusuarios</a>
+          <a href="#carga">Carga de informacion</a>
+          <a href="#consulta-individual" data-nav-requires-approved>Consulta individual</a>
+          <a href="#consulta-bloque" data-nav-requires-approved>Consulta por bloque</a>
+          <a href="#api" data-nav-requires-approved>API</a>
+          <a href="#facturacion" data-nav-requires-approved>Facturacion</a>
+          <a href="#auditoria" data-nav-requires-approved>Auditoria de consultas</a>
           <a href="#notificaciones">Notificaciones</a>
-          <a href="#perfil">Perfil y clave</a>
         </nav>
         <div class="sidebar-footer">
-          Sesion visual aprobada. Backend real pendiente para Fase 2.
+          <b data-session-mode>Cliente aprobado</b><br />
+          <span data-session-copy>Acceso visual aprobado; modulos abiertos segun modalidad demo.</span>
         </div>
       </aside>
 
@@ -137,80 +142,173 @@
           <div>
             <div class="eyebrow">Decision Data</div>
             <h1>Portal cliente / Data Partner</h1>
-            <p class="sub">Navegacion visible solo despues del login. No consume datos reales ni ejecuta consultas.</p>
+            <p class="sub">Cockpit operativo para estado, documentos, ingesta, consultas, API, facturacion postpago y BAC.</p>
           </div>
           <div class="toolbar">
-            <div class="session-pill"><span>Sesion demo</span><b>Data Partner Founding</b></div>
-            <button class="btn help-button" type="button" data-toggle-explain>Que es Data Exchange?</button>
+            <div class="session-pill"><span>Estado de acceso</span><b data-session-mode>Cliente aprobado</b></div>
             <a class="btn" href="/journey">Journey aprobacion</a>
             <a class="btn" href="/admin">Portal admin</a>
             <button class="btn" type="button" data-logout-action>Cerrar sesion</button>
           </div>
         </header>
-        <div class="explain-box is-hidden" data-explain-box>
-          <div class="notice">Por ahora este bloque diferencia el portal cliente: explica el producto, modalidades, Decision Credits y que la facturacion es mensual postpago.</div>
-        </div>
+        <div class="notice is-hidden" data-access-notice></div>
 
-        <section id="dashboard" class="view active">
+        <section id="inicio" class="view active">
           <div class="grid cols-3">
-            <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Consultas reales ejecutadas</span></div></article>
-            <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Bloques reales cargados</span></div></article>
-            <article class="panel metric"><div class="panel-body"><strong>$0.00</strong><span>Facturacion real del periodo</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>0</strong><span>Consultas productivas del periodo</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>95%</strong><span>Umbral minimo de calidad</span></div></article>
+            <article class="panel metric"><div class="panel-body"><strong>Postpago</strong><span>Cierre mensual de facturacion</span></div></article>
           </div>
-          <article class="panel" style="margin-top: 14px;">
-            <div class="panel-head"><h2>Journey cliente</h2><span class="status warn">Visual Fase 1</span></div>
-            <div class="panel-body steps">
-              <div class="step"><span class="num">1</span><div>Login con usuario aprobado o autorregistro si no tiene cuenta.</div><span class="status ok">visual</span></div>
-              <div class="step"><span class="num">2</span><div>Aprobacion admin y correo con clave temporal.</div><span class="status warn">Fase 2</span></div>
-              <div class="step"><span class="num">3</span><div>Cambio de clave en primer ingreso.</div><span class="status warn">Fase 2</span></div>
-              <div class="step"><span class="num">4</span><div>Uso del portal segun modalidad aprobada.</div><span class="status warn">Fase 3+</span></div>
-            </div>
-          </article>
+          <div class="grid cols-2" style="margin-top: 14px;">
+            <article class="panel">
+              <div class="panel-head"><h2>Centro de estado</h2><span class="status warn">Requiere aprobacion</span></div>
+              <div class="panel-body status-rail">
+                <div class="step"><span class="num">1</span><div>Autorregistro y correo corporativo confirmado.</div><span class="status ok">visual</span></div>
+                <div class="step"><span class="num">2</span><div>Documentos firmados y habilitantes cargados.</div><span class="status warn">revision</span></div>
+                <div class="step"><span class="num">3</span><div>Admin aprueba modalidad y usuario productivo.</div><span class="status warn">bloqueante</span></div>
+                <div class="step"><span class="num">4</span><div>Clave temporal y cambio obligatorio en primer ingreso.</div><span class="status warn">Fase 2</span></div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Modulos operativos</h2><span class="status warn">Bloqueo por estado</span></div>
+              <div class="panel-body module-list">
+                <div class="module-row"><div><b>Permitido en pendiente</b><span>Estado, documentos y carga no productiva para preparar validacion tecnica.</span></div><span class="status ok">si</span></div>
+                <div class="module-row"><div><b>Bloqueado en pendiente</b><span>Consultas, API, facturacion, subusuarios productivos y BAC de consumo.</span></div><span class="status warn">hasta aprobar</span></div>
+                <div class="module-row"><div><b>Permitido aprobado</b><span>Operacion segun modalidad: Cliente Normal, Contributor, Active o Founding.</span></div><span class="status ok">visual</span></div>
+              </div>
+            </article>
+          </div>
         </section>
 
-        <section id="usuarios" class="view">
+        <section id="estado" class="view">
+          <div class="grid cols-2">
+            <article class="panel">
+              <div class="panel-head"><h2>Estado de cuenta</h2><span class="status warn">Centro unificado</span></div>
+              <div class="panel-body stack">
+                <div class="notice">Estado actual: expediente documental en revision. El entorno productivo se habilita solo con aprobacion completa.</div>
+                <div class="module-list">
+                  <div class="module-row"><div><b>Modalidad solicitada</b><span>Data Partner Founding, pendiente de aprobacion admin.</span></div><span class="status warn">tentativa</span></div>
+                  <div class="module-row"><div><b>Documentos bloqueantes</b><span>RUC actualizado, nombramiento y cedula representante.</span></div><span class="status warn">pendientes</span></div>
+                  <div class="module-row"><div><b>Carga no productiva</b><span>Permitida para validar formato y diccionario.</span></div><span class="status ok">habilitada</span></div>
+                </div>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Notificaciones accionables</h2><span class="status warn">Pendientes</span></div>
+              <div class="panel-body notification-stack">
+                <div class="notification"><b>Completar expediente</b><p>Carga documentos habilitantes faltantes para que admin pueda aprobar.</p></div>
+                <div class="notification ok"><b>Carga sandbox disponible</b><p>Puedes subir un bloque no productivo; no genera credits ni consumo.</p></div>
+                <div class="notification error"><b>Modulo productivo bloqueado</b><p>Consulta individual, bloque, API y facturacion se abren solo tras aprobacion.</p></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="documentos" class="view">
+          <div class="grid cols-2">
+            <article class="panel">
+              <div class="panel-head"><h2>Documentos descargables</h2><span class="status warn">Genericos</span></div>
+              <div class="panel-body document-grid">
+                <article class="document-card"><div><h3>NDA</h3><p>Confidencialidad para revision y habilitacion.</p></div><a class="btn" href="/contracts/decision-data-nda-template.txt" download>Descargar</a></article>
+                <article class="document-card"><div><h3>Contrato marco</h3><p>Plantilla aplicable a modalidad aprobada.</p></div><a class="btn" href="/contracts/decision-data-master-agreement-template.txt" download>Descargar</a></article>
+                <article class="document-card"><div><h3>Anexo tecnico</h3><p>Diccionario, calidad 95%, contactos y canal.</p></div><a class="btn" href="/contracts/decision-data-technical-annex-template.txt" download>Descargar</a></article>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Carga de habilitantes</h2><span class="status warn">Checklist</span></div>
+              <div class="panel-body checklist">
+                <label class="check-row"><input type="checkbox" checked /><span>NDA firmado</span><span class="status ok">recibido</span></label>
+                <label class="check-row"><input type="checkbox" checked /><span>Contrato marco firmado</span><span class="status ok">recibido</span></label>
+                <label class="check-row"><input type="checkbox" /><span>RUC actualizado</span><span class="status warn">pendiente</span></label>
+                <label class="check-row"><input type="checkbox" /><span>Nombramiento representante legal</span><span class="status warn">pendiente</span></label>
+                <label class="check-row"><input type="checkbox" /><span>Cedula representante legal</span><span class="status warn">pendiente</span></label>
+                <div class="grid cols-2">
+                  <div class="field"><label>Subir documento corregido</label><input type="file" /></div>
+                  <button class="btn primary" type="button">Enviar a revision</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="subusuarios" class="view" data-requires-approved>
           <article class="panel">
-            <div class="panel-head"><h2>Usuarios autorizados</h2><span class="status warn">Visual Fase 1</span></div>
+            <div class="panel-head"><h2>Subusuarios y permisos</h2><span class="status warn">RBAC Fase 2</span></div>
             <div class="panel-body">
-              <table class="table">
-                <tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Alcance</th></tr>
-                <tr><td>miza@decisiondata.ec</td><td>Operador principal</td><td>Aprobado demo</td><td>Consultas, bloques y facturacion</td></tr>
-                <tr><td>analista@megadatos.demo</td><td>Analista</td><td>Pendiente Fase 2</td><td>Consultas con consentimiento</td></tr>
-                <tr><td>finanzas@megadatos.demo</td><td>Facturacion</td><td>Pendiente Fase 2</td><td>Consumo mensual postpago</td></tr>
-              </table>
-              <div class="notice">Alta, baja y cambio de rol deben quedar auditados. La aprobacion real y el correo con clave temporal se implementan en Fase 2.</div>
+              <div class="permission-grid">
+                <article class="permission-card"><h3>Operador principal</h3><ul><li>Gestiona subusuarios</li><li>Ejecuta consultas</li><li>Ve facturacion y BAC</li></ul></article>
+                <article class="permission-card"><h3>Analista de consultas</h3><ul><li>Consulta individual</li><li>Consulta por bloque</li><li>Historial propio</li></ul></article>
+                <article class="permission-card"><h3>Integrador API</h3><ul><li>Llaves API</li><li>Webhooks</li><li>Consumo tecnico</li></ul></article>
+                <article class="permission-card"><h3>Facturacion</h3><ul><li>Consumo mensual</li><li>Tarifas aplicadas</li><li>Descarga de soportes</li></ul></article>
+              </div>
             </div>
           </article>
         </section>
 
-        <section id="ingesta" class="view">
+        <section id="carga" class="view">
           <article class="panel">
-            <div class="panel-head"><h2>Bloques de informacion</h2><span class="status warn">No procesa todavia</span></div>
+            <div class="panel-head"><h2>Carga de informacion</h2><span class="status warn">Sandbox permitido</span></div>
             <div class="panel-body grid cols-2">
-              <div class="notice">Umbral minimo: 95%. Duplicados se descartan sin error y sin Decision Credits.</div>
+              <div class="stack">
+                <div class="notice ok">Cliente pendiente puede cargar informacion no productiva para validar estructura. No genera consultas, facturacion ni Decision Credits.</div>
+                <div class="notice">Regla productiva futura: bloques de informacion, umbral minimo 95%, duplicados descartados sin error y sin credits.</div>
+              </div>
               <form class="form">
+                <div class="field"><label>Ambiente</label><select><option>No productivo / sandbox</option><option disabled>Productivo bloqueado hasta aprobacion</option></select></div>
                 <div class="field"><label>Archivo CSV/XLSX</label><input value="plantilla_bloque_informacion_datapartner_v6.csv" /></div>
-                <button class="btn primary" type="button">Validar bloque</button>
+                <button class="btn primary" type="button">Validar bloque no productivo</button>
               </form>
             </div>
           </article>
         </section>
 
-        <section id="consultas" class="view">
-          <article class="panel">
-            <div class="panel-head"><h2>Consulta unificada</h2><span class="status warn">Visual</span></div>
-            <div class="panel-body">
-              <form class="form">
+        <section id="consulta-individual" class="view" data-requires-approved>
+          <div class="grid cols-2">
+            <article class="panel">
+              <div class="panel-head"><h2>Consulta individual</h2><span class="status warn">Con consentimiento</span></div>
+              <div class="panel-body form">
                 <div class="field"><label>Cedula, RUC o codigo SB</label><input value="0923048581" /></div>
+                <div class="field"><label>Producto</label><select><option>Reporte completo</option><option>Reporte basico</option></select></div>
+                <div class="notice">Se registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado.</div>
+                <div class="module-row"><div><b>Valor estimado</b><span>Data Partner Founding, tramo ejemplo 1-100.</span></div><span class="status ok">$0.50</span></div>
+                <button class="btn primary" type="button">Consultar y generar BAC</button>
+              </div>
+            </article>
+            <article class="panel">
+              <div class="panel-head"><h2>Vista reporte completo</h2><span class="status ok">Base confirmada</span></div>
+              <div class="panel-body report-shell">
+                <div class="report-score">
+                  <div class="score-ring">991</div>
+                  <div>
+                    <h3>Perfil Crediticio Pro</h3>
+                    <p class="sub">Inspirado en el reporte ejemplo confirmado. Incluye score, riesgo, factores, comportamiento y trazabilidad.</p>
+                    <div class="mini-bars">
+                      <div class="mini-bar"><span>3 meses</span><i style="width: 98%;"></i><b>A+</b></div>
+                      <div class="mini-bar"><span>6 meses</span><i style="width: 98%;"></i><b>A+</b></div>
+                      <div class="mini-bar"><span>12 meses</span><i style="width: 94%;"></i><b>A</b></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="consulta-bloque" class="view" data-requires-approved>
+          <article class="panel">
+            <div class="panel-head"><h2>Consulta por bloque</h2><span class="status warn">Productivo aprobado</span></div>
+            <div class="panel-body grid cols-2">
+              <div class="notice">Carga cedulas, RUC o codigos SB para consulta masiva. Cada fila valida consentimiento, producto, tarifa y estado BAC.</div>
+              <form class="form">
+                <div class="field"><label>Archivo de consulta</label><input value="consulta_bloque_100_registros.xlsx" /></div>
                 <div class="field"><label>Producto</label><select><option>Reporte basico</option><option>Reporte completo</option></select></div>
-                <div class="notice">Toda consulta real debe registrar BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado.</div>
-                <button class="btn primary" type="button">Consultar con consentimiento</button>
+                <button class="btn primary" type="button">Prevalidar costo y consentimiento</button>
               </form>
             </div>
           </article>
         </section>
 
-        <section id="api" class="view">
+        <section id="api" class="view" data-requires-approved>
           <article class="panel">
             <div class="panel-head"><h2>Consumo via API</h2><span class="status warn">Fase 7</span></div>
             <div class="panel-body">
@@ -218,56 +316,36 @@
                 <tr><th>Endpoint</th><th>Estado</th><th>Uso</th></tr>
                 <tr><td>POST /api/v1/queries</td><td>Reservado</td><td>Consulta individual</td></tr>
                 <tr><td>POST /api/v1/batch-queries</td><td>Reservado</td><td>Consulta por bloque</td></tr>
-                <tr><td>GET /api/v1/usage</td><td>Reservado</td><td>Consumo mensual</td></tr>
+                <tr><td>GET /api/v1/usage</td><td>Reservado</td><td>Consumo mensual y facturacion</td></tr>
               </table>
             </div>
           </article>
         </section>
 
-        <section id="facturacion" class="view">
+        <section id="facturacion" class="view" data-requires-approved>
           <article class="panel">
-            <div class="panel-head"><h2>Facturacion estimada</h2><span class="status ok">Postpago mensual</span></div>
+            <div class="panel-head"><h2>Facturacion</h2><span class="status ok">Mensual postpago</span></div>
             <div class="panel-body">
-              <div class="notice">Decision Credits no son prepago. El exceso sobre credits se factura a tarifa Cliente Normal.</div>
+              <table class="table">
+                <tr><th>Modalidad</th><th>Decision Credits</th><th>Exceso</th></tr>
+                <tr><td>Cliente Normal</td><td>No aplica</td><td>Tarifa normal</td></tr>
+                <tr><td>Contributor</td><td>1:2 para reporte basico</td><td>Tarifa Cliente Normal</td></tr>
+                <tr><td>Active / Founding</td><td>1:1 beneficios preferenciales</td><td>Tarifa Cliente Normal</td></tr>
+              </table>
             </div>
           </article>
         </section>
 
-        <section id="estados" class="view">
+        <section id="auditoria" class="view" data-requires-approved>
           <article class="panel">
-            <div class="panel-head"><h2>Estados del portal cliente</h2><span class="status warn">Fase 1 visual</span></div>
-            <div class="panel-body state-grid">
-              <div class="state-card">
-                <div>
-                  <div class="state-icon">0</div>
-                  <h3>Sin bloques cargados</h3>
-                  <p>Cuando el cliente aun no reporta informacion, se invita a descargar plantilla y manual.</p>
-                </div>
-                <button class="btn" type="button">Descargar plantilla</button>
-              </div>
-              <div class="state-card">
-                <div>
-                  <div class="state-icon">...</div>
-                  <h3>Validando archivo</h3>
-                  <p>Estado de carga mientras el backend calcula calidad, duplicados y observados.</p>
-                  <div class="skeleton"><span></span><span></span><span></span></div>
-                </div>
-              </div>
-              <div class="state-card error">
-                <div>
-                  <div class="state-icon">!</div>
-                  <h3>Bloque bajo 95%</h3>
-                  <p>Si no supera el umbral, el lote se rechaza y se muestra reporte de errores.</p>
-                </div>
-                <button class="btn" type="button">Ver errores</button>
-              </div>
-              <div class="state-card success">
-                <div>
-                  <div class="state-icon">OK</div>
-                  <h3>Cliente aprobado</h3>
-                  <p>Una vez aprobado, se habilitan consultas segun modalidad y se mantiene BAC.</p>
-                </div>
-              </div>
+            <div class="panel-head"><h2>Auditoria de consultas</h2><span class="status warn">BAC</span></div>
+            <div class="panel-body">
+              <table class="table">
+                <tr><th>Fecha</th><th>Identificador</th><th>Producto</th><th>Valor</th><th>Estado</th></tr>
+                <tr><td>2026-05-22 10:10</td><td>0923048581</td><td>Reporte completo</td><td>$0.50</td><td>Simulado</td></tr>
+                <tr><td>2026-05-22 10:04</td><td>0999999999001</td><td>Reporte basico</td><td>$0.50</td><td>Simulado</td></tr>
+              </table>
+              <div class="notice">En produccion cada consulta debe poder descargarse con BAC completo y evidencia de consentimiento.</div>
             </div>
           </article>
         </section>
@@ -275,36 +353,22 @@
         <section id="notificaciones" class="view">
           <div class="grid cols-2">
             <article class="panel">
-              <div class="panel-head"><h2>Notificaciones cliente</h2><span class="status warn">Visual Fase 1</span></div>
+              <div class="panel-head"><h2>Notificaciones</h2><span class="status warn">Centro unico</span></div>
               <div class="panel-body notification-stack">
-                <div class="notification ok"><b>Solicitud aprobada</b><p>En Fase 2 se enviaria correo con clave temporal y enlace de cambio obligatorio.</p></div>
-                <div class="notification"><b>Bloque observado</b><p>Si la calidad cae bajo 95%, se mostrara reporte de errores descargable.</p></div>
-                <div class="notification error"><b>Consulta bloqueada</b><p>Si falta consentimiento o documentos bloqueantes, el cliente no puede consumir.</p></div>
+                <div class="notification"><b>Observacion documental</b><p>Falta nombramiento actualizado del representante legal.</p></div>
+                <div class="notification ok"><b>Sandbox listo</b><p>La plantilla de carga no productiva esta disponible.</p></div>
+                <div class="notification error"><b>Consulta bloqueada</b><p>Cuenta pendiente de aprobacion documental completa.</p></div>
               </div>
             </article>
             <article class="panel">
-              <div class="panel-head"><h2>Actividad reciente</h2><span class="status warn">Demo visual</span></div>
+              <div class="panel-head"><h2>Actividad reciente</h2><span class="status warn">Visual</span></div>
               <div class="panel-body activity-list">
-                <div class="activity-item"><span class="activity-time">Hoy 00:30</span><div><b>Login demo</b><span>Navegacion cliente habilitada visualmente.</span></div><span class="status ok">visual</span></div>
-                <div class="activity-item"><span class="activity-time">Hoy 00:24</span><div><b>Autorregistro</b><span>Flujo pendiente de aprobacion admin mapeado.</span></div><span class="status warn">Fase 2</span></div>
-                <div class="activity-item"><span class="activity-time">Hoy 00:18</span><div><b>Workbench</b><span>Avance real actualizado en tablero admin.</span></div><span class="status ok">listo</span></div>
+                <div class="activity-item"><span class="activity-time">Hoy 10:30</span><div><b>Login</b><span>Ingreso al portal cliente.</span></div><span class="status ok">visual</span></div>
+                <div class="activity-item"><span class="activity-time">Hoy 10:22</span><div><b>Documento observado</b><span>Admin solicita correccion.</span></div><span class="status warn">pendiente</span></div>
+                <div class="activity-item"><span class="activity-time">Hoy 10:05</span><div><b>Carga sandbox</b><span>Validacion no productiva permitida.</span></div><span class="status ok">permitida</span></div>
               </div>
             </article>
           </div>
-        </section>
-
-        <section id="perfil" class="view">
-          <article class="panel">
-            <div class="panel-head"><h2>Perfil y cambio de clave</h2><span class="status warn">Visual Fase 2</span></div>
-            <div class="panel-body grid cols-2">
-              <div class="notice">Cuando el usuario reciba claves temporales por correo, el primer ingreso debe obligar cambio de contrasena.</div>
-              <form class="form">
-                <div class="field"><label>Clave temporal</label><input type="password" value="Temporal2026" /></div>
-                <div class="field"><label>Nueva clave</label><input type="password" value="MiClaveSegura2026" /></div>
-                <button class="btn primary" type="button">Cambiar clave</button>
-              </form>
-            </div>
-          </article>
         </section>
       </main>
     </div>

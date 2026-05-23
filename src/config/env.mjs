@@ -5,15 +5,15 @@ const DEFAULTS = {
   NEXT_PUBLIC_API_BASE_URL: "http://localhost:4100",
   NEXT_PUBLIC_CLIENT_PORTAL_PATH: "/client",
   NEXT_PUBLIC_ADMIN_PORTAL_PATH: "/admin",
-  NEXT_PUBLIC_AGENT_WORKBENCH_PATH: "/admin/agent-workbench",
+  NEXT_PUBLIC_DEV_MONITOR_PATH: "/internal/dev-monitor",
   NEXT_PUBLIC_APPROVAL_JOURNEY_PATH: "/journey"
 };
 
 export function getFrontendConfig(env = process.env) {
   const source = { ...DEFAULTS, ...env };
 
-  if (!source.NEXT_PUBLIC_AGENT_WORKBENCH_PATH.startsWith(source.NEXT_PUBLIC_ADMIN_PORTAL_PATH)) {
-    throw new Error("Agent Workbench must remain inside admin portal.");
+  if (source.NEXT_PUBLIC_DEV_MONITOR_PATH.startsWith(source.NEXT_PUBLIC_ADMIN_PORTAL_PATH)) {
+    throw new Error("Development monitor must remain outside admin product routes.");
   }
 
   return {
@@ -23,7 +23,7 @@ export function getFrontendConfig(env = process.env) {
     apiBaseUrl: source.NEXT_PUBLIC_API_BASE_URL,
     clientPortalPath: source.NEXT_PUBLIC_CLIENT_PORTAL_PATH,
     adminPortalPath: source.NEXT_PUBLIC_ADMIN_PORTAL_PATH,
-    agentWorkbenchPath: source.NEXT_PUBLIC_AGENT_WORKBENCH_PATH,
+    devMonitorPath: source.NEXT_PUBLIC_DEV_MONITOR_PATH,
     approvalJourneyPath: source.NEXT_PUBLIC_APPROVAL_JOURNEY_PATH
   };
 }
@@ -32,14 +32,14 @@ export function buildFrontendHealth(config, now = new Date()) {
   return {
     status: "ok",
     service: "data-exchange-frontend",
-    phase: "0",
+    phase: "1",
     environment: config.appEnv,
     timestamp: now.toISOString(),
     apiBaseUrl: config.apiBaseUrl,
     portals: {
       client: config.clientPortalPath,
       admin: config.adminPortalPath,
-      agentWorkbench: config.agentWorkbenchPath,
+      devMonitor: config.devMonitorPath,
       approvalJourney: config.approvalJourneyPath
     }
   };

@@ -11,15 +11,15 @@ Frontend bootstrap para Data Exchange de Decision Data.
 - React Hook Form + Zod.
 - Recharts para metricas.
 
-Fase 0 usa un servidor Node.js minimo sin dependencias para validar estructura, rutas reservadas y contrato de salud. La implementacion Next.js real inicia cuando Mateo valide pasar a Fase 1.
+Fase 1 mantiene un servidor Node.js minimo sin dependencias para validar el journey visual, rutas reservadas y contrato de salud. La implementacion Next.js real inicia cuando Mateo valide pasar del prototipo visual a aplicacion productiva.
 
 ## Separacion obligatoria
 
 - Portal cliente: `src/app/client`.
 - Portal admin: `src/app/admin`.
-- Agent Workbench: `src/app/admin/agent-workbench`.
+- Visor externo de desarrollo: `src/app/internal/dev-monitor`.
 
-Agent Workbench no debe aparecer en el portal cliente.
+Agent Workbench no pertenece al portal cliente ni al portal administrador productivo. La ruta local `/admin/agent-workbench` redirige al visor externo `/internal/dev-monitor`.
 
 ## Comandos
 
@@ -44,9 +44,10 @@ npm run test
 ## Rutas bootstrap
 
 - `GET /health`
-- `GET /client`: portal cliente visual de Fase 1 con login primero, autorregistro y navegacion posterior al acceso.
-- `GET /admin`: portal admin visual de Fase 1 con login primero y navegacion administrativa posterior al acceso.
-- `GET /admin/agent-workbench`: vista viva local del Agent Workbench para visualizar avance simulado. No ejecuta agentes reales ni automatiza decisiones.
+- `GET /client`: portal cliente visual de Fase 1 con login primero, autorregistro, cliente pendiente/aprobado, carga no productiva y navegacion posterior al acceso.
+- `GET /admin`: portal admin visual de Fase 1 con login primero, onboarding, clientes/modalidades, usuarios, ingesta, consumos/API, facturacion, BAC, notificaciones y configuracion.
+- `GET /internal/dev-monitor`: visor externo del Agent Workbench para visualizar avance simulado. No ejecuta agentes reales ni automatiza decisiones.
+- `GET /admin/agent-workbench`: redirige a `/internal/dev-monitor` por compatibilidad local.
 - `GET /journey`: journey completo de aprobacion preproduccion para recorrer cliente, admin, ingesta, consulta, BAC, facturacion, API y checklist de Mateo.
 
 ## Autorregistro documental

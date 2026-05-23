@@ -9,10 +9,18 @@ function activateView(hash) {
   const views = Array.from(document.querySelectorAll(".view"));
   const navItems = Array.from(document.querySelectorAll("[data-nav] a[href^='#']"));
   const fallback = views[0];
-  const activeView = document.getElementById(id) || fallback;
+  const requestedView = document.getElementById(id) || fallback;
+  const isPending = document.body.dataset.accountState === "pending";
+  const locked = isPending && requestedView?.hasAttribute("data-requires-approved");
+  const activeView = locked ? document.getElementById("estado") || fallback : requestedView;
 
   views.forEach((view) => view.classList.toggle("active", view === activeView));
   navItems.forEach((item) => item.classList.toggle("active", item.getAttribute("href") === `#${activeView.id}`));
+
+  if (locked) {
+    window.location.hash = `#${activeView.id}`;
+    showAccessNotice("Las funciones productivas quedan bloqueadas hasta aprobar documentos habilitantes. Puedes revisar estado, cargar documentos y preparar una carga no productiva.");
+  }
 }
 
 function showAuthPanel(name) {
@@ -20,9 +28,45 @@ function showAuthPanel(name) {
   panels.forEach((panel) => panel.classList.toggle("is-hidden", panel.dataset.authPanel !== name));
 }
 
-function enterPortal() {
+function applyAccessState(state) {
+  document.body.dataset.accountState = state;
+  const isPending = state === "pending";
+  const modeLabel = isPending ? "Cliente pendiente" : "Cliente aprobado";
+  const modeCopy = isPending
+    ? "Pendiente de aprobacion documental; solo entorno no productivo habilitado."
+    : "Acceso visual aprobado; modulos abiertos segun modalidad demo.";
+
+  document.querySelectorAll("[data-session-mode]").forEach((item) => {
+    item.textContent = modeLabel;
+  });
+
+  document.querySelectorAll("[data-session-copy]").forEach((item) => {
+    item.textContent = modeCopy;
+  });
+
+  document.querySelectorAll("[data-requires-approved]").forEach((view) => {
+    view.classList.toggle("is-access-locked", isPending);
+  });
+
+  document.querySelectorAll("[data-nav-requires-approved]").forEach((item) => {
+    item.classList.toggle("locked", isPending);
+    item.setAttribute("aria-disabled", isPending ? "true" : "false");
+  });
+}
+
+function showAccessNotice(message) {
+  document.querySelectorAll("[data-access-notice]").forEach((item) => {
+    item.textContent = message;
+    item.classList.remove("is-hidden");
+  });
+}
+
+function enterPortal(event) {
   const authGate = document.querySelector("[data-auth-gate]");
   const appShell = document.querySelector("[data-app-shell]");
+  const state = event?.currentTarget?.dataset.accountMode || "approved";
+
+  applyAccessState(state);
 
   if (authGate) {
     authGate.classList.add("is-hidden");
@@ -32,7 +76,10 @@ function enterPortal() {
     appShell.classList.remove("is-hidden");
   }
 
-  if (!window.location.hash || window.location.hash === "#login" || window.location.hash === "#registro") {
+  if (state === "pending") {
+    window.location.hash = "#estado";
+    showAccessNotice("Tu cuenta esta pendiente. Puedes cargar documentos y preparar informacion no productiva; las consultas, API y facturacion quedan bloqueadas.");
+  } else if (!window.location.hash || window.location.hash === "#login" || window.location.hash === "#registro") {
     window.location.hash = activeDefaultHash();
   }
 
@@ -71,6 +118,17 @@ document.querySelectorAll("[data-register-submit]").forEach((button) => {
 
 document.querySelectorAll("[data-login-action]").forEach((button) => {
   button.addEventListener("click", enterPortal);
+});
+
+document.querySelectorAll("[data-nav-requires-approved]").forEach((item) => {
+  item.addEventListener("click", (event) => {
+    if (document.body.dataset.accountState === "pending") {
+      event.preventDefault();
+      window.location.hash = "#estado";
+      activateView("#estado");
+      showAccessNotice("Modulo bloqueado hasta aprobacion completa de documentos habilitantes.");
+    }
+  });
 });
 
 document.querySelectorAll("[data-logout-action]").forEach((button) => {

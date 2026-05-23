@@ -8,4 +8,6 @@ Responsabilidades futuras:
 - Aprobar o rechazar documentacion.
 - Confirmar o cambiar modalidad.
 - Ver ingesta, errores, Decision Credits, BAC, consumo y facturacion.
-- Operar Agent Workbench.
+- Gestionar notificaciones globales y configuracion.
+
+Agent Workbench no pertenece al portal admin productivo; queda como visor externo de desarrollo.

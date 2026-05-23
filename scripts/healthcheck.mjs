@@ -6,10 +6,10 @@ const health = buildFrontendHealth(config, new Date("2026-05-22T00:00:00.000Z"))
 const expected = [
   health.status === "ok",
   health.service === "data-exchange-frontend",
-  health.phase === "0",
+  health.phase === "1",
   health.portals.client === "/client",
   health.portals.admin === "/admin",
-  health.portals.agentWorkbench === "/admin/agent-workbench",
+  health.portals.devMonitor === "/internal/dev-monitor",
   health.portals.approvalJourney === "/journey"
 ];
 

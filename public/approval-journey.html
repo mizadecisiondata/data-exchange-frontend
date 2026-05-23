@@ -153,13 +153,13 @@
           <div>
             <div class="eyebrow">Decision Data</div>
             <h1>Journey de aprobacion preproduccion</h1>
-            <p class="sub">Caso de uso completo para recorrer portal cliente, portal admin, ingesta, consulta, BAC, facturacion postpago, API y Agent Workbench antes de salida a produccion.</p>
+            <p class="sub">Caso de uso completo para recorrer portal cliente, portal admin, ingesta, consulta, BAC, facturacion postpago, API y visor externo de desarrollo antes de salida a produccion.</p>
           </div>
         </div>
         <div class="toolbar">
           <a class="btn" href="/client">Portal cliente</a>
           <a class="btn" href="/admin">Portal admin</a>
-          <a class="btn primary" href="/admin/agent-workbench">Agent Workbench</a>
+          <a class="btn primary" href="/internal/dev-monitor">Visor externo</a>
         </div>
       </header>
 
@@ -297,13 +297,13 @@
                 <tr><td>POST /api/v1/queries</td><td>Consulta individual</td><td>4</td></tr>
                 <tr><td>POST /api/v1/batch-queries</td><td>Consulta por bloque</td><td>5</td></tr>
                 <tr><td>GET /api/v1/usage</td><td>Consumo y cierre mensual</td><td>6</td></tr>
-                <tr><td>GET /api/v1/agent-workbench/events</td><td>Eventos admin</td><td>2+</td></tr>
+                <tr><td>GET /internal/dev-monitor</td><td>Visor externo de agentes</td><td>Fase 1 visual</td></tr>
               </table>
             </article>
 
             <article class="journey-stage" data-stage-panel="8">
               <div class="approval-checklist">
-                <label class="approval-check"><input type="checkbox" /><div><b>Separacion cliente/admin</b><span>El cliente no accede a Agent Workbench ni pantallas internas.</span></div><span class="status ok">visual</span></label>
+                <label class="approval-check"><input type="checkbox" /><div><b>Separacion cliente/admin</b><span>El cliente no accede a pantallas internas y Agent Workbench no vive en el producto admin.</span></div><span class="status ok">visual</span></label>
                 <label class="approval-check"><input type="checkbox" /><div><b>Login primero</b><span>Ambos portales abren con login antes de navegar.</span></div><span class="status ok">visual</span></label>
                 <label class="approval-check"><input type="checkbox" /><div><b>Autorregistro y aprobacion</b><span>Cliente solicita acceso; admin aprueba usuario y modalidad.</span></div><span class="status warn">Fase 2 real</span></label>
                 <label class="approval-check"><input type="checkbox" /><div><b>Calidad de ingesta</b><span>95% minimo, duplicados descartados sin error ni credits.</span></div><span class="status warn">Fase 3 real</span></label>
