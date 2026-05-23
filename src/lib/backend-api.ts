@@ -14,6 +14,7 @@ export type DemoState = {
   uploads: UploadSummary[];
   queries: QueryAudit[];
   batchQueries: BatchSummary[];
+  subUsers: SubUser[];
   usage: UsageSummary;
   outbox: OutboxEmail[];
   invoicePreview: InvoicePreview;
@@ -70,6 +71,17 @@ export type UsageSummary = {
   estimatedSubtotal: number;
   creditsGenerated: number;
   creditsUsed: number;
+};
+
+export type SubUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: "active" | "blocked";
+  allowedModules: string[];
+  mustChangeTemporaryPassword: boolean;
+  createdAt: string;
 };
 
 export type InvoicePreview = {

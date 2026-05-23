@@ -7,8 +7,8 @@ import { BrandMark } from "@/components/brand";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Progress } from "@/components/ui";
 
 const agents = [
-  { name: "Frontend Agent", icon: Code2, progress: 78, task: "Cliente cero con carga, bloque, API, factura y auditoria visibles." },
-  { name: "Backend Architect", icon: Database, progress: 66, task: "Store sandbox funcional: aprobacion, ingesta, consultas y uso." },
+  { name: "Frontend Agent", icon: Code2, progress: 84, task: "Cliente cero con subusuarios, permisos, carga, API y factura visibles." },
+  { name: "Backend Architect", icon: Database, progress: 72, task: "Store sandbox funcional: aprobacion, subusuarios, ingesta, consultas y uso." },
   { name: "BAC Audit Agent", icon: ShieldCheck, progress: 42, task: "Cada consulta sandbox registra BAC, consentimiento, canal, IP y tarifa." },
   { name: "PM Tracking Agent", icon: FileQuestion, progress: 40, task: "Pricing queda como simulacion tecnica hasta aprobacion final." }
 ];
@@ -33,7 +33,7 @@ export function DevMonitor() {
       </header>
       <section className="mb-4 grid gap-4 lg:grid-cols-4">
         <MetricCard label="Fase" value="2" tone="info" />
-        <MetricCard label="Avance real" value="74%" tone="warn" />
+        <MetricCard label="Avance real" value="80%" tone="warn" />
         <MetricCard label="Agentes" value="4" tone="ok" />
         <MetricCard label="Preguntas bloqueantes" value="0" tone="ok" />
       </section>
@@ -87,6 +87,7 @@ export function DevMonitor() {
             <Log text="Fase 2 activa: primera capa login y autorregistro visual." />
             <Log text="Backend conectado desde frontend mediante /api/backend/health." />
             <Log text="Sandbox funcional agregado: aprobar, cargar, consultar, bloquear, API y facturar." />
+            <Log text="Subusuarios agregados: crear, bloquear, permisos por modulo y preview." />
             <Log text="Admin revisa expediente y emite outbox simulado de credenciales." />
             <Log text="Workbench sigue separado del producto admin." />
           </CardContent>

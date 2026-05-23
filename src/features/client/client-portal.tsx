@@ -12,6 +12,8 @@ import {
   Bell,
   Blocks,
   Braces,
+  Eye,
+  EyeOff,
   Download,
   FileCheck2,
   Home,
@@ -20,6 +22,7 @@ import {
   Search,
   ShieldCheck,
   UploadCloud,
+  UserPlus,
   Users
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -29,7 +32,7 @@ import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
 import { ReportPreview } from "@/components/report-preview";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Select } from "@/components/ui";
-import { backendGet, backendPost, type DemoState, type QueryAudit } from "@/lib/backend-api";
+import { backendGet, backendPost, type DemoState, type QueryAudit, type SubUser } from "@/lib/backend-api";
 import {
   apiEndpoints,
   bacEvents,
@@ -88,10 +91,15 @@ const navBase: NavItem[] = [
 
 const approvedOnly = new Set(["subusuarios", "consulta-individual", "consulta-bloque", "api", "facturacion", "auditoria"]);
 
+const subUserModuleOptions = navBase
+  .filter((item) => item.id !== "subusuarios")
+  .map((item) => ({ id: item.id, label: item.label }));
+
 export function ClientPortal() {
   const [state, send] = useMachine(clientMachine);
   const [active, setActive] = useState("inicio");
   const [queryProduct, setQueryProduct] = useState("complete_report");
+  const [previewSubUserId, setPreviewSubUserId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const demoState = useQuery({
     queryKey: ["demo-state"],
@@ -102,7 +110,12 @@ export function ClientPortal() {
   const isApproved = state.matches("approvedPortal") || demoState.data?.client.productionAccess === true;
   const isPortal = isPending || isApproved;
   const uppy = useMemo(() => new Uppy({ restrictions: { maxNumberOfFiles: 3 } }), []);
-  const nav = navBase.map((item) => ({ ...item, locked: !isApproved && approvedOnly.has(item.id) }));
+  const previewSubUser = demoState.data?.subUsers.find((item) => item.id === previewSubUserId && item.status === "active");
+  const previewAllowed = new Set(previewSubUser?.allowedModules ?? []);
+  const nav = navBase.map((item) => ({
+    ...item,
+    locked: (!isApproved && approvedOnly.has(item.id)) || (Boolean(previewSubUser) && !previewAllowed.has(item.id))
+  }));
   const refreshState = () => queryClient.invalidateQueries({ queryKey: ["demo-state"] });
   const ingestion = useMutation({
     mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/ingestion/information-blocks"),
@@ -143,6 +156,20 @@ export function ClientPortal() {
       refreshState();
     }
   });
+  const createSubUser = useMutation({
+    mutationFn: (body: { name: string; email: string; role: string; allowedModules: string[] }) => backendPost<{ state: DemoState }>("/api/v1/client/subusers", body),
+    onSuccess: () => {
+      toast.success("Subusuario creado con credenciales temporales simuladas.");
+      refreshState();
+    }
+  });
+  const updateSubUser = useMutation({
+    mutationFn: (body: { id: string; allowedModules?: string[]; active?: boolean }) => backendPost<{ state: DemoState }>(`/api/v1/client/subusers/${body.id}`, body),
+    onSuccess: () => {
+      toast.success("Permisos del subusuario actualizados.");
+      refreshState();
+    }
+  });
   const registrationForm = useForm<RegistrationInput>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -158,6 +185,10 @@ export function ClientPortal() {
   function selectSection(id: string) {
     if (!isApproved && approvedOnly.has(id)) {
       setActive("estado");
+      return;
+    }
+    if (previewSubUser && !previewAllowed.has(id)) {
+      setActive("inicio");
       return;
     }
     setActive(id);
@@ -255,7 +286,7 @@ export function ClientPortal() {
     <AppShell
       label="Portal cliente"
       title="Portal cliente / Data Partner"
-      subtitle="Cockpit con estado de cuenta, documentos, ingesta, consultas, API, facturacion postpago y auditoria BAC."
+      subtitle={previewSubUser ? `Vista previa como ${previewSubUser.name}: solo modulos permitidos por el superadministrador.` : "Cockpit con estado de cuenta, documentos, ingesta, consultas, API, facturacion postpago y auditoria BAC."}
       nav={nav}
       active={active}
       onSelect={selectSection}
@@ -263,7 +294,8 @@ export function ClientPortal() {
       aside={
         <>
           <b className="text-foreground">{isApproved ? "Cliente aprobado" : "Cliente pendiente"}</b>
-          <p className="mt-1">{isApproved ? "Modulos abiertos para cliente cero sandbox." : "Solo estado, documentos y carga no productiva."}</p>
+          <p className="mt-1">{previewSubUser ? `Preview subusuario: ${previewSubUser.email}` : isApproved ? "Superadministrador cliente cero sandbox." : "Solo estado, documentos y carga no productiva."}</p>
+          {previewSubUser ? <Button className="mt-3 w-full" size="sm" onClick={() => setPreviewSubUserId(null)}>Salir vista subusuario</Button> : null}
           <Button className="mt-3 w-full" size="sm" onClick={() => send({ type: "LOGOUT" })}>Cerrar sesion</Button>
         </>
       }
@@ -276,7 +308,7 @@ export function ClientPortal() {
       {active === "inicio" && <Inicio isPending={!isApproved} demoState={demoState.data} />}
       {active === "estado" && <Estado demoState={demoState.data} />}
       {active === "documentos" && <Documentos />}
-      {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios /></LockedAware>}
+      {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={demoState.data} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
       {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={demoState.data} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
       {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={demoState.data?.queries[0]} /></LockedAware>}
       {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={demoState.data} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
@@ -532,8 +564,107 @@ function Auditoria({ events }: { events: QueryAudit[] | typeof bacEvents }) {
   );
 }
 
-function Subusuarios() {
-  return <Info title="Subusuarios" text="Roles sugeridos: operador principal, analista de consultas, integrador API y facturacion." tone="info" />;
+function Subusuarios({
+  demoState,
+  onCreate,
+  creating,
+  onUpdate,
+  updating,
+  previewSubUserId,
+  onPreview
+}: {
+  demoState?: DemoState;
+  onCreate: (body: { name: string; email: string; role: string; allowedModules: string[] }) => void;
+  creating: boolean;
+  onUpdate: (body: { id: string; allowedModules?: string[]; active?: boolean }) => void;
+  updating: boolean;
+  previewSubUserId: string | null;
+  onPreview: (id: string | null) => void;
+}) {
+  const [name, setName] = useState("Operador cobranza");
+  const [email, setEmail] = useState("operador.cobranza@megadatos.demo");
+  const [role, setRole] = useState("Operador cliente");
+  const [allowedModules, setAllowedModules] = useState(["inicio", "estado", "carga", "consulta-individual"]);
+  const subUsers = demoState?.subUsers ?? [];
+
+  function toggleCreateModule(moduleId: string) {
+    setAllowedModules((current) => current.includes(moduleId) ? current.filter((item) => item !== moduleId) : [...current, moduleId]);
+  }
+
+  function toggleExistingModule(subUser: SubUser, moduleId: string) {
+    const next = subUser.allowedModules.includes(moduleId)
+      ? subUser.allowedModules.filter((item) => item !== moduleId)
+      : [...subUser.allowedModules, moduleId];
+    onUpdate({ id: subUser.id, allowedModules: next });
+  }
+
+  return (
+    <div className="grid gap-4 xl:grid-cols-[.9fr_1.1fr]">
+      <Card>
+        <CardHeader><CardTitle>Crear subusuario</CardTitle><Badge tone="info">Superadmin cliente</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          <Field label="Nombre"><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
+          <Field label="Correo"><Input value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
+          <Field label="Rol">
+            <Select value={role} onChange={(event) => setRole(event.target.value)}>
+              <option>Operador cliente</option>
+              <option>Analista de consultas</option>
+              <option>Integrador API</option>
+              <option>Facturacion</option>
+            </Select>
+          </Field>
+          <div className="grid gap-2">
+            <Badge tone="warn">Modulos permitidos</Badge>
+            <div className="grid gap-2 md:grid-cols-2">
+              {subUserModuleOptions.map((module) => (
+                <label key={module.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2 text-sm">
+                  <input type="checkbox" checked={allowedModules.includes(module.id)} onChange={() => toggleCreateModule(module.id)} />
+                  <span>{module.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <Button variant="primary" disabled={creating || allowedModules.length === 0} onClick={() => onCreate({ name, email, role, allowedModules })}>
+            <UserPlus className="size-4" /> Crear subusuario sandbox
+          </Button>
+          <p className="text-xs leading-5 text-muted">Al crear se genera un correo simulado en notificaciones/outbox con credenciales temporales.</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Subusuarios creados</CardTitle><Badge tone="ok">{subUsers.length} usuarios</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          {subUsers.map((subUser) => (
+            <div key={subUser.id} className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <b>{subUser.name}</b>
+                  <p className="mt-1 text-xs text-muted">{subUser.email} / {subUser.role}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge tone={subUser.status === "active" ? "ok" : "danger"}>{subUser.status === "active" ? "activo" : "bloqueado"}</Badge>
+                  <Button size="sm" onClick={() => onPreview(previewSubUserId === subUser.id ? null : subUser.id)} disabled={subUser.status !== "active"}>
+                    {previewSubUserId === subUser.id ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    {previewSubUserId === subUser.id ? "Salir preview" : "Ver como subusuario"}
+                  </Button>
+                  <Button size="sm" variant={subUser.status === "active" ? "danger" : "primary"} disabled={updating} onClick={() => onUpdate({ id: subUser.id, active: subUser.status !== "active" })}>
+                    {subUser.status === "active" ? "Bloquear" : "Desbloquear"}
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-2 md:grid-cols-2">
+                {subUserModuleOptions.map((module) => (
+                  <label key={`${subUser.id}-${module.id}`} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/15 p-2 text-sm">
+                    <span>{module.label}</span>
+                    <input type="checkbox" checked={subUser.allowedModules.includes(module.id)} disabled={updating || subUser.status !== "active"} onChange={() => toggleExistingModule(subUser, module.id)} />
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function Notificaciones({ demoState }: { demoState?: DemoState }) {
