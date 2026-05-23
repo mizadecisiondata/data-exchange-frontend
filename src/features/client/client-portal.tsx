@@ -2,6 +2,7 @@
 
 import Uppy from "@uppy/core";
 import Dashboard from "@uppy/react/dashboard";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMachine } from "@xstate/react";
 import { createMachine } from "xstate";
 import {
@@ -20,9 +21,21 @@ import {
   Users
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
+import { BackendStatusCard } from "@/components/backend-status";
 import { ReportPreview } from "@/components/report-preview";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Select } from "@/components/ui";
+import {
+  apiEndpoints,
+  bacEvents,
+  commercialModes,
+  registrationSchema,
+  reporterSectors,
+  requiredDocuments,
+  type RegistrationInput
+} from "@/lib/data-exchange";
 
 const clientMachine = createMachine({
   id: "clientAccess",
@@ -80,6 +93,17 @@ export function ClientPortal() {
   const isPortal = isPending || isApproved;
   const uppy = useMemo(() => new Uppy({ restrictions: { maxNumberOfFiles: 3 } }), []);
   const nav = navBase.map((item) => ({ ...item, locked: isPending && approvedOnly.has(item.id) }));
+  const registrationForm = useForm<RegistrationInput>({
+    resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      ruc: "0999999999001",
+      legalName: "MEGADATOS S.A. demo",
+      contactName: "Mateo Iza",
+      email: "miza@decisiondata.ec",
+      sector: "Telco / ISP",
+      mode: "Data Partner Founding"
+    }
+  });
 
   function selectSection(id: string) {
     if (isPending && approvedOnly.has(id)) {
@@ -128,26 +152,48 @@ export function ClientPortal() {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col gap-5">
+                <form
+                  className="flex flex-col gap-5"
+                  onSubmit={registrationForm.handleSubmit(() => {
+                    toast.success("Solicitud visual enviada a revision admin.");
+                    send({ type: "SUBMIT" });
+                  })}
+                >
                   <div>
                     <Badge tone="warn">Autorregistro</Badge>
                     <h2 className="mt-3 text-2xl font-black">Solicita acceso como cliente o Data Partner</h2>
                     <p className="mt-2 text-sm text-muted">La modalidad queda tentativa hasta revision admin.</p>
                   </div>
                   <div className="grid gap-3 lg:grid-cols-2">
-                    <Field label="RUC"><Input defaultValue="0999999999001" /></Field>
-                    <Field label="Razon social"><Input defaultValue="MEGADATOS S.A. demo" /></Field>
-                    <Field label="Contacto autorizado"><Input defaultValue="Mateo Iza" /></Field>
-                    <Field label="Correo"><Input defaultValue="miza@decisiondata.ec" /></Field>
-                    <Field label="Sector"><Select defaultValue="telco"><option value="telco">Telco / ISP</option><option>Retail</option><option>Casa comercial</option><option>Fintech</option></Select></Field>
-                    <Field label="Modalidad tentativa"><Select defaultValue="founding"><option value="founding">Data Partner Founding</option><option>Data Partner Active</option><option>Data Partner Contributor</option><option>Cliente Normal</option></Select></Field>
+                    <ValidatedField label="RUC" error={registrationForm.formState.errors.ruc?.message}>
+                      <Input {...registrationForm.register("ruc")} />
+                    </ValidatedField>
+                    <ValidatedField label="Razon social" error={registrationForm.formState.errors.legalName?.message}>
+                      <Input {...registrationForm.register("legalName")} />
+                    </ValidatedField>
+                    <ValidatedField label="Contacto autorizado" error={registrationForm.formState.errors.contactName?.message}>
+                      <Input {...registrationForm.register("contactName")} />
+                    </ValidatedField>
+                    <ValidatedField label="Correo" error={registrationForm.formState.errors.email?.message}>
+                      <Input {...registrationForm.register("email")} />
+                    </ValidatedField>
+                    <Field label="Sector">
+                      <Select {...registrationForm.register("sector")}>
+                        {reporterSectors.map((sector) => <option key={sector}>{sector}</option>)}
+                      </Select>
+                    </Field>
+                    <Field label="Modalidad tentativa">
+                      <Select {...registrationForm.register("mode")}>
+                        {commercialModes.map((mode) => <option key={mode}>{mode}</option>)}
+                      </Select>
+                    </Field>
                   </div>
                   <div className="rounded-lg border border-primary/25 bg-primary/10 p-3 text-sm text-amber-100">Descarga contratos, firma y carga habilitantes. Productivo queda bloqueado hasta aprobacion completa.</div>
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="primary" onClick={() => send({ type: "SUBMIT" })}>Enviar solicitud visual</Button>
-                    <Button variant="ghost" onClick={() => send({ type: "LOGIN" })}>Volver al login</Button>
+                    <Button variant="primary" type="submit">Enviar solicitud visual</Button>
+                    <Button variant="ghost" type="button" onClick={() => send({ type: "LOGIN" })}>Volver al login</Button>
                   </div>
-                </div>
+                </form>
               )}
             </CardContent>
           </Card>
@@ -217,7 +263,8 @@ function Inicio({ isPending }: { isPending: boolean }) {
         <MetricCard label="Umbral calidad" value="95%" tone="ok" />
         <MetricCard label="Modelo facturacion" value="Postpago" tone="info" />
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-[.85fr_1.15fr]">
+        <BackendStatusCard />
         <Card>
           <CardHeader><CardTitle>Centro de estado</CardTitle><Badge tone="warn">Journey</Badge></CardHeader>
           <CardContent className="grid gap-3">
@@ -229,6 +276,8 @@ function Inicio({ isPending }: { isPending: boolean }) {
             ))}
           </CardContent>
         </Card>
+      </div>
+      <div className="grid gap-4">
         <ReportPreview />
       </div>
     </div>
@@ -260,10 +309,10 @@ function Documentos() {
       <Card>
         <CardHeader><CardTitle>Checklist habilitante</CardTitle><Badge tone="warn">Revision</Badge></CardHeader>
         <CardContent className="grid gap-2">
-          {["NDA firmado", "Contrato marco firmado", "RUC actualizado", "Nombramiento representante legal", "Cedula representante legal"].map((item, index) => (
-            <label key={item} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
-              <span>{item}</span>
-              <Badge tone={index < 2 ? "ok" : "warn"}>{index < 2 ? "recibido" : "pendiente"}</Badge>
+          {requiredDocuments.map((document, index) => (
+            <label key={document.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
+              <span>{document.label}</span>
+              <Badge tone={index < 3 ? "ok" : "warn"}>{index < 3 ? "recibido" : document.blocking ? "bloqueante" : "pendiente"}</Badge>
             </label>
           ))}
         </CardContent>
@@ -316,7 +365,15 @@ function Api() {
   return (
     <div className="grid gap-3">
       <Info title="API keys" text="Scopes, rotacion y vencimiento solo para clientes aprobados." tone="warn" />
-      <pre className="overflow-auto rounded-lg border border-white/10 bg-black/30 p-4 text-sm text-slate-200">{`POST /api/v1/queries\nPOST /api/v1/batch-queries\nGET  /api/v1/usage`}</pre>
+      <div className="grid gap-2">
+        {apiEndpoints.map((endpoint) => (
+          <div key={endpoint.path} className="grid gap-2 rounded-lg border border-white/10 bg-black/20 p-3 text-sm lg:grid-cols-[90px_1fr_180px]">
+            <b className="text-primary">{endpoint.method}</b>
+            <code className="text-slate-200">{endpoint.path}</code>
+            <span className="text-muted">{endpoint.use}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -326,7 +383,25 @@ function Facturacion() {
 }
 
 function Auditoria() {
-  return <Info title="Auditoria BAC" text="Cada consulta registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado." tone="info" />;
+  return (
+    <Card>
+      <CardHeader><CardTitle>Auditoria BAC</CardTitle><Badge tone="info">Append-only</Badge></CardHeader>
+      <CardContent className="grid gap-3">
+        <Info title="Contrato obligatorio" text="Cada consulta registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado." tone="info" />
+        <div className="overflow-hidden rounded-lg border border-white/10">
+          {bacEvents.map((event) => (
+            <div key={`${event.date}-${event.product}`} className="grid gap-2 border-b border-white/10 p-3 text-sm last:border-b-0 lg:grid-cols-[150px_1fr_110px_110px_100px]">
+              <span className="text-muted">{event.date}</span>
+              <span>{event.actor}</span>
+              <span>{event.channel}</span>
+              <span>{event.value}</span>
+              <Badge tone="ok">{event.status}</Badge>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function Subusuarios() {
@@ -348,6 +423,15 @@ function Info({ title, text, tone }: { title: string; text: string; tone: "neutr
     <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
       <Badge tone={tone}>{title}</Badge>
       <p className="mt-3 text-sm leading-6 text-muted">{text}</p>
+    </div>
+  );
+}
+
+function ValidatedField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Field label={label}>{children}</Field>
+      {error ? <span className="text-xs text-red-200">{error}</span> : null}
     </div>
   );
 }

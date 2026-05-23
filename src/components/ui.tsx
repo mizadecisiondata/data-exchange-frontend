@@ -95,6 +95,18 @@ export function Select(props: ComponentPropsWithoutRef<"select">) {
   );
 }
 
+export function Textarea(props: ComponentPropsWithoutRef<"textarea">) {
+  return (
+    <textarea
+      {...props}
+      className={cn(
+        "min-h-24 w-full resize-none rounded-lg border border-white/10 bg-[#09142d] px-3 py-2 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary/50",
+        props.className
+      )}
+    />
+  );
+}
+
 export function Label({ className, ...props }: ComponentPropsWithoutRef<"label">) {
   return <label className={cn("text-xs font-medium uppercase tracking-wide text-muted", className)} {...props} />;
 }
@@ -116,5 +128,16 @@ export function MetricCard({ label, value, tone = "warn" }: { label: string; val
         <strong className="mt-3 block text-2xl font-black text-primary">{value}</strong>
       </CardContent>
     </Card>
+  );
+}
+
+export function Progress({ value, className }: { value: number; className?: string }) {
+  return (
+    <div className={cn("h-2 overflow-hidden rounded-full bg-white/10", className)}>
+      <div
+        className="h-full rounded-full bg-gradient-to-r from-[#ff6b1a] to-[#ffc400] transition-all"
+        style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+      />
+    </div>
   );
 }

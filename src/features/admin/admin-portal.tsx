@@ -15,9 +15,16 @@ import {
   Workflow
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
+import { BackendStatusCard } from "@/components/backend-status";
 import { DataTable } from "@/components/data-table";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard } from "@/components/ui";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Progress, Textarea } from "@/components/ui";
+import {
+  initialDocumentState,
+  requiredDocuments,
+  type RequiredDocumentId
+} from "@/lib/data-exchange";
 
 type ClientRow = {
   empresa: string;
@@ -96,7 +103,8 @@ function Dashboard() {
         <MetricCard label="Clientes productivos reales" value="0" tone="neutral" />
         <MetricCard label="Estado frontend" value="Next" tone="ok" />
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-[.75fr_1.25fr]">
+        <BackendStatusCard />
         <Card>
           <CardHeader><CardTitle>Prioridades operativas</CardTitle><Badge tone="warn">Fase 2 visual</Badge></CardHeader>
           <CardContent className="grid gap-3">
@@ -105,6 +113,8 @@ function Dashboard() {
             <Step n="3" text="Habilitar productivo solo con expediente completo." />
           </CardContent>
         </Card>
+      </div>
+      <div className="grid gap-4">
         <Card>
           <CardHeader><CardTitle>Guardrails</CardTitle><Badge tone="ok">Confirmados</Badge></CardHeader>
           <CardContent className="grid gap-3">
@@ -119,6 +129,25 @@ function Dashboard() {
 }
 
 function Onboarding() {
+  const [documentState, setDocumentState] = useState(initialDocumentState);
+  const [observation, setObservation] = useState("Falta cargar RUC actualizado, nombramiento y cedula del representante legal.");
+  const blockingDocuments = requiredDocuments.filter((item) => item.blocking);
+  const completedBlocking = blockingDocuments.filter((item) => documentState[item.id]).length;
+  const completion = Math.round((completedBlocking / blockingDocuments.length) * 100);
+  const canApprove = completedBlocking === blockingDocuments.length;
+
+  function toggleDocument(id: RequiredDocumentId) {
+    setDocumentState((current) => ({ ...current, [id]: !current[id] }));
+  }
+
+  function sendObservation() {
+    toast.warning("Observacion visual enviada al cliente.");
+  }
+
+  function approveClient() {
+    toast.success("Aprobacion visual registrada. En backend real emitiria clave temporal.");
+  }
+
   return (
     <div className="grid gap-4 xl:grid-cols-[1.05fr_.95fr]">
       <Card>
@@ -128,15 +157,30 @@ function Onboarding() {
       <Card>
         <CardHeader><CardTitle>Expediente MEGADATOS</CardTitle><Badge tone="warn">Revision</Badge></CardHeader>
         <CardContent className="grid gap-2">
-          {["NDA firmado", "Contrato marco firmado", "Anexo tecnico Founding", "RUC actualizado", "Nombramiento representante legal", "Cedula representante legal"].map((item, index) => (
-            <div key={item} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
-              <span>{item}</span>
-              <Badge tone={index < 3 ? "ok" : "warn"}>{index < 3 ? "ok" : "pendiente"}</Badge>
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="text-muted">Checklist bloqueante</span>
+              <b>{completion}%</b>
             </div>
+            <Progress value={completion} />
+          </div>
+          {requiredDocuments.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => toggleDocument(item.id)}
+              className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-left text-sm transition hover:border-primary/30"
+            >
+              <span>{item.label}</span>
+              <Badge tone={documentState[item.id] ? "ok" : item.blocking ? "warn" : "neutral"}>
+                {documentState[item.id] ? "ok" : item.blocking ? "bloqueante" : "pendiente"}
+              </Badge>
+            </button>
           ))}
+          <Textarea value={observation} onChange={(event) => setObservation(event.target.value)} />
           <div className="mt-2 flex gap-2">
-            <Button>Enviar observacion</Button>
-            <Button variant="primary" disabled>Aprobar cuando complete</Button>
+            <Button onClick={sendObservation}>Enviar observacion</Button>
+            <Button variant="primary" disabled={!canApprove} onClick={approveClient}>Aprobar cuando complete</Button>
           </div>
         </CardContent>
       </Card>
