@@ -9,6 +9,7 @@ import { createMachine } from "xstate";
 import {
   Activity,
   BadgeDollarSign,
+  BarChart3,
   Bell,
   Blocks,
   Braces,
@@ -21,6 +22,7 @@ import {
   Play,
   Search,
   ShieldCheck,
+  TrendingUp,
   UploadCloud,
   UserPlus,
   Users
@@ -31,7 +33,6 @@ import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
 import { ReportHtmlViewer } from "@/components/report-html-viewer";
-import { ReportPreview } from "@/components/report-preview";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Select } from "@/components/ui";
 import { backendGet, backendPost, type DemoState, type QueryAudit, type SubUser } from "@/lib/backend-api";
 import {
@@ -339,13 +340,17 @@ function LockedAware({ enabled, children }: { enabled: boolean; children: React.
 }
 
 function Inicio({ isPending, demoState }: { isPending: boolean; demoState?: DemoState }) {
+  const totalQueries = (demoState?.usage.basicReports ?? 0) + (demoState?.usage.completeReports ?? 0);
+
   return (
     <div className="grid gap-4">
-      <div className="grid gap-4 lg:grid-cols-3">
-        <MetricCard label="Consultas del mes" value={String((demoState?.usage.basicReports ?? 0) + (demoState?.usage.completeReports ?? 0))} tone={isPending ? "warn" : "ok"} />
+      <div className="grid gap-4 lg:grid-cols-4">
+        <MetricCard label="Consultas del mes" value={String(totalQueries)} tone={isPending ? "warn" : "ok"} />
+        <MetricCard label="Principal consulta" value={getMainQueryType(demoState)} tone="warn" />
         <MetricCard label="Creditos disponibles" value={String(demoState?.client.creditsBalance ?? 0)} tone="ok" />
         <MetricCard label="Factura estimada" value={`$${(demoState?.invoicePreview.total ?? 0).toFixed(2)}`} tone="info" />
       </div>
+      <ClientUsageDashboard demoState={demoState} />
       <div className="grid gap-4 xl:grid-cols-[.85fr_1.15fr]">
         <BackendStatusCard />
         <Card>
@@ -360,10 +365,110 @@ function Inicio({ isPending, demoState }: { isPending: boolean; demoState?: Demo
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4">
-        <ReportPreview />
-      </div>
     </div>
+  );
+}
+
+function ClientUsageDashboard({ demoState }: { demoState?: DemoState }) {
+  const [period, setPeriod] = useState<"daily" | "monthly">("daily");
+  const series = buildConsumptionSeries(demoState, period);
+  const points = toChartPoints(series);
+  const path = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+  const lastPoint = points[points.length - 1];
+  const areaPath = `${path} L ${lastPoint?.x ?? 0} 180 L ${points[0]?.x ?? 0} 180 Z`;
+  const mix = buildProductMix(demoState);
+  const maxValue = Math.max(...series.map((item) => item.queries), 1);
+
+  return (
+    <Card>
+      <CardHeader className="flex-col items-start gap-3 lg:flex-row">
+        <div>
+          <CardTitle>Reporte de consumo del cliente</CardTitle>
+          <p className="mt-1 text-sm text-muted">Lectura inicial para ver tendencia, producto dominante y monto postpago estimado.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant={period === "daily" ? "primary" : "default"} onClick={() => setPeriod("daily")}>Diario</Button>
+          <Button size="sm" variant={period === "monthly" ? "primary" : "default"} onClick={() => setPeriod("monthly")}>Mensual</Button>
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-4 xl:grid-cols-[1.3fr_.7fr]">
+        <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <TrendingUp className="size-4 text-primary" />
+              Consumo {period === "daily" ? "diario" : "mensual"}
+            </div>
+            <Badge tone="info">Consultas y valor estimado</Badge>
+          </div>
+          <svg viewBox="0 0 720 220" role="img" aria-label="Tendencia de consumo del cliente" className="h-64 w-full">
+            <defs>
+              <linearGradient id="usageArea" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#ffc400" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#ff6b1a" stopOpacity="0.03" />
+              </linearGradient>
+            </defs>
+            {[40, 75, 110, 145, 180].map((y) => (
+              <line key={y} x1="46" x2="690" y1={y} y2={y} stroke="rgba(255,255,255,.08)" />
+            ))}
+            <path d={areaPath} fill="url(#usageArea)" />
+            <path d={path} fill="none" stroke="#ffc400" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            {points.map((point, index) => (
+              <g key={series[index].label}>
+                <circle cx={point.x} cy={point.y} r="6" fill="#ffc400" stroke="#07122c" strokeWidth="3" />
+                <text x={point.x} y="205" textAnchor="middle" fill="#9fb0cc" fontSize="13" fontWeight="700">{series[index].label}</text>
+                <text x={point.x} y={Math.max(22, point.y - 13)} textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="800">{series[index].queries}</text>
+              </g>
+            ))}
+            <text x="48" y="28" fill="#9fb0cc" fontSize="13">{maxValue} consultas</text>
+          </svg>
+          <div className="grid gap-3 md:grid-cols-3">
+            {series.slice(-3).map((item) => (
+              <div key={`${period}-${item.label}`} className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
+                <Badge tone="neutral">{item.label}</Badge>
+                <strong className="mt-2 block text-lg text-primary">{item.queries} consultas</strong>
+                <p className="mt-1 text-xs text-muted">${item.amount.toFixed(2)} estimado</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          <div className="rounded-lg border border-white/10 bg-white/[0.035]">
+            <div className="flex items-start justify-between gap-3 border-b border-white/10 p-4"><CardTitle>Mix de productos</CardTitle><Badge tone="warn">{getMainQueryType(demoState)}</Badge></div>
+            <div className="grid gap-3 p-4">
+              {mix.map((item) => (
+                <div key={item.label} className="grid gap-2">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="flex items-center gap-2"><BarChart3 className="size-4 text-primary" />{item.label}</span>
+                    <b>{item.count}</b>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#ff6b1a] to-[#ffc400]" style={{ width: `${item.percent}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Info
+            title="Tarifa aplicada"
+            text="Cliente cero Data Partner Founding: reporte completo usa la tarifa Founding del tramo vigente; reporte basico con consentimiento queda incluido como beneficio. Todo se liquida en postpago mensual."
+            tone="ok"
+          />
+          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+            <Badge tone="info">Ultimas consultas</Badge>
+            <div className="mt-3 grid gap-2">
+              {(demoState?.queries ?? []).slice(0, 4).map((event) => (
+                <div key={event.id} className="grid gap-1 rounded-lg border border-white/10 bg-black/20 p-2 text-xs">
+                  <span className="font-semibold text-foreground">{formatProduct(event.product)} / {event.channel}</span>
+                  <span className="text-muted">{event.tariff} - ${event.estimatedValue.toFixed(2)}</span>
+                </div>
+              ))}
+              {(demoState?.queries.length ?? 0) === 0 ? <p className="text-sm text-muted">Aun no hay consultas reales en esta sesion sandbox.</p> : null}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -375,6 +480,9 @@ function Estado({ demoState }: { demoState?: DemoState }) {
         <Info title="Modalidad" text={demoState?.client.mode ?? "Data Partner Founding"} tone="warn" />
         <Info title="Estado de aprobacion" text={demoState?.client.productionAccess ? "Aprobado para sandbox productivo." : "Pendiente de aprobacion documental admin."} tone={demoState?.client.productionAccess ? "ok" : "danger"} />
         <Info title="Carga sandbox" text="Permitida para validar formato, calidad, duplicados y consumo simulado." tone="ok" />
+        <Info title="Tarifario vigente" text="Founding mantiene la tarifa mas baja por 12 meses: reporte completo desde $0.50 en el tramo 1-100 y basico incluido con consentimiento cuando aplique." tone="info" />
+        <Info title="Postpago" text={`Subtotal mensual estimado: $${(demoState?.invoicePreview.subtotal ?? 0).toFixed(2)}. No se maneja prepago como modelo principal.`} tone="ok" />
+        <Info title="Decision Credits" text={`Generados: ${demoState?.usage.creditsGenerated ?? 0}. Usados: ${demoState?.usage.creditsUsed ?? 0}. Saldo: ${demoState?.client.creditsBalance ?? 0}.`} tone="neutral" />
       </CardContent>
     </Card>
   );
@@ -459,9 +567,9 @@ function ConsultaIndividual({ product, onProductChange, onRun, loading, latest }
               <option value="basic_report">Reporte basico</option>
             </Select>
           </Field>
-          <Info title="Valor estimado" text="Founding usa beneficios 1:1 en sandbox; si no hay creditos aplica exceso a Cliente Normal." tone="ok" />
+          <Info title="Valor estimado" text="Founding aplica la matriz preferencial: completo desde $0.50 en el tramo 1-100; basico incluido con consentimiento cuando aplique." tone="ok" />
           <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Consultar con consentimiento</Button>
-          {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${latest.product}, canal ${latest.channel}, tarifa ${latest.tariff}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
+          {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${latest.product}, canal ${latest.channel}, tarifa ${latest.tariff}, tramo ${latest.tariffTier ?? "1-100"}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
         </CardContent>
       </Card>
       <ReportHtmlViewer latest={latest} />
@@ -677,6 +785,77 @@ function Notificaciones({ demoState }: { demoState?: DemoState }) {
       {demoState?.outbox.map((email) => <Info key={email.id} title={email.subject} text={`${email.to} - ${email.status}`} tone="info" />)}
     </div>
   );
+}
+
+function getMainQueryType(demoState?: DemoState) {
+  const usage = demoState?.usage;
+  const values = [
+    { label: "Completos", count: usage?.completeReports ?? 0 },
+    { label: "Basicos", count: usage?.basicReports ?? 0 },
+    { label: "API", count: usage?.apiCalls ?? 0 }
+  ];
+  const winner = values.reduce((best, item) => item.count > best.count ? item : best, values[0]);
+  return winner.count > 0 ? winner.label : "Sin consumo";
+}
+
+function buildProductMix(demoState?: DemoState) {
+  const values = [
+    { label: "Reporte completo", count: demoState?.usage.completeReports ?? 0 },
+    { label: "Reporte basico", count: demoState?.usage.basicReports ?? 0 },
+    { label: "API", count: demoState?.usage.apiCalls ?? 0 }
+  ];
+  const total = Math.max(values.reduce((sum, item) => sum + item.count, 0), 1);
+  return values.map((item) => ({
+    ...item,
+    percent: Math.max(5, Math.round((item.count / total) * 100))
+  }));
+}
+
+function buildConsumptionSeries(demoState: DemoState | undefined, period: "daily" | "monthly") {
+  const totalQueries = (demoState?.usage.basicReports ?? 0) + (demoState?.usage.completeReports ?? 0);
+  const subtotal = demoState?.invoicePreview.subtotal ?? 0;
+  const dailyBase = [
+    { label: "Lun", queries: 2, amount: 1.0 },
+    { label: "Mar", queries: 4, amount: 2.0 },
+    { label: "Mie", queries: 3, amount: 1.5 },
+    { label: "Jue", queries: 5, amount: 2.5 },
+    { label: "Vie", queries: 4, amount: 2.0 },
+    { label: "Sab", queries: 1, amount: 0.5 },
+    { label: "Hoy", queries: 0, amount: 0 }
+  ];
+  const monthlyBase = [
+    { label: "Ene", queries: 48, amount: 24 },
+    { label: "Feb", queries: 62, amount: 31 },
+    { label: "Mar", queries: 71, amount: 35.5 },
+    { label: "Abr", queries: 56, amount: 28 },
+    { label: "May", queries: 0, amount: 0 }
+  ];
+  const series = period === "daily" ? dailyBase : monthlyBase;
+  const current = series[series.length - 1];
+  current.queries = Math.max(current.queries, totalQueries);
+  current.amount = Math.max(current.amount, subtotal);
+  return series;
+}
+
+function toChartPoints(series: Array<{ label: string; queries: number; amount: number }>) {
+  const maxValue = Math.max(...series.map((item) => item.queries), 1);
+  const width = 640;
+  const startX = 56;
+  const step = width / Math.max(series.length - 1, 1);
+  return series.map((item, index) => ({
+    x: Math.round(startX + index * step),
+    y: Math.round(180 - (item.queries / maxValue) * 135)
+  }));
+}
+
+function formatProduct(product: string) {
+  if (product === "basic_report") {
+    return "Reporte basico";
+  }
+  if (product === "complete_report") {
+    return "Reporte completo";
+  }
+  return product;
 }
 
 function Info({ title, text, tone }: { title: string; text: string; tone: "neutral" | "warn" | "ok" | "danger" | "info" }) {

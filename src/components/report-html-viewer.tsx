@@ -91,7 +91,7 @@ export function ReportHtmlViewer({ latest }: { latest?: QueryAudit }) {
                 {latest ? (
                   <p className="mt-2 text-sm leading-6 text-muted">
                     BAC {latest.bac}, consentimiento {latest.consent}, usuario {latest.user}, canal {latest.channel},
-                    producto {latest.product}, tarifa {latest.tariff}, valor estimado {currency.format(latest.estimatedValue)}.
+                    producto {latest.product}, tarifa {latest.tariff}, tramo {latest.tariffTier ?? "1-100"}, valor estimado {currency.format(latest.estimatedValue)}.
                   </p>
                 ) : (
                   <p className="mt-2 text-sm leading-6 text-muted">

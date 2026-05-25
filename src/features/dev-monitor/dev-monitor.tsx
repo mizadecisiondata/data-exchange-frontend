@@ -7,8 +7,8 @@ import { BrandMark } from "@/components/brand";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Progress } from "@/components/ui";
 
 const agents = [
-  { name: "Frontend Agent", icon: Code2, progress: 86, task: "Consulta individual ahora embebe el HTML completo del reporte ejemplo." },
-  { name: "Backend Architect", icon: Database, progress: 72, task: "Store sandbox funcional: aprobacion, subusuarios, ingesta, consultas y uso." },
+  { name: "Frontend Agent", icon: Code2, progress: 88, task: "Inicio cliente convertido en dashboard de consumo diario/mensual y mix de productos." },
+  { name: "Backend Architect", icon: Database, progress: 74, task: "Tarifario Founding conectado a matriz comercial: completo desde $0.50 tramo 1-100." },
   { name: "BAC Audit Agent", icon: ShieldCheck, progress: 42, task: "Cada consulta sandbox registra BAC, consentimiento, canal, IP y tarifa." },
   { name: "PM Tracking Agent", icon: FileQuestion, progress: 40, task: "Pricing queda como simulacion tecnica hasta aprobacion final." }
 ];
@@ -33,7 +33,7 @@ export function DevMonitor() {
       </header>
       <section className="mb-4 grid gap-4 lg:grid-cols-4">
         <MetricCard label="Fase" value="2" tone="info" />
-        <MetricCard label="Avance real" value="81%" tone="warn" />
+        <MetricCard label="Avance real" value="83%" tone="warn" />
         <MetricCard label="Agentes" value="4" tone="ok" />
         <MetricCard label="Preguntas bloqueantes" value="0" tone="ok" />
       </section>
@@ -90,6 +90,8 @@ export function DevMonitor() {
             <Log text="Subusuarios agregados: crear, bloquear, permisos por modulo y preview." />
             <Log text="Admin revisa expediente y emite outbox simulado de credenciales." />
             <Log text="Reporte individual conectado al HTML completo confirmado por Mateo; resumen sale de ese reporte." />
+            <Log text="Dashboard cliente ahora muestra consumo diario/mensual y tipo de consulta principal." />
+            <Log text="Pricing sandbox corregido para Data Partner Founding segun matriz de propuesta comercial." />
             <Log text="Workbench sigue separado del producto admin." />
           </CardContent>
         </Card>

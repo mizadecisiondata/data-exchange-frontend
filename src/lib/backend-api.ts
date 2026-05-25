@@ -51,6 +51,9 @@ export type QueryAudit = {
   product: string;
   tariff: string;
   estimatedValue: number;
+  tariffTier?: string;
+  unitPrice?: number;
+  creditApplied?: boolean;
   status: string;
   createdAt: string;
 };
