@@ -451,7 +451,7 @@ function ClientUsageDashboard({ demoState }: { demoState?: DemoState }) {
           </div>
           <Info
             title="Tarifa aplicada"
-            text="Cliente cero Data Partner Founding: reporte completo usa la tarifa Founding del tramo vigente; reporte basico con consentimiento queda incluido como beneficio. Todo se liquida en postpago mensual."
+            text="Cliente cero Data Partner Founding: cada Decision Credit habilita 1 consulta con tarifa Founding. Cuando el saldo llega a 0, el exceso se cobra con tarifa Cliente Normal."
             tone="ok"
           />
           <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
@@ -460,7 +460,7 @@ function ClientUsageDashboard({ demoState }: { demoState?: DemoState }) {
               {(demoState?.queries ?? []).slice(0, 4).map((event) => (
                 <div key={event.id} className="grid gap-1 rounded-lg border border-white/10 bg-black/20 p-2 text-xs">
                   <span className="font-semibold text-foreground">{formatProduct(event.product)} / {event.channel}</span>
-                  <span className="text-muted">{event.tariff} - ${event.estimatedValue.toFixed(2)}</span>
+                  <span className="text-muted">{event.tariff} - {event.creditApplied ? "con credit" : "sin credit"} - ${event.estimatedValue.toFixed(2)}</span>
                 </div>
               ))}
               {(demoState?.queries.length ?? 0) === 0 ? <p className="text-sm text-muted">Aun no hay consultas reales en esta sesion sandbox.</p> : null}
@@ -480,7 +480,7 @@ function Estado({ demoState }: { demoState?: DemoState }) {
         <Info title="Modalidad" text={demoState?.client.mode ?? "Data Partner Founding"} tone="warn" />
         <Info title="Estado de aprobacion" text={demoState?.client.productionAccess ? "Aprobado para sandbox productivo." : "Pendiente de aprobacion documental admin."} tone={demoState?.client.productionAccess ? "ok" : "danger"} />
         <Info title="Carga sandbox" text="Permitida para validar formato, calidad, duplicados y consumo simulado." tone="ok" />
-        <Info title="Tarifario vigente" text="Founding mantiene la tarifa mas baja por 12 meses: reporte completo desde $0.50 en el tramo 1-100 y basico incluido con consentimiento cuando aplique." tone="info" />
+        <Info title="Tarifario vigente" text="Founding mantiene tarifa preferencial solo dentro del saldo de Decision Credits: reporte completo desde $0.50 en el tramo 1-100. El exceso cae a Cliente Normal." tone="info" />
         <Info title="Postpago" text={`Subtotal mensual estimado: $${(demoState?.invoicePreview.subtotal ?? 0).toFixed(2)}. No se maneja prepago como modelo principal.`} tone="ok" />
         <Info title="Decision Credits" text={`Generados: ${demoState?.usage.creditsGenerated ?? 0}. Usados: ${demoState?.usage.creditsUsed ?? 0}. Saldo: ${demoState?.client.creditsBalance ?? 0}.`} tone="neutral" />
       </CardContent>
@@ -567,9 +567,9 @@ function ConsultaIndividual({ product, onProductChange, onRun, loading, latest }
               <option value="basic_report">Reporte basico</option>
             </Select>
           </Field>
-          <Info title="Valor estimado" text="Founding aplica la matriz preferencial: completo desde $0.50 en el tramo 1-100; basico incluido con consentimiento cuando aplique." tone="ok" />
+          <Info title="Valor estimado" text="Founding aplica tarifa preferencial mientras existan Decision Credits. Al agotarse, la siguiente consulta se cobra como exceso a tarifa Cliente Normal." tone="ok" />
           <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Consultar con consentimiento</Button>
-          {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${latest.product}, canal ${latest.channel}, tarifa ${latest.tariff}, tramo ${latest.tariffTier ?? "1-100"}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
+          {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${latest.product}, canal ${latest.channel}, tarifa ${latest.tariff}, tramo ${latest.tariffTier ?? "1-100"}, ${latest.creditApplied ? `consume ${latest.creditCost ?? 1} Decision Credit` : "sin Decision Credit"}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
         </CardContent>
       </Card>
       <ReportHtmlViewer latest={latest} />
@@ -630,6 +630,11 @@ Authorization: Bearer dd_sandbox_key
 
 function Facturacion({ demoState }: { demoState?: DemoState }) {
   const invoice = demoState?.invoicePreview;
+  const breakdown = invoice?.breakdown;
+  const dataPartnerCreditQueries = breakdown?.dataPartnerCreditQueries ?? demoState?.usage.dataPartnerCreditQueries ?? 0;
+  const dataPartnerCreditSubtotal = breakdown?.dataPartnerCreditSubtotal ?? demoState?.usage.dataPartnerCreditSubtotal ?? 0;
+  const excessNormalQueries = breakdown?.excessNormalQueries ?? demoState?.usage.excessNormalQueries ?? 0;
+  const excessNormalSubtotal = breakdown?.excessNormalSubtotal ?? demoState?.usage.excessNormalSubtotal ?? 0;
 
   return (
     <Card>
@@ -639,6 +644,20 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
         <MetricCard label="Completos" value={String(demoState?.usage.completeReports ?? 0)} tone="warn" />
         <MetricCard label="API calls" value={String(demoState?.usage.apiCalls ?? 0)} tone="neutral" />
         <MetricCard label="Total estimado" value={`$${(invoice?.total ?? 0).toFixed(2)}`} tone="ok" />
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-2">
+          <Badge tone="ok">Consultas con credit Data Partner</Badge>
+          <strong className="mt-3 block text-2xl font-black text-primary">{dataPartnerCreditQueries}</strong>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            Subtotal con tarifa Founding: ${dataPartnerCreditSubtotal.toFixed(2)}. Estas consultas consumen Decision Credits y mantienen beneficio preferencial.
+          </p>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-2">
+          <Badge tone={excessNormalQueries > 0 ? "danger" : "neutral"}>Consultas fuera de credit</Badge>
+          <strong className="mt-3 block text-2xl font-black text-primary">{excessNormalQueries}</strong>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            Subtotal exceso Cliente Normal: ${excessNormalSubtotal.toFixed(2)}. Se activa cuando el saldo de Decision Credits llega a 0.
+          </p>
+        </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-4">
           <Badge tone="ok">Decision Credits</Badge>
           <p className="mt-3 text-sm leading-6 text-muted">
@@ -646,8 +665,27 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
           </p>
           <p className="mt-2 text-xs text-muted">{invoice?.note}</p>
         </div>
+        <div className="overflow-hidden rounded-lg border border-white/10 lg:col-span-4">
+          <div className="grid grid-cols-[1fr_120px_140px] gap-3 border-b border-white/10 bg-white/[0.04] p-3 text-xs font-semibold uppercase text-muted">
+            <span>Concepto</span>
+            <span>Consultas</span>
+            <span>Subtotal</span>
+          </div>
+          <BillingRow label="Dentro de Decision Credits Data Partner Founding" queries={dataPartnerCreditQueries} subtotal={dataPartnerCreditSubtotal} />
+          <BillingRow label="Exceso a tarifa Cliente Normal" queries={excessNormalQueries} subtotal={excessNormalSubtotal} />
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+function BillingRow({ label, queries, subtotal }: { label: string; queries: number; subtotal: number }) {
+  return (
+    <div className="grid grid-cols-[1fr_120px_140px] gap-3 border-b border-white/10 p-3 text-sm last:border-b-0">
+      <span>{label}</span>
+      <b>{queries}</b>
+      <b>${subtotal.toFixed(2)}</b>
+    </div>
   );
 }
 

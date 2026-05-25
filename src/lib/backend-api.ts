@@ -54,6 +54,8 @@ export type QueryAudit = {
   tariffTier?: string;
   unitPrice?: number;
   creditApplied?: boolean;
+  creditCost?: number;
+  tariffBucket?: "data_partner_credit" | "excess_cliente_normal" | "cliente_normal";
   status: string;
   createdAt: string;
 };
@@ -74,6 +76,12 @@ export type UsageSummary = {
   estimatedSubtotal: number;
   creditsGenerated: number;
   creditsUsed: number;
+  dataPartnerCreditQueries: number;
+  dataPartnerCreditSubtotal: number;
+  excessNormalQueries: number;
+  excessNormalSubtotal: number;
+  clienteNormalQueries: number;
+  clienteNormalSubtotal: number;
 };
 
 export type SubUser = {
@@ -97,6 +105,14 @@ export type InvoicePreview = {
   creditsGenerated: number;
   creditsUsed: number;
   creditsBalance: number;
+  breakdown?: {
+    dataPartnerCreditQueries: number;
+    dataPartnerCreditSubtotal: number;
+    excessNormalQueries: number;
+    excessNormalSubtotal: number;
+    clienteNormalQueries: number;
+    clienteNormalSubtotal: number;
+  };
   note: string;
 };
 

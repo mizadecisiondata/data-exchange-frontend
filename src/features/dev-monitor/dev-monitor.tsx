@@ -8,7 +8,7 @@ import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Pr
 
 const agents = [
   { name: "Frontend Agent", icon: Code2, progress: 88, task: "Inicio cliente convertido en dashboard de consumo diario/mensual y mix de productos." },
-  { name: "Backend Architect", icon: Database, progress: 74, task: "Tarifario Founding conectado a matriz comercial: completo desde $0.50 tramo 1-100." },
+  { name: "Backend Architect", icon: Database, progress: 76, task: "Decision Credits ahora habilitan tarifa Data Partner; exceso cae a Cliente Normal." },
   { name: "BAC Audit Agent", icon: ShieldCheck, progress: 42, task: "Cada consulta sandbox registra BAC, consentimiento, canal, IP y tarifa." },
   { name: "PM Tracking Agent", icon: FileQuestion, progress: 40, task: "Pricing queda como simulacion tecnica hasta aprobacion final." }
 ];
@@ -33,7 +33,7 @@ export function DevMonitor() {
       </header>
       <section className="mb-4 grid gap-4 lg:grid-cols-4">
         <MetricCard label="Fase" value="2" tone="info" />
-        <MetricCard label="Avance real" value="83%" tone="warn" />
+        <MetricCard label="Avance real" value="84%" tone="warn" />
         <MetricCard label="Agentes" value="4" tone="ok" />
         <MetricCard label="Preguntas bloqueantes" value="0" tone="ok" />
       </section>
@@ -92,6 +92,7 @@ export function DevMonitor() {
             <Log text="Reporte individual conectado al HTML completo confirmado por Mateo; resumen sale de ese reporte." />
             <Log text="Dashboard cliente ahora muestra consumo diario/mensual y tipo de consulta principal." />
             <Log text="Pricing sandbox corregido para Data Partner Founding segun matriz de propuesta comercial." />
+            <Log text="Facturacion separa consultas dentro de credits Data Partner y exceso a tarifa Cliente Normal." />
             <Log text="Workbench sigue separado del producto admin." />
           </CardContent>
         </Card>
