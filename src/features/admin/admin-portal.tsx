@@ -1,17 +1,18 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Activity,
   BadgeDollarSign,
   Bell,
   Building2,
+  FileCheck2,
   Gauge,
   KeyRound,
+  Play,
   Settings,
   ShieldCheck,
   UploadCloud,
+  UserPlus,
   Users,
   Workflow
 } from "lucide-react";
@@ -19,21 +20,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
-import { DataTable } from "@/components/data-table";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Progress, Textarea } from "@/components/ui";
-import { backendGet, backendPost, type DemoState } from "@/lib/backend-api";
-import {
-  initialDocumentState,
-  requiredDocuments,
-  type RequiredDocumentId
-} from "@/lib/data-exchange";
-
-type ClientRow = {
-  empresa: string;
-  sector: string;
-  modalidad: string;
-  estado: string;
-};
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Progress, Select, Textarea } from "@/components/ui";
+import { backendGet, backendPost, type AdminClient, type AdminUser, type DemoState } from "@/lib/backend-api";
+import { commercialModes, reporterSectors, requiredDocuments } from "@/lib/data-exchange";
 
 const nav: NavItem[] = [
   { id: "dashboard", label: "Dashboard ejecutivo", icon: Gauge },
@@ -48,26 +37,12 @@ const nav: NavItem[] = [
   { id: "configuracion", label: "Configuracion", icon: Settings }
 ];
 
-const clients: ClientRow[] = [
-  { empresa: "MEGADATOS S.A.", sector: "Telco / ISP", modalidad: "Founding tentativa", estado: "Documentos observados" },
-  { empresa: "Retail Demo", sector: "Retail", modalidad: "Active tentativa", estado: "Sin contratos firmados" },
-  { empresa: "Casa Comercial Demo", sector: "Casa comercial", modalidad: "Cliente Normal", estado: "No productivo" }
-];
-
-const clientColumns: ColumnDef<ClientRow>[] = [
-  { accessorKey: "empresa", header: "Cliente" },
-  { accessorKey: "sector", header: "Sector" },
-  { accessorKey: "modalidad", header: "Modalidad" },
-  {
-    accessorKey: "estado",
-    header: "Estado",
-    cell: ({ getValue }) => <Badge tone={String(getValue()).includes("observados") ? "warn" : "neutral"}>{String(getValue())}</Badge>
-  }
-];
+const adminModuleOptions = nav.map((item) => ({ id: item.id, label: item.label }));
 
 export function AdminPortal() {
   const [active, setActive] = useState("dashboard");
   const [authenticated, setAuthenticated] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const demoState = useQuery({
     queryKey: ["demo-state"],
@@ -75,19 +50,53 @@ export function AdminPortal() {
     refetchInterval: 4_000
   });
   const refreshState = () => queryClient.invalidateQueries({ queryKey: ["demo-state"] });
+  const clients = demoState.data?.adminClients ?? [];
+  const selectedClient = clients.find((client) => client.id === selectedClientId) ?? clients[0];
+
   const approve = useMutation({
-    mutationFn: () => backendPost("/api/v1/admin/access-requests/REQ-2026-MEGADATOS-DEMO/approve", {}),
+    mutationFn: (requestId: string) => backendPost("/api/v1/admin/access-requests/" + requestId + "/approve", {}),
     onSuccess: () => {
-      toast.success("Cliente aprobado. Credenciales temporales quedaron en outbox simulado.");
+      toast.success("Cliente aprobado. El portal cliente y admin quedan sincronizados.");
       refreshState();
     }
   });
   const observe = useMutation({
-    mutationFn: (observation: string) => backendPost("/api/v1/admin/access-requests/REQ-2026-MEGADATOS-DEMO/observe", { observation }),
+    mutationFn: (body: { requestId: string; observation: string }) => backendPost("/api/v1/admin/access-requests/" + body.requestId + "/observe", { observation: body.observation }),
     onSuccess: () => {
-      toast.warning("Observacion enviada al outbox simulado.");
+      toast.warning("Observacion registrada y visible en notificaciones.");
       refreshState();
     }
+  });
+  const createClient = useMutation({
+    mutationFn: (body: { legalName: string; sector: string; mode: string; email: string }) => backendPost<{ state: DemoState }>("/api/v1/admin/clients", body),
+    onSuccess: (payload) => {
+      const created = payload.state.adminClients[0];
+      setSelectedClientId(created?.id ?? null);
+      toast.success("Cliente fantasma creado para probar onboarding.");
+      refreshState();
+    }
+  });
+  const createAdminUser = useMutation({
+    mutationFn: (body: { name: string; email: string; role: string; modules: string[] }) => backendPost<{ state: DemoState }>("/api/v1/admin/users", body),
+    onSuccess: () => {
+      toast.success("Usuario admin creado.");
+      refreshState();
+    }
+  });
+  const updateAdminUser = useMutation({
+    mutationFn: (body: { id: string; active?: boolean; modules?: string[]; role?: string }) => backendPost<{ state: DemoState }>("/api/v1/admin/users/" + body.id, body),
+    onSuccess: () => {
+      toast.success("Usuario admin actualizado.");
+      refreshState();
+    }
+  });
+  const updateSettings = useMutation({
+    mutationFn: (body: { emailProvider?: string; devMonitorExternal?: boolean; sbInhabilitationIncludedInPanorama?: boolean; allowPricingAutomation?: boolean }) => backendPost<{ state: DemoState }>("/api/v1/admin/settings", body),
+    onSuccess: () => {
+      toast.success("Configuracion operativa actualizada.");
+      refreshState();
+    },
+    onError: (error) => toast.error(error.message)
   });
 
   if (!authenticated) {
@@ -113,58 +122,72 @@ export function AdminPortal() {
     <AppShell
       label="Portal admin"
       title="Centro de control Decision Data"
-      subtitle="Gestion documental, clientes, modalidades, usuarios, ingesta, consumos, facturacion postpago, BAC y configuracion."
+      subtitle="Clientes, onboarding, usuarios, ingesta, consumos, facturacion, BAC, notificaciones y configuracion conectados al sandbox."
       nav={nav}
       active={active}
       onSelect={setActive}
       portalLinks={false}
       aside={
         <>
-          <b className="text-foreground">Producto limpio</b>
-          <p className="mt-1">Agent Workbench no vive en admin. El visor externo esta separado.</p>
+          <b className="text-foreground">{selectedClient?.legalName ?? "Sin cliente"}</b>
+          <p className="mt-1">{selectedClient ? `${selectedClient.mode} / ${selectedClient.statusLabel}` : "Cargando estado admin."}</p>
+          <Button className="mt-3 w-full" size="sm" onClick={() => setActive("clientes")}>Cambiar cliente</Button>
         </>
       }
     >
       {active === "dashboard" && <Dashboard demoState={demoState.data} />}
-      {active === "onboarding" && <Onboarding demoState={demoState.data} onApprove={() => approve.mutate()} approving={approve.isPending} onObserve={(text) => observe.mutate(text)} observing={observe.isPending} />}
-      {active === "clientes" && <Clientes demoState={demoState.data} />}
-      {active === "usuarios" && <Info title="Usuarios y roles" text="RBAC granular por modulo: super admin, onboarding, ingesta, facturacion, auditoria y soporte." tone="info" />}
-      {active === "ingesta" && <Ingesta />}
+      {active === "onboarding" && (
+        <Onboarding
+          clients={clients}
+          selectedClient={selectedClient}
+          onSelect={setSelectedClientId}
+          onApprove={(requestId) => approve.mutate(requestId)}
+          approving={approve.isPending}
+          onObserve={(requestId, observation) => observe.mutate({ requestId, observation })}
+          observing={observe.isPending}
+        />
+      )}
+      {active === "clientes" && <Clientes clients={clients} selectedClient={selectedClient} onSelect={setSelectedClientId} onCreate={(body) => createClient.mutate(body)} creating={createClient.isPending} />}
+      {active === "usuarios" && <Usuarios users={demoState.data?.adminUsers ?? []} onCreate={(body) => createAdminUser.mutate(body)} creating={createAdminUser.isPending} onUpdate={(body) => updateAdminUser.mutate(body)} updating={updateAdminUser.isPending} />}
+      {active === "ingesta" && <Ingesta demoState={demoState.data} />}
       {active === "consumos" && <Consumos demoState={demoState.data} />}
       {active === "facturacion" && <Facturacion demoState={demoState.data} />}
-      {active === "auditoria" && <Info title="Auditoria/BAC" text="Append-only: actor, usuario, canal, IP, producto, tarifa, valor, consentimiento y estado." tone="info" />}
-      {active === "notificaciones" && <Notificaciones />}
-      {active === "configuracion" && <Info title="Configuracion" text="Feature flags, plantillas documentales, politicas de seguridad y parametros no comerciales." tone="neutral" />}
+      {active === "auditoria" && <Auditoria demoState={demoState.data} />}
+      {active === "notificaciones" && <Notificaciones demoState={demoState.data} />}
+      {active === "configuracion" && <Configuracion demoState={demoState.data} onUpdate={(body) => updateSettings.mutate(body)} updating={updateSettings.isPending} />}
     </AppShell>
   );
 }
 
 function Dashboard({ demoState }: { demoState?: DemoState }) {
+  const usage = demoState?.globalUsage;
+
   return (
     <div className="grid gap-4">
-      <div className="grid gap-4 lg:grid-cols-3">
-        <MetricCard label="Solicitudes en revision" value={demoState?.client.productionAccess ? "0" : "1"} tone="warn" />
-        <MetricCard label="Clientes productivos sandbox" value={demoState?.client.productionAccess ? "1" : "0"} tone="neutral" />
-        <MetricCard label="Factura estimada" value={`$${(demoState?.invoicePreview.total ?? 0).toFixed(2)}`} tone="ok" />
+      <div className="grid gap-4 lg:grid-cols-4">
+        <MetricCard label="Solicitudes en revision" value={String(usage?.pendingClients ?? 0)} tone="warn" />
+        <MetricCard label="Clientes productivos" value={String(usage?.productiveClients ?? 0)} tone="ok" />
+        <MetricCard label="Consultas globales" value={String(usage?.totalQueries ?? 0)} tone="info" />
+        <MetricCard label="Facturacion estimada" value={`$${(usage?.estimatedSubtotal ?? 0).toFixed(2)}`} tone="neutral" />
       </div>
-      <div className="grid gap-4 xl:grid-cols-[.75fr_1.25fr]">
+      <div className="grid gap-4 xl:grid-cols-[.8fr_1.2fr]">
         <BackendStatusCard />
         <Card>
-          <CardHeader><CardTitle>Prioridades operativas</CardTitle><Badge tone="warn">Fase 2 visual</Badge></CardHeader>
-          <CardContent className="grid gap-3">
-            <Step n="1" text="Revisar documentos MEGADATOS y emitir observaciones." />
-            <Step n="2" text="Confirmar modalidad sin automatizar pricing ni excepciones." />
-            <Step n="3" text="Habilitar productivo solo con expediente completo." />
-          </CardContent>
+          <CardHeader><CardTitle>Consumo global mensual</CardTitle><Badge tone="ok">Todos los clientes</Badge></CardHeader>
+          <CardContent><LineChart data={usage?.series ?? []} /></CardContent>
         </Card>
       </div>
-      <div className="grid gap-4">
+      <div className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Guardrails</CardTitle><Badge tone="ok">Confirmados</Badge></CardHeader>
-          <CardContent className="grid gap-3">
-            <Info title="Postpago mensual" text="Decision Credits no son prepago." tone="ok" />
-            <Info title="Calidad 95%" text="Duplicados no son error ni generan credits." tone="ok" />
-            <Info title="Consulta trazada" text="BAC y consentimiento obligatorios." tone="ok" />
+          <CardHeader><CardTitle>Clientes por actividad</CardTitle><Badge tone="info">Tiempo real</Badge></CardHeader>
+          <CardContent className="grid gap-2">
+            {(usage?.byClient ?? []).map((client) => <BarRow key={client.clientId} label={client.legalName} value={client.queries} max={Math.max(...(usage?.byClient ?? []).map((item) => item.queries), 1)} detail={`${client.uploads} cargas / $${client.subtotal.toFixed(2)}`} />)}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Mix de productos</CardTitle><Badge tone="warn">Consultas</Badge></CardHeader>
+          <CardContent className="grid gap-2">
+            {(usage?.productMix ?? []).map((item) => <BarRow key={item.label} label={item.label} value={item.count} max={Math.max(...(usage?.productMix ?? []).map((mix) => mix.count), 1)} />)}
           </CardContent>
         </Card>
       </div>
@@ -172,139 +195,326 @@ function Dashboard({ demoState }: { demoState?: DemoState }) {
   );
 }
 
-function Onboarding({ demoState, onApprove, approving, onObserve, observing }: { demoState?: DemoState; onApprove: () => void; approving: boolean; onObserve: (text: string) => void; observing: boolean }) {
-  const [documentState, setDocumentState] = useState(initialDocumentState);
-  const [observation, setObservation] = useState("Falta cargar RUC actualizado, nombramiento y cedula del representante legal.");
+function Onboarding({
+  clients,
+  selectedClient,
+  onSelect,
+  onApprove,
+  approving,
+  onObserve,
+  observing
+}: {
+  clients: AdminClient[];
+  selectedClient?: AdminClient;
+  onSelect: (id: string) => void;
+  onApprove: (requestId: string) => void;
+  approving: boolean;
+  onObserve: (requestId: string, observation: string) => void;
+  observing: boolean;
+}) {
+  const [observation, setObservation] = useState("Falta completar documentos habilitantes para aprobar acceso productivo.");
+  const docs = selectedClient?.documents ?? {};
   const blockingDocuments = requiredDocuments.filter((item) => item.blocking);
-  const completedBlocking = blockingDocuments.filter((item) => documentState[item.id]).length;
-  const completion = Math.round((completedBlocking / blockingDocuments.length) * 100);
-  const canApprove = completedBlocking === blockingDocuments.length;
-
-  function toggleDocument(id: RequiredDocumentId) {
-    setDocumentState((current) => ({ ...current, [id]: !current[id] }));
-  }
-
-  function sendObservation() {
-    onObserve(observation);
-  }
-
-  function approveClient() {
-    onApprove();
-  }
+  const completedBlocking = blockingDocuments.filter((item) => docs[item.id]).length;
+  const completion = blockingDocuments.length === 0 ? 0 : Math.round((completedBlocking / blockingDocuments.length) * 100);
+  const canApprove = selectedClient?.productionAccess === false;
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[1.05fr_.95fr]">
+    <div className="grid gap-4 xl:grid-cols-[.9fr_1.1fr]">
       <Card>
-        <CardHeader><CardTitle>Solicitudes</CardTitle><Badge tone="warn">Modulo unico</Badge></CardHeader>
-        <CardContent><DataTable columns={clientColumns} data={clients} /></CardContent>
-      </Card>
-      <Card>
-        <CardHeader><CardTitle>Expediente MEGADATOS</CardTitle><Badge tone={demoState?.client.productionAccess ? "ok" : "warn"}>{demoState?.client.productionAccess ? "Aprobado" : "Revision"}</Badge></CardHeader>
+        <CardHeader><CardTitle>Solicitudes y clientes</CardTitle><Badge tone="warn">{clients.length} expedientes</Badge></CardHeader>
         <CardContent className="grid gap-2">
-          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
-            <div className="mb-2 flex items-center justify-between text-sm">
-              <span className="text-muted">Checklist bloqueante</span>
-              <b>{completion}%</b>
-            </div>
-            <Progress value={completion} />
-          </div>
-          {requiredDocuments.map((item) => (
+          {clients.map((client) => (
             <button
-              key={item.id}
+              key={client.id}
               type="button"
-              onClick={() => toggleDocument(item.id)}
-              className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-left text-sm transition hover:border-primary/30"
+              onClick={() => onSelect(client.id)}
+              className={`rounded-lg border p-3 text-left transition ${selectedClient?.id === client.id ? "border-primary/60 bg-primary/10" : "border-white/10 bg-white/[0.03] hover:border-primary/30"}`}
             >
-              <span>{item.label}</span>
-              <Badge tone={documentState[item.id] ? "ok" : item.blocking ? "warn" : "neutral"}>
-                {documentState[item.id] ? "ok" : item.blocking ? "bloqueante" : "pendiente"}
-              </Badge>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <b>{client.legalName}</b>
+                  <p className="mt-1 text-xs text-muted">{client.requestId} / {client.mode}</p>
+                </div>
+                <Badge tone={client.productionAccess ? "ok" : "warn"}>{client.statusLabel}</Badge>
+              </div>
             </button>
           ))}
-          <Textarea value={observation} onChange={(event) => setObservation(event.target.value)} />
-          <div className="mt-2 flex gap-2">
-            <Button onClick={sendObservation} disabled={observing}>Enviar observacion</Button>
-            <Button variant="primary" disabled={approving} onClick={approveClient}>{canApprove ? "Aprobar cliente cero" : "Aprobar y completar checklist demo"}</Button>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Expediente {selectedClient?.legalName ?? "sin seleccion"}</CardTitle>
+          <Badge tone={selectedClient?.productionAccess ? "ok" : "warn"}>{selectedClient?.productionAccess ? "Aprobado" : "Revision"}</Badge>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+            <div className="mb-2 flex items-center justify-between text-sm"><span className="text-muted">Checklist bloqueante</span><b>{completion}%</b></div>
+            <Progress value={completion} />
           </div>
-          {demoState?.outbox[0] ? <Info title="Ultimo correo simulado" text={`${demoState.outbox[0].subject} / ${demoState.outbox[0].status}`} tone="info" /> : null}
+          <div className="grid gap-2 md:grid-cols-2">
+            {requiredDocuments.map((item) => (
+              <div key={item.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
+                <span>{item.label}</span>
+                <Badge tone={docs[item.id] ? "ok" : item.blocking ? "warn" : "neutral"}>{docs[item.id] ? "ok" : item.blocking ? "bloqueante" : "pendiente"}</Badge>
+              </div>
+            ))}
+          </div>
+          <Textarea value={observation} onChange={(event) => setObservation(event.target.value)} />
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => selectedClient && onObserve(selectedClient.requestId, observation)} disabled={!selectedClient || observing}>Enviar observacion</Button>
+            <Button variant="primary" onClick={() => selectedClient && onApprove(selectedClient.requestId)} disabled={!canApprove || approving}><FileCheck2 className="size-4" /> Aprobar acceso</Button>
+          </div>
+          {selectedClient?.outbox[0] ? <Info title="Ultima notificacion del cliente" text={`${selectedClient.outbox[0].subject} / ${selectedClient.outbox[0].status}`} tone="info" /> : null}
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function Clientes({ demoState }: { demoState?: DemoState }) {
-  const rows = demoState
-    ? [{ empresa: demoState.client.legalName, sector: demoState.client.sector, modalidad: demoState.client.mode, estado: demoState.client.productionAccess ? "Aprobado" : "Documentos observados" }]
-    : clients;
+function Clientes({ clients, selectedClient, onSelect, onCreate, creating }: { clients: AdminClient[]; selectedClient?: AdminClient; onSelect: (id: string) => void; onCreate: (body: { legalName: string; sector: string; mode: string; email: string }) => void; creating: boolean }) {
+  const [legalName, setLegalName] = useState("CLIENTE FANTASMA S.A.");
+  const [email, setEmail] = useState("operaciones@cliente-fantasma.demo");
+  const [sector, setSector] = useState<(typeof reporterSectors)[number]>("Casa comercial");
+  const [mode, setMode] = useState<(typeof commercialModes)[number]>("Cliente Normal");
 
   return (
-    <Card>
-      <CardHeader><CardTitle>Clientes y modalidades</CardTitle><Badge tone="warn">Decision reservada</Badge></CardHeader>
-      <CardContent className="grid gap-4">
-        <DataTable columns={clientColumns} data={rows} />
-        <Info title="Pricing protegido" text="Cambios de modalidad, tarifa, excepciones o beneficios se consultan con Mateo." tone="warn" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function Ingesta() {
-  return (
-    <Card>
-      <CardHeader><CardTitle>Control de ingesta</CardTitle><Badge tone="ok">Guardrails</Badge></CardHeader>
-      <CardContent className="grid gap-3 lg:grid-cols-2">
-        <Info title="Bloques de informacion" text="No bloques de cartera. Diccionario Reporte como base." tone="info" />
-        <Info title="Umbral minimo" text="95% de calidad antes de aceptar productivo." tone="ok" />
-        <Info title="Duplicados" text="Descartar sin error y sin Decision Credits." tone="ok" />
-        <Info title="Reportantes permitidos" text="Casas comerciales, telcos, retail, concesionarios, fintechs, cobranza/BPO, industria y mayoristas." tone="neutral" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function Consumos({ demoState }: { demoState?: DemoState }) {
-  return (
-    <Card>
-      <CardHeader><CardTitle>Consumos y APIs</CardTitle><Badge tone="warn">Tiempo real sandbox</Badge></CardHeader>
-      <CardContent className="grid gap-3 lg:grid-cols-4">
-        <MetricCard label="Basicos" value={String(demoState?.usage.basicReports ?? 0)} tone="info" />
-        <MetricCard label="Panorama" value={String(demoState?.usage.completeReports ?? 0)} tone="warn" />
-        <MetricCard label="API calls" value={String(demoState?.usage.apiCalls ?? 0)} tone="neutral" />
-        <MetricCard label="BAC registrados" value={String(demoState?.queries.length ?? 0)} tone="ok" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function Facturacion({ demoState }: { demoState?: DemoState }) {
-  return (
-    <Card>
-      <CardHeader><CardTitle>Facturacion y tarifas</CardTitle><Badge tone="ok">Postpago</Badge></CardHeader>
-      <CardContent className="grid gap-3 lg:grid-cols-3">
-        <Info title="Subtotal" text={`$${(demoState?.invoicePreview.subtotal ?? 0).toFixed(2)}`} tone="neutral" />
-        <Info title="IVA estimado" text={`$${(demoState?.invoicePreview.tax ?? 0).toFixed(2)}`} tone="warn" />
-        <Info title="Total postpago" text={`$${(demoState?.invoicePreview.total ?? 0).toFixed(2)}`} tone="ok" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function Notificaciones() {
-  return (
-    <div className="grid gap-3">
-      <Info title="Nueva solicitud" text="MEGADATOS tiene documentos faltantes para aprobar." tone="warn" />
-      <Info title="Visor externo" text="Agent Workbench fue retirado del producto admin." tone="ok" />
-      <Info title="Decision reservada" text="No automatizar pricing, regulatorio ni excepciones." tone="danger" />
+    <div className="grid gap-4 xl:grid-cols-[1.15fr_.85fr]">
+      <Card>
+        <CardHeader><CardTitle>Clientes y modalidades</CardTitle><Badge tone="info">{clients.length} clientes</Badge></CardHeader>
+        <CardContent className="grid gap-2">
+          {clients.map((client) => (
+            <button key={client.id} type="button" onClick={() => onSelect(client.id)} className={`grid gap-2 rounded-lg border p-3 text-left text-sm transition lg:grid-cols-[1fr_160px_150px_120px] ${selectedClient?.id === client.id ? "border-primary/60 bg-primary/10" : "border-white/10 bg-white/[0.03]"}`}>
+              <b>{client.legalName}</b>
+              <span>{client.sector}</span>
+              <span>{client.mode}</span>
+              <Badge tone={client.productionAccess ? "ok" : "warn"}>{client.statusLabel}</Badge>
+            </button>
+          ))}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Crear cliente fantasma</CardTitle><Badge tone="warn">Sandbox</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          <Field label="Razon social"><Input value={legalName} onChange={(event) => setLegalName(event.target.value)} /></Field>
+          <Field label="Correo operativo"><Input value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
+          <Field label="Sector"><Select value={sector} onChange={(event) => setSector(event.target.value as (typeof reporterSectors)[number])}>{reporterSectors.map((item) => <option key={item}>{item}</option>)}</Select></Field>
+          <Field label="Modalidad tentativa"><Select value={mode} onChange={(event) => setMode(event.target.value as (typeof commercialModes)[number])}>{commercialModes.map((item) => <option key={item}>{item}</option>)}</Select></Field>
+          <Button variant="primary" disabled={creating} onClick={() => onCreate({ legalName, sector, mode, email })}><Building2 className="size-4" /> Crear cliente</Button>
+          <Info title="Pricing protegido" text="Crear clientes no automatiza cambios comerciales ni excepciones de tarifa." tone="warn" />
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-function Step({ n, text }: { n: string; text: string }) {
+function Usuarios({ users, onCreate, creating, onUpdate, updating }: { users: AdminUser[]; onCreate: (body: { name: string; email: string; role: string; modules: string[] }) => void; creating: boolean; onUpdate: (body: { id: string; active?: boolean; modules?: string[]; role?: string }) => void; updating: boolean }) {
+  const [name, setName] = useState("Analista soporte");
+  const [email, setEmail] = useState("soporte@decisiondata.ec");
+  const [role, setRole] = useState("Soporte");
+  const [modules, setModules] = useState(["dashboard", "clientes", "notificaciones"]);
+
+  function toggleModule(moduleId: string) {
+    setModules((current) => current.includes(moduleId) ? current.filter((item) => item !== moduleId) : [...current, moduleId]);
+  }
+
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-      <span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-sm font-black text-primary">{n}</span>
-      <span className="text-sm">{text}</span>
+    <div className="grid gap-4 xl:grid-cols-[.85fr_1.15fr]">
+      <Card>
+        <CardHeader><CardTitle>Crear usuario admin</CardTitle><Badge tone="info">RBAC</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          <Field label="Nombre"><Input value={name} onChange={(event) => setName(event.target.value)} /></Field>
+          <Field label="Correo"><Input value={email} onChange={(event) => setEmail(event.target.value)} /></Field>
+          <Field label="Rol"><Select value={role} onChange={(event) => setRole(event.target.value)}><option>Soporte</option><option>Onboarding</option><option>Facturacion</option><option>Auditoria</option><option>Super admin</option></Select></Field>
+          <div className="grid gap-2 md:grid-cols-2">
+            {adminModuleOptions.map((module) => <label key={module.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2 text-sm"><input type="checkbox" checked={modules.includes(module.id)} onChange={() => toggleModule(module.id)} />{module.label}</label>)}
+          </div>
+          <Button variant="primary" disabled={creating || modules.length === 0} onClick={() => onCreate({ name, email, role, modules })}><UserPlus className="size-4" /> Crear usuario</Button>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Usuarios Decision Data</CardTitle><Badge tone="ok">{users.length} usuarios</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          {users.map((user) => (
+            <div key={user.id} className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div><b>{user.name}</b><p className="mt-1 text-xs text-muted">{user.email} / {user.role}</p></div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge tone={user.status === "active" ? "ok" : "danger"}>{user.status === "active" ? "activo" : "bloqueado"}</Badge>
+                  <Button size="sm" variant={user.status === "active" ? "danger" : "primary"} disabled={updating} onClick={() => onUpdate({ id: user.id, active: user.status !== "active" })}>{user.status === "active" ? "Bloquear" : "Desbloquear"}</Button>
+                </div>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted">Modulos: {user.modules.join(", ")}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Ingesta({ demoState }: { demoState?: DemoState }) {
+  const dashboard = demoState?.ingestionDashboard;
+
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-4 lg:grid-cols-4">
+        <MetricCard label="Registros aceptados" value={String(dashboard?.acceptedRows ?? 0)} tone="ok" />
+        <MetricCard label="Duplicados descartados" value={String(dashboard?.duplicateRows ?? 0)} tone="neutral" />
+        <MetricCard label="Errores calidad" value={String(dashboard?.errorRows ?? 0)} tone="danger" />
+        <MetricCard label="Umbral minimo" value={`${Math.round((dashboard?.qualityThreshold ?? 0.95) * 100)}%`} tone="warn" />
+      </div>
+      <Card>
+        <CardHeader><CardTitle>Cargas por cliente</CardTitle><Badge tone="info">Bloques de informacion</Badge></CardHeader>
+        <CardContent className="grid gap-2">
+          {(dashboard?.byClient ?? []).map((item) => <BarRow key={item.clientId} label={item.legalName} value={item.acceptedRows} max={Math.max(...(dashboard?.byClient ?? []).map((client) => client.acceptedRows), 1)} detail={`${item.uploads} cargas / ${item.creditsGenerated} credits`} />)}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Ultimas cargas</CardTitle><Badge tone="ok">{dashboard?.uploads.length ?? 0} eventos</Badge></CardHeader>
+        <CardContent className="grid gap-2">
+          {(dashboard?.uploads ?? []).map((upload) => <EventRow key={upload.id} title={upload.clientName} detail={`${upload.acceptedRows}/${upload.rowsReceived} aceptadas, ${upload.duplicateRows} duplicadas, calidad ${Math.round(upload.qualityScore * 100)}%`} status={upload.status} date={upload.createdAt} />)}
+          {(dashboard?.uploads.length ?? 0) === 0 ? <Info title="Sin cargas aun" text="Cuando MEGADATOS simule una carga en el portal cliente, aparecera aqui en tiempo real." tone="warn" /> : null}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Consumos({ demoState }: { demoState?: DemoState }) {
+  const usage = demoState?.globalUsage;
+
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-4 lg:grid-cols-4">
+        <MetricCard label="Basicos" value={String(usage?.basicReports ?? 0)} tone="info" />
+        <MetricCard label="Panorama" value={String(usage?.completeReports ?? 0)} tone="warn" />
+        <MetricCard label="API calls" value={String(usage?.apiCalls ?? 0)} tone="neutral" />
+        <MetricCard label="BAC registrados" value={String(demoState?.auditLog.filter((event) => event.type === "query_bac").length ?? 0)} tone="ok" />
+      </div>
+      <Card>
+        <CardHeader><CardTitle>Tendencia global de consumo</CardTitle><Badge tone="warn">Todos los clientes</Badge></CardHeader>
+        <CardContent><LineChart data={usage?.series ?? []} /></CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Consumo por cliente</CardTitle><Badge tone="info">Consultas + API</Badge></CardHeader>
+        <CardContent className="grid gap-2">
+          {(usage?.byClient ?? []).map((client) => <BarRow key={client.clientId} label={client.legalName} value={client.queries} max={Math.max(...(usage?.byClient ?? []).map((item) => item.queries), 1)} detail={`Subtotal $${client.subtotal.toFixed(2)} / estado ${client.state}`} />)}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Facturacion({ demoState }: { demoState?: DemoState }) {
+  const global = demoState?.globalUsage;
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Facturacion y tarifas</CardTitle><Badge tone="ok">Postpago global</Badge></CardHeader>
+      <CardContent className="grid gap-3 lg:grid-cols-4">
+        <Info title="Subtotal global" text={`$${(global?.estimatedSubtotal ?? 0).toFixed(2)}`} tone="neutral" />
+        <Info title="IVA estimado" text={`$${((global?.estimatedSubtotal ?? 0) * 0.15).toFixed(2)}`} tone="warn" />
+        <Info title="Total postpago" text={`$${((global?.estimatedSubtotal ?? 0) * 1.15).toFixed(2)}`} tone="ok" />
+        <Info title="Regla comercial" text="Excesos Data Partner se liquidan como Cliente Normal. Cambios de pricing requieren Mateo." tone="danger" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function Auditoria({ demoState }: { demoState?: DemoState }) {
+  return (
+    <Card>
+      <CardHeader><CardTitle>Auditoria BAC y operativa</CardTitle><Badge tone="info">{demoState?.auditLog.length ?? 0} eventos</Badge></CardHeader>
+      <CardContent className="grid gap-2">
+        {(demoState?.auditLog ?? []).map((event) => <EventRow key={event.id} title={`${event.clientName} / ${event.actor}`} detail={`${event.type} - ${event.detail}${event.estimatedValue ? ` - $${event.estimatedValue.toFixed(2)}` : ""}`} status={event.status} date={event.createdAt} />)}
+        {(demoState?.auditLog.length ?? 0) === 0 ? <Info title="Sin eventos aun" text="Las aprobaciones, cargas y consultas apareceran aqui con trazabilidad." tone="warn" /> : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Notificaciones({ demoState }: { demoState?: DemoState }) {
+  return (
+    <Card>
+      <CardHeader><CardTitle>Notificaciones globales</CardTitle><Badge tone="ok">{demoState?.notifications.length ?? 0} mensajes</Badge></CardHeader>
+      <CardContent className="grid gap-2">
+        {(demoState?.notifications ?? []).map((email) => <EventRow key={email.id} title={`${email.clientName} / ${email.to}`} detail={`${email.subject}${email.body ? ` - ${email.body}` : ""}`} status={email.status} date={email.createdAt} />)}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Configuracion({ demoState, onUpdate, updating }: { demoState?: DemoState; onUpdate: (body: { emailProvider?: string; devMonitorExternal?: boolean; sbInhabilitationIncludedInPanorama?: boolean; allowPricingAutomation?: boolean }) => void; updating: boolean }) {
+  const settings = demoState?.settings;
+
+  return (
+    <div className="grid gap-4 xl:grid-cols-2">
+      <Card>
+        <CardHeader><CardTitle>Parametros protegidos</CardTitle><Badge tone="danger">No automatizar</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          <Info title="Facturacion" text={settings?.billingMode ?? "monthly_postpaid"} tone="ok" />
+          <Info title="Umbral de calidad" text={`${Math.round((settings?.qualityThreshold ?? 0.95) * 100)}% minimo`} tone="warn" />
+          <Info title="Pricing" text="Tarifas, excepciones, cambios comerciales o regulatorios se consultan con Mateo." tone="danger" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Operativo sandbox</CardTitle><Badge tone="info">Editable</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          <Info title="Proveedor email" text={settings?.emailProvider ?? "simulated_outbox"} tone="neutral" />
+          <label className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
+            <span>Workbench externo</span>
+            <input type="checkbox" checked={settings?.devMonitorExternal ?? true} disabled={updating} onChange={(event) => onUpdate({ devMonitorExternal: event.target.checked })} />
+          </label>
+          <label className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
+            <span>Inhabilidad SB incluida en Panorama completo</span>
+            <input type="checkbox" checked={settings?.sbInhabilitationIncludedInPanorama ?? true} disabled={updating} onChange={(event) => onUpdate({ sbInhabilitationIncludedInPanorama: event.target.checked })} />
+          </label>
+          <Button disabled={updating} onClick={() => onUpdate({ emailProvider: "simulated_outbox" })}><Settings className="size-4" /> Guardar configuracion</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function LineChart({ data }: { data: Array<{ label: string; queries: number; amount: number }> }) {
+  const safeData = data.length > 0 ? data : [{ label: "May", queries: 0, amount: 0 }];
+  const max = Math.max(...safeData.map((item) => item.queries), 1);
+  const points = safeData.map((item, index) => ({
+    x: 48 + index * (580 / Math.max(safeData.length - 1, 1)),
+    y: 170 - (item.queries / max) * 120
+  }));
+  const path = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+
+  return (
+    <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+      <svg viewBox="0 0 680 220" role="img" aria-label="Grafico de consumo global" className="h-64 w-full">
+        <path d={path} fill="none" stroke="#ffc400" strokeWidth="4" />
+        {points.map((point, index) => <circle key={safeData[index].label} cx={point.x} cy={point.y} r="6" fill="#ff6b1a" />)}
+        {safeData.map((item, index) => <text key={item.label} x={points[index].x - 18} y="204" fill="#9fb0cc" fontSize="13">{item.label}</text>)}
+        <text x="48" y="28" fill="#9fb0cc" fontSize="13">{max} consultas</text>
+      </svg>
+    </div>
+  );
+}
+
+function BarRow({ label, value, max, detail }: { label: string; value: number; max: number; detail?: string }) {
+  const width = Math.max(4, Math.round((value / Math.max(max, 1)) * 100));
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+      <div className="mb-2 flex items-center justify-between gap-3 text-sm"><b>{label}</b><span className="text-muted">{value}</span></div>
+      <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-[#ff6b1a] to-[#ffc400]" style={{ width: `${width}%` }} /></div>
+      {detail ? <p className="mt-2 text-xs text-muted">{detail}</p> : null}
+    </div>
+  );
+}
+
+function EventRow({ title, detail, status, date }: { title: string; detail: string; status: string; date: string }) {
+  return (
+    <div className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm lg:grid-cols-[180px_1fr_150px]">
+      <span className="text-muted">{date.slice(0, 19).replace("T", " ")}</span>
+      <div><b>{title}</b><p className="mt-1 text-xs leading-5 text-muted">{detail}</p></div>
+      <Badge tone={status.includes("approved") || status.includes("accepted") || status.includes("completed") || status.includes("processed") ? "ok" : status.includes("blocked") || status.includes("rejected") ? "danger" : "warn"}>{status}</Badge>
     </div>
   );
 }

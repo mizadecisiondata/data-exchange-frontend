@@ -18,11 +18,104 @@ export type DemoState = {
   usage: UsageSummary;
   outbox: OutboxEmail[];
   invoicePreview: InvoicePreview;
+  adminClients: AdminClient[];
+  adminUsers: AdminUser[];
+  globalUsage: GlobalUsage;
+  ingestionDashboard: IngestionDashboard;
+  auditLog: AdminAuditEvent[];
+  notifications: AdminNotification[];
+  settings: AdminSettings;
   accessRequest: {
     id: string;
     state: string;
     blockingDocumentsMissing: string[];
   };
+};
+
+export type AdminClient = {
+  id: string;
+  requestId: string;
+  legalName: string;
+  sector: string;
+  mode: string;
+  state: string;
+  productionAccess: boolean;
+  sandboxUploadAllowed: boolean;
+  creditsBalance: number;
+  blockingDocumentsMissing: string[];
+  documents: Record<string, boolean>;
+  uploads: UploadSummary[];
+  queries: QueryAudit[];
+  batchQueries: BatchSummary[];
+  usage: UsageSummary;
+  outbox: OutboxEmail[];
+  createdAt: string;
+  latestUploadAt: string | null;
+  latestQueryAt: string | null;
+  statusLabel: string;
+};
+
+export type AdminUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: "active" | "blocked";
+  modules: string[];
+  createdAt: string;
+};
+
+export type GlobalUsage = {
+  basicReports: number;
+  completeReports: number;
+  apiCalls: number;
+  estimatedSubtotal: number;
+  creditsGenerated: number;
+  creditsUsed: number;
+  productiveClients: number;
+  pendingClients: number;
+  totalQueries: number;
+  series: Array<{ label: string; queries: number; amount: number }>;
+  productMix: Array<{ label: string; count: number }>;
+  byClient: Array<{ clientId: string; legalName: string; queries: number; uploads: number; subtotal: number; state: string }>;
+};
+
+export type IngestionDashboard = {
+  uploads: Array<UploadSummary & { clientId: string; clientName: string }>;
+  acceptedRows: number;
+  duplicateRows: number;
+  errorRows: number;
+  qualityThreshold: number;
+  byClient: Array<{ clientId: string; legalName: string; uploads: number; acceptedRows: number; creditsGenerated: number }>;
+};
+
+export type AdminAuditEvent = {
+  id: string;
+  type: string;
+  actor: string;
+  clientId: string;
+  clientName: string;
+  channel: string;
+  product?: string;
+  tariff?: string;
+  estimatedValue?: number;
+  status: string;
+  detail: string;
+  createdAt: string;
+};
+
+export type AdminNotification = OutboxEmail & {
+  clientId: string;
+  clientName: string;
+};
+
+export type AdminSettings = {
+  qualityThreshold: number;
+  billingMode: string;
+  allowPricingAutomation: boolean;
+  emailProvider: string;
+  devMonitorExternal: boolean;
+  sbInhabilitationIncludedInPanorama: boolean;
 };
 
 export type UploadSummary = {
