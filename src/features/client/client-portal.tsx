@@ -39,6 +39,8 @@ import {
   apiEndpoints,
   bacEvents,
   commercialModes,
+  getQueryProductLabel,
+  queryProducts,
   registrationSchema,
   reporterSectors,
   requiredDocuments,
@@ -101,6 +103,9 @@ export function ClientPortal() {
   const [state, send] = useMachine(clientMachine);
   const [active, setActive] = useState("inicio");
   const [queryProduct, setQueryProduct] = useState("complete_report");
+  const [queryIdentifier, setQueryIdentifier] = useState("0923048581");
+  const [batchProduct, setBatchProduct] = useState("complete_report");
+  const [apiProduct, setApiProduct] = useState("complete_report");
   const [previewSubUserId, setPreviewSubUserId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const demoState = useQuery({
@@ -130,8 +135,8 @@ export function ClientPortal() {
     mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/queries", {
       product: queryProduct,
       channel: "portal",
-      identifierType: "cedula",
-      identifier: "0923048581"
+      identifierType: guessIdentifierType(queryIdentifier),
+      identifier: queryIdentifier
     }),
     onSuccess: () => {
       toast.success("Consulta registrada con BAC y consentimiento.");
@@ -139,7 +144,9 @@ export function ClientPortal() {
     }
   });
   const batchQuery = useMutation({
-    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/batch-queries"),
+    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/batch-queries", {
+      product: batchProduct
+    }),
     onSuccess: () => {
       toast.success("Consulta por bloque procesada.");
       refreshState();
@@ -147,7 +154,7 @@ export function ClientPortal() {
   });
   const apiQuery = useMutation({
     mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/queries", {
-      product: "complete_report",
+      product: apiProduct,
       channel: "api",
       identifierType: "ruc",
       identifier: "0999999999001",
@@ -312,9 +319,9 @@ export function ClientPortal() {
       {active === "documentos" && <Documentos />}
       {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={demoState.data} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
       {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={demoState.data} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
-      {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={demoState.data?.queries[0]} /></LockedAware>}
-      {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={demoState.data} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
-      {active === "api" && <LockedAware enabled={isApproved}><Api onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
+      {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={demoState.data?.queries[0]} /></LockedAware>}
+      {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={demoState.data} product={batchProduct} onProductChange={setBatchProduct} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
+      {active === "api" && <LockedAware enabled={isApproved}><Api product={apiProduct} onProductChange={setApiProduct} onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
       {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion demoState={demoState.data} /></LockedAware>}
       {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria events={demoState.data?.queries ?? bacEvents} /></LockedAware>}
       {active === "notificaciones" && <Notificaciones demoState={demoState.data} />}
@@ -340,7 +347,7 @@ function LockedAware({ enabled, children }: { enabled: boolean; children: React.
 }
 
 function Inicio({ isPending, demoState }: { isPending: boolean; demoState?: DemoState }) {
-  const totalQueries = (demoState?.usage.basicReports ?? 0) + (demoState?.usage.completeReports ?? 0);
+  const totalQueries = getTotalQueries(demoState);
 
   return (
     <div className="grid gap-4">
@@ -554,42 +561,95 @@ function Carga({ uppy, isPending, demoState, onSimulate, loading }: { uppy: Uppy
   );
 }
 
-function ConsultaIndividual({ product, onProductChange, onRun, loading, latest }: { product: string; onProductChange: (value: string) => void; onRun: () => void; loading: boolean; latest?: QueryAudit }) {
+function ConsultaIndividual({
+  identifier,
+  onIdentifierChange,
+  product,
+  onProductChange,
+  onRun,
+  loading,
+  latest
+}: {
+  identifier: string;
+  onIdentifierChange: (value: string) => void;
+  product: string;
+  onProductChange: (value: string) => void;
+  onRun: () => void;
+  loading: boolean;
+  latest?: QueryAudit;
+}) {
+  const selectedIsInhabilitations = product === "inhabilitations_check";
+  const latestIsInhabilitations = latest?.product === "inhabilitations_check";
+
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <Card>
         <CardHeader><CardTitle>Consulta individual</CardTitle><Badge tone="warn">BAC obligatorio</Badge></CardHeader>
         <CardContent className="grid gap-3">
-          <Field label="Cedula, RUC o codigo SB"><Input defaultValue="0923048581" /></Field>
+          <Field label="Cedula, RUC o codigo SB"><Input value={identifier} onChange={(event) => onIdentifierChange(event.target.value)} /></Field>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => onIdentifierChange("0923048581")}>Demo NO inhabilitado</Button>
+            <Button size="sm" onClick={() => onIdentifierChange("0911111111")}>Demo SI inhabilitado</Button>
+            <Button size="sm" onClick={() => onIdentifierChange("SB-000234")}>Codigo SB inhabilitado</Button>
+          </div>
           <Field label="Producto">
             <Select value={product} onChange={(event) => onProductChange(event.target.value)}>
-              <option value="complete_report">Reporte completo</option>
-              <option value="basic_report">Reporte basico</option>
+              {queryProducts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
             </Select>
           </Field>
-          <Info title="Valor estimado" text="Founding aplica tarifa preferencial mientras existan Decision Credits. Al agotarse, la siguiente consulta se cobra como exceso a tarifa Cliente Normal." tone="ok" />
+          <Info
+            title={selectedIsInhabilitations ? "Consulta de inhabilidades" : "Valor estimado"}
+            text={selectedIsInhabilitations
+              ? "Devuelve si/no para inhabilidad de girar cheques o abrir cuentas corrientes. Se registra como consulta facturable y auditable."
+              : "Founding aplica tarifa preferencial mientras existan Decision Credits. Al agotarse, la siguiente consulta se cobra como exceso a tarifa Cliente Normal."}
+            tone={selectedIsInhabilitations ? "warn" : "ok"}
+          />
           <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Consultar con consentimiento</Button>
-          {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${latest.product}, canal ${latest.channel}, tarifa ${latest.tariff}, tramo ${latest.tariffTier ?? "1-100"}, ${latest.creditApplied ? `consume ${latest.creditCost ?? 1} Decision Credit` : "sin Decision Credit"}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
+          {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${formatProduct(latest.product)}, canal ${latest.channel}, tarifa ${latest.tariff}, tramo ${latest.tariffTier ?? "1-100"}, ${latest.creditApplied ? `consume ${latest.creditCost ?? 1} Decision Credit` : "sin Decision Credit"}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
         </CardContent>
       </Card>
-      <ReportHtmlViewer latest={latest} />
+      {selectedIsInhabilitations || latestIsInhabilitations ? <InhabilitationsResult latest={latest} /> : <ReportHtmlViewer latest={latest} />}
     </div>
   );
 }
 
-function ConsultaBloque({ demoState, onRun, loading }: { demoState?: DemoState; onRun: () => void; loading: boolean }) {
+function InhabilitationsResult({ latest }: { latest?: QueryAudit }) {
+  const result = latest?.product === "inhabilitations_check" ? latest.inhabilitations : undefined;
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Resultado de inhabilidades</CardTitle><Badge tone={result?.isInhabilitated ? "danger" : "ok"}>{result?.status ?? "pendiente"}</Badge></CardHeader>
+      <CardContent className="grid gap-3">
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+          <span className="text-sm text-muted">Estado consultado</span>
+          <strong className="mt-2 block text-3xl font-black text-primary">{result ? (result.isInhabilitated ? "SI inhabilitado" : "NO inhabilitado") : "Ejecuta la consulta"}</strong>
+          <p className="mt-3 text-sm leading-6 text-muted">{result?.reason ?? "La respuesta aparecera aqui con BAC, consentimiento y tarifa."}</p>
+        </div>
+        <Info title="Alcance" text="Valida inhabilidad para girar cheques o abrir cuentas corrientes dentro del sandbox Decision Data." tone="info" />
+        {result ? <Info title="Fuente y fecha" text={`${result.source} / vigente al ${result.effectiveDate}`} tone="neutral" /> : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ConsultaBloque({ demoState, product, onProductChange, onRun, loading }: { demoState?: DemoState; product: string; onProductChange: (value: string) => void; onRun: () => void; loading: boolean }) {
   const latest = demoState?.batchQueries[0];
 
   return (
     <Card>
       <CardHeader><CardTitle>Consulta por bloque</CardTitle><Badge tone="info">CSV sandbox</Badge></CardHeader>
       <CardContent className="grid gap-3">
-        <p className="text-sm text-muted">Carga un bloque de identificadores. Cada fila registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado.</p>
+        <p className="text-sm text-muted">Carga un bloque de identificadores y escoge si todo el bloque usa reporte basico, panorama completo o consulta de inhabilidades. Cada fila registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado.</p>
+        <Field label="Producto para todo el bloque">
+          <Select value={product} onChange={(event) => onProductChange(event.target.value)}>
+            {queryProducts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </Select>
+        </Field>
         <div className="flex flex-wrap gap-2">
           <Button asChild>
             <a href="/api/backend/api/v1/templates/batch-query.csv" download><Download className="size-4" /> Descargar template CSV</a>
           </Button>
-          <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Procesar bloque demo</Button>
+          <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Procesar bloque {getQueryProductLabel(product)}</Button>
         </div>
         {latest ? <Info title={`Bloque ${latest.id}`} text={`${latest.rowsProcessed}/${latest.rowsReceived} filas procesadas. Subtotal estimado $${latest.estimatedSubtotal.toFixed(2)}.`} tone="ok" /> : null}
       </CardContent>
@@ -597,19 +657,24 @@ function ConsultaBloque({ demoState, onRun, loading }: { demoState?: DemoState; 
   );
 }
 
-function Api({ onRun, loading }: { onRun: () => void; loading: boolean }) {
+function Api({ product, onProductChange, onRun, loading }: { product: string; onProductChange: (value: string) => void; onRun: () => void; loading: boolean }) {
   return (
     <div className="grid gap-3">
       <Info title="API keys" text="Scopes, rotacion y vencimiento solo para clientes aprobados." tone="warn" />
       <Card>
         <CardHeader><CardTitle>Ejemplo para desarrolladores</CardTitle><Badge tone="info">Sandbox</Badge></CardHeader>
         <CardContent className="grid gap-3">
+          <Field label="Producto API">
+            <Select value={product} onChange={(event) => onProductChange(event.target.value)}>
+              {queryProducts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+            </Select>
+          </Field>
           <pre className="overflow-auto rounded-lg border border-white/10 bg-black/30 p-3 text-xs text-slate-200">{`POST /api/v1/queries
 Authorization: Bearer dd_sandbox_key
 {
   "identifierType": "ruc",
   "identifier": "0999999999001",
-  "product": "complete_report",
+  "product": "${product}",
   "channel": "api"
 }`}</pre>
           <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Simular llamada API</Button>
@@ -639,9 +704,10 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
   return (
     <Card>
       <CardHeader><CardTitle>Facturacion mensual postpago</CardTitle><Badge tone="ok">Dinamica sandbox</Badge></CardHeader>
-      <CardContent className="grid gap-3 lg:grid-cols-4">
+      <CardContent className="grid gap-3 lg:grid-cols-5">
         <MetricCard label="Basicos" value={String(demoState?.usage.basicReports ?? 0)} tone="info" />
-        <MetricCard label="Completos" value={String(demoState?.usage.completeReports ?? 0)} tone="warn" />
+        <MetricCard label="Panorama" value={String(demoState?.usage.completeReports ?? 0)} tone="warn" />
+        <MetricCard label="Inhabilidades" value={String(demoState?.usage.inhabilitationChecks ?? 0)} tone="danger" />
         <MetricCard label="API calls" value={String(demoState?.usage.apiCalls ?? 0)} tone="neutral" />
         <MetricCard label="Total estimado" value={`$${(invoice?.total ?? 0).toFixed(2)}`} tone="ok" />
         <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-2">
@@ -828,8 +894,9 @@ function Notificaciones({ demoState }: { demoState?: DemoState }) {
 function getMainQueryType(demoState?: DemoState) {
   const usage = demoState?.usage;
   const values = [
-    { label: "Completos", count: usage?.completeReports ?? 0 },
+    { label: "Panorama", count: usage?.completeReports ?? 0 },
     { label: "Basicos", count: usage?.basicReports ?? 0 },
+    { label: "Inhabilidades", count: usage?.inhabilitationChecks ?? 0 },
     { label: "API", count: usage?.apiCalls ?? 0 }
   ];
   const winner = values.reduce((best, item) => item.count > best.count ? item : best, values[0]);
@@ -838,8 +905,9 @@ function getMainQueryType(demoState?: DemoState) {
 
 function buildProductMix(demoState?: DemoState) {
   const values = [
-    { label: "Reporte completo", count: demoState?.usage.completeReports ?? 0 },
+    { label: "Panorama completo", count: demoState?.usage.completeReports ?? 0 },
     { label: "Reporte basico", count: demoState?.usage.basicReports ?? 0 },
+    { label: "Inhabilidades", count: demoState?.usage.inhabilitationChecks ?? 0 },
     { label: "API", count: demoState?.usage.apiCalls ?? 0 }
   ];
   const total = Math.max(values.reduce((sum, item) => sum + item.count, 0), 1);
@@ -850,7 +918,7 @@ function buildProductMix(demoState?: DemoState) {
 }
 
 function buildConsumptionSeries(demoState: DemoState | undefined, period: "daily" | "monthly") {
-  const totalQueries = (demoState?.usage.basicReports ?? 0) + (demoState?.usage.completeReports ?? 0);
+  const totalQueries = getTotalQueries(demoState);
   const subtotal = demoState?.invoicePreview.subtotal ?? 0;
   const dailyBase = [
     { label: "Lun", queries: 2, amount: 1.0 },
@@ -887,13 +955,23 @@ function toChartPoints(series: Array<{ label: string; queries: number; amount: n
 }
 
 function formatProduct(product: string) {
-  if (product === "basic_report") {
-    return "Reporte basico";
+  return getQueryProductLabel(product);
+}
+
+function getTotalQueries(demoState?: DemoState) {
+  return (demoState?.usage.basicReports ?? 0)
+    + (demoState?.usage.completeReports ?? 0)
+    + (demoState?.usage.inhabilitationChecks ?? 0);
+}
+
+function guessIdentifierType(identifier: string) {
+  if (identifier.toUpperCase().startsWith("SB-")) {
+    return "codigo_sb";
   }
-  if (product === "complete_report") {
-    return "Reporte completo";
+  if (/^\d{13}$/.test(identifier)) {
+    return "ruc";
   }
-  return product;
+  return "cedula";
 }
 
 function Info({ title, text, tone }: { title: string; text: string; tone: "neutral" | "warn" | "ok" | "danger" | "info" }) {

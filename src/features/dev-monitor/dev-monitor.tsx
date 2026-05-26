@@ -7,10 +7,10 @@ import { BrandMark } from "@/components/brand";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Progress } from "@/components/ui";
 
 const agents = [
-  { name: "Frontend Agent", icon: Code2, progress: 88, task: "Inicio cliente convertido en dashboard de consumo diario/mensual y mix de productos." },
-  { name: "Backend Architect", icon: Database, progress: 76, task: "Decision Credits ahora habilitan tarifa Data Partner; exceso cae a Cliente Normal." },
-  { name: "BAC Audit Agent", icon: ShieldCheck, progress: 42, task: "Cada consulta sandbox registra BAC, consentimiento, canal, IP y tarifa." },
-  { name: "PM Tracking Agent", icon: FileQuestion, progress: 40, task: "Pricing queda como simulacion tecnica hasta aprobacion final." }
+  { name: "Frontend Agent", icon: Code2, progress: 91, task: "Agregando inhabilidades como producto en individual, bloque y API." },
+  { name: "Backend Architect", icon: Database, progress: 80, task: "Normalizando productos y consumo para basic, panorama e inhabilidades." },
+  { name: "BAC Audit Agent", icon: ShieldCheck, progress: 48, task: "Inhabilidades tambien registra BAC, consentimiento, canal, IP, tarifa y estado." },
+  { name: "PM Tracking Agent", icon: FileQuestion, progress: 44, task: "Tarifa final especifica de inhabilidades queda pendiente si debe diferir de la matriz actual." }
 ];
 
 const officePositions = [
@@ -93,6 +93,7 @@ export function DevMonitor() {
             <Log text="Dashboard cliente ahora muestra consumo diario/mensual y tipo de consulta principal." />
             <Log text="Pricing sandbox corregido para Data Partner Founding segun matriz de propuesta comercial." />
             <Log text="Facturacion separa consultas dentro de credits Data Partner y exceso a tarifa Cliente Normal." />
+            <Log text="Consulta de inhabilidades integrada en individual, bloque y API con respuesta si/no para cheques y cuentas corrientes." />
             <Log text="Workbench sigue separado del producto admin." />
           </CardContent>
         </Card>

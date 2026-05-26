@@ -56,8 +56,18 @@ export type QueryAudit = {
   creditApplied?: boolean;
   creditCost?: number;
   tariffBucket?: "data_partner_credit" | "excess_cliente_normal" | "cliente_normal";
+  inhabilitations?: InhabilitationsResult;
   status: string;
   createdAt: string;
+};
+
+export type InhabilitationsResult = {
+  isInhabilitated: boolean;
+  status: "habilitado" | "inhabilitado";
+  checkedCapabilities: string[];
+  reason: string;
+  source: string;
+  effectiveDate: string;
 };
 
 export type BatchSummary = {
@@ -72,6 +82,7 @@ export type BatchSummary = {
 export type UsageSummary = {
   basicReports: number;
   completeReports: number;
+  inhabilitationChecks: number;
   apiCalls: number;
   estimatedSubtotal: number;
   creditsGenerated: number;

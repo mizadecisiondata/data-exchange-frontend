@@ -41,6 +41,33 @@ export const requiredDocuments = [
 
 export type RequiredDocumentId = (typeof requiredDocuments)[number]["id"];
 
+export const queryProducts = [
+  {
+    id: "basic_report",
+    label: "Reporte basico",
+    shortLabel: "Basico",
+    description: "Consulta sintetica para validacion inicial."
+  },
+  {
+    id: "complete_report",
+    label: "Panorama completo",
+    shortLabel: "Panorama",
+    description: "Reporte ampliado con el HTML completo Decision Data."
+  },
+  {
+    id: "inhabilitations_check",
+    label: "Consulta de inhabilidades",
+    shortLabel: "Inhabilidades",
+    description: "Estado si/no para girar cheques o abrir cuentas corrientes."
+  }
+] as const;
+
+export type QueryProductId = (typeof queryProducts)[number]["id"];
+
+export function getQueryProductLabel(product: string) {
+  return queryProducts.find((item) => item.id === product)?.label ?? product;
+}
+
 export const initialDocumentState: Record<RequiredDocumentId, boolean> = {
   nda: true,
   "master-agreement": true,
@@ -53,8 +80,8 @@ export const initialDocumentState: Record<RequiredDocumentId, boolean> = {
 };
 
 export const apiEndpoints = [
-  { method: "POST", path: "/api/v1/queries", use: "Consulta individual" },
-  { method: "POST", path: "/api/v1/batch-queries", use: "Consulta por bloque" },
+  { method: "POST", path: "/api/v1/queries", use: "Consulta individual/API con product: basic_report, complete_report o inhabilitations_check" },
+  { method: "POST", path: "/api/v1/batch-queries", use: "Consulta por bloque con product unico o por fila" },
   { method: "GET", path: "/api/v1/usage", use: "Consumo mensual" }
 ];
 
@@ -76,4 +103,3 @@ export const bacEvents = [
     status: "Registrado"
   }
 ];
-
