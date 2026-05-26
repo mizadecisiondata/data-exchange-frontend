@@ -75,6 +75,8 @@ export type BatchSummary = {
   status: string;
   rowsReceived: number;
   rowsProcessed: number;
+  completeReportRows?: number;
+  sebInhabilitatedRows?: number;
   estimatedSubtotal: number;
   createdAt: string;
 };
@@ -82,7 +84,6 @@ export type BatchSummary = {
 export type UsageSummary = {
   basicReports: number;
   completeReports: number;
-  inhabilitationChecks: number;
   apiCalls: number;
   estimatedSubtotal: number;
   creditsGenerated: number;

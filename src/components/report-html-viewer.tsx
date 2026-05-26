@@ -24,7 +24,8 @@ const reportFacts = {
   ingresoEstimado: 7437.75,
   dti: "61.9%",
   scoreSobre: "54/100",
-  scoreSobreLabel: "Critico"
+  scoreSobreLabel: "Critico",
+  sbInhabilitado: false
 };
 
 const currency = new Intl.NumberFormat("es-EC", {
@@ -41,6 +42,11 @@ const summaryItems = [
 ];
 
 export function ReportHtmlViewer({ latest }: { latest?: QueryAudit }) {
+  const sbStatus = latest?.product === "complete_report"
+    ? latest.inhabilitations
+    : undefined;
+  const sbIsInhabilitated = sbStatus?.isInhabilitated ?? reportFacts.sbInhabilitado;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex-col items-start sm:flex-row">
@@ -60,7 +66,7 @@ export function ReportHtmlViewer({ latest }: { latest?: QueryAudit }) {
         </div>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div className="grid gap-3 lg:grid-cols-4">
+        <div className="grid gap-3 lg:grid-cols-5">
           {summaryItems.map((item) => (
             <div key={item.label} className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
               <Badge tone={item.tone}>{item.label}</Badge>
@@ -68,6 +74,13 @@ export function ReportHtmlViewer({ latest }: { latest?: QueryAudit }) {
               <p className="mt-2 text-xs leading-5 text-muted">{item.detail}</p>
             </div>
           ))}
+          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
+            <Badge tone={sbIsInhabilitated ? "danger" : "ok"}>Superintendencia de Bancos</Badge>
+            <strong className="mt-3 block text-xl font-black text-primary">{sbIsInhabilitated ? "SI" : "NO"}</strong>
+            <p className="mt-2 text-xs leading-5 text-muted">
+              {sbStatus?.reason ?? "No registra inhabilidad para girar cheques o abrir cuentas corrientes en el reporte HTML."}
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-3 lg:grid-cols-2">

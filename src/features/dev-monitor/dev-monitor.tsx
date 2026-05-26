@@ -7,10 +7,10 @@ import { BrandMark } from "@/components/brand";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Progress } from "@/components/ui";
 
 const agents = [
-  { name: "Frontend Agent", icon: Code2, progress: 91, task: "Agregando inhabilidades como producto en individual, bloque y API." },
-  { name: "Backend Architect", icon: Database, progress: 80, task: "Normalizando productos y consumo para basic, panorama e inhabilidades." },
-  { name: "BAC Audit Agent", icon: ShieldCheck, progress: 48, task: "Inhabilidades tambien registra BAC, consentimiento, canal, IP, tarifa y estado." },
-  { name: "PM Tracking Agent", icon: FileQuestion, progress: 44, task: "Tarifa final especifica de inhabilidades queda pendiente si debe diferir de la matriz actual." }
+  { name: "Frontend Agent", icon: Code2, progress: 91, task: "Dejando inhabilidad SB como indicador dentro de Panorama completo." },
+  { name: "Backend Architect", icon: Database, progress: 80, task: "Quitando producto separado de inhabilidades; se conserva en complete_report." },
+  { name: "BAC Audit Agent", icon: ShieldCheck, progress: 48, task: "Panorama completo registra BAC, consentimiento, tarifa y estado SB." },
+  { name: "PM Tracking Agent", icon: FileQuestion, progress: 44, task: "Sin cambio de pricing: inhabilidad SB queda incluida en Panorama completo." }
 ];
 
 const officePositions = [
@@ -93,7 +93,7 @@ export function DevMonitor() {
             <Log text="Dashboard cliente ahora muestra consumo diario/mensual y tipo de consulta principal." />
             <Log text="Pricing sandbox corregido para Data Partner Founding segun matriz de propuesta comercial." />
             <Log text="Facturacion separa consultas dentro de credits Data Partner y exceso a tarifa Cliente Normal." />
-            <Log text="Consulta de inhabilidades integrada en individual, bloque y API con respuesta si/no para cheques y cuentas corrientes." />
+            <Log text="Ajuste Mateo: inhabilidad SB ya no es producto separado; aparece como cuadrito dentro de Panorama completo." />
             <Log text="Workbench sigue separado del producto admin." />
           </CardContent>
         </Card>

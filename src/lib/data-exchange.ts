@@ -53,12 +53,6 @@ export const queryProducts = [
     label: "Panorama completo",
     shortLabel: "Panorama",
     description: "Reporte ampliado con el HTML completo Decision Data."
-  },
-  {
-    id: "inhabilitations_check",
-    label: "Consulta de inhabilidades",
-    shortLabel: "Inhabilidades",
-    description: "Estado si/no para girar cheques o abrir cuentas corrientes."
   }
 ] as const;
 
@@ -80,8 +74,8 @@ export const initialDocumentState: Record<RequiredDocumentId, boolean> = {
 };
 
 export const apiEndpoints = [
-  { method: "POST", path: "/api/v1/queries", use: "Consulta individual/API con product: basic_report, complete_report o inhabilitations_check" },
-  { method: "POST", path: "/api/v1/batch-queries", use: "Consulta por bloque con product unico o por fila" },
+  { method: "POST", path: "/api/v1/queries", use: "Consulta individual/API con product: basic_report o complete_report" },
+  { method: "POST", path: "/api/v1/batch-queries", use: "Consulta por bloque con producto unico o por fila" },
   { method: "GET", path: "/api/v1/usage", use: "Consumo mensual" }
 ];
 

@@ -267,10 +267,9 @@ function Consumos({ demoState }: { demoState?: DemoState }) {
   return (
     <Card>
       <CardHeader><CardTitle>Consumos y APIs</CardTitle><Badge tone="warn">Tiempo real sandbox</Badge></CardHeader>
-      <CardContent className="grid gap-3 lg:grid-cols-5">
+      <CardContent className="grid gap-3 lg:grid-cols-4">
         <MetricCard label="Basicos" value={String(demoState?.usage.basicReports ?? 0)} tone="info" />
         <MetricCard label="Panorama" value={String(demoState?.usage.completeReports ?? 0)} tone="warn" />
-        <MetricCard label="Inhabilidades" value={String(demoState?.usage.inhabilitationChecks ?? 0)} tone="danger" />
         <MetricCard label="API calls" value={String(demoState?.usage.apiCalls ?? 0)} tone="neutral" />
         <MetricCard label="BAC registrados" value={String(demoState?.queries.length ?? 0)} tone="ok" />
       </CardContent>
