@@ -7,10 +7,10 @@ import { BrandMark } from "@/components/brand";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, MetricCard, Progress } from "@/components/ui";
 
 const agents = [
-  { name: "Frontend Agent", icon: Code2, progress: 91, task: "Dejando inhabilidad SB como indicador dentro de Panorama completo." },
-  { name: "Backend Architect", icon: Database, progress: 80, task: "Quitando producto separado de inhabilidades; se conserva en complete_report." },
-  { name: "BAC Audit Agent", icon: ShieldCheck, progress: 48, task: "Panorama completo registra BAC, consentimiento, tarifa y estado SB." },
-  { name: "PM Tracking Agent", icon: FileQuestion, progress: 44, task: "Sin cambio de pricing: inhabilidad SB queda incluida en Panorama completo." }
+  { name: "Frontend Agent", icon: Code2, progress: 86, task: "Portal cliente ahora opera por cuenta sandbox seleccionada, con subusuarios, carga, consultas y facturacion propias." },
+  { name: "Backend Architect", icon: Database, progress: 83, task: "Endpoints sandbox aceptan clientId y separan estado de MEGADATOS, clientes fantasma y clientes aprobados." },
+  { name: "BAC Audit Agent", icon: ShieldCheck, progress: 58, task: "Admin refleja consultas BAC, carga, outbox y consumo global del mismo cliente que opera en portal cliente." },
+  { name: "PM Tracking Agent", icon: FileQuestion, progress: 52, task: "Prueba viva admin-cliente-admin registrada; no marca plataforma al 100%, solo flujo integral sandbox." }
 ];
 
 const officePositions = [
@@ -33,7 +33,7 @@ export function DevMonitor() {
       </header>
       <section className="mb-4 grid gap-4 lg:grid-cols-4">
         <MetricCard label="Fase" value="2" tone="info" />
-        <MetricCard label="Avance real" value="84%" tone="warn" />
+        <MetricCard label="Avance real" value="88%" tone="warn" />
         <MetricCard label="Agentes" value="4" tone="ok" />
         <MetricCard label="Preguntas bloqueantes" value="0" tone="ok" />
       </section>
@@ -94,6 +94,8 @@ export function DevMonitor() {
             <Log text="Pricing sandbox corregido para Data Partner Founding segun matriz de propuesta comercial." />
             <Log text="Facturacion separa consultas dentro de credits Data Partner y exceso a tarifa Cliente Normal." />
             <Log text="Ajuste Mateo: inhabilidad SB ya no es producto separado; aparece como cuadrito dentro de Panorama completo." />
+            <Log text="Flujo admin-cliente-admin probado: crear/aprobar CLIENTE QA, cargar 4 registros, consumir Panorama, crear subusuario y ver reflejo en admin." />
+            <Log text="Portal cliente queda multi-cuenta sandbox: selector en login y aside para revisar MEGADATOS o clientes fantasma sin mezclar consumos." />
             <Log text="Workbench sigue separado del producto admin." />
           </CardContent>
         </Card>

@@ -2,6 +2,7 @@ export type DemoState = {
   status: string;
   generatedAt: string;
   client: {
+    id: string;
     legalName: string;
     sector: string;
     mode: string;
@@ -47,8 +48,10 @@ export type AdminClient = {
   uploads: UploadSummary[];
   queries: QueryAudit[];
   batchQueries: BatchSummary[];
+  subUsers: SubUser[];
   usage: UsageSummary;
   outbox: OutboxEmail[];
+  invoicePreview: InvoicePreview;
   createdAt: string;
   latestUploadAt: string | null;
   latestQueryAt: string | null;

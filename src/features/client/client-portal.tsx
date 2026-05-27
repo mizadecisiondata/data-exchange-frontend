@@ -105,6 +105,7 @@ export function ClientPortal() {
   const [queryProduct, setQueryProduct] = useState("complete_report");
   const [queryIdentifier, setQueryIdentifier] = useState("0923048581");
   const [batchProduct, setBatchProduct] = useState("complete_report");
+  const [sandboxClientId, setSandboxClientId] = useState<string | null>(null);
   const [previewSubUserId, setPreviewSubUserId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const demoState = useQuery({
@@ -112,11 +113,15 @@ export function ClientPortal() {
     queryFn: () => backendGet<DemoState>("/api/v1/demo/state"),
     refetchInterval: 4_000
   });
-  const isPending = state.matches("pendingPortal");
-  const isApproved = state.matches("approvedPortal") || demoState.data?.client.productionAccess === true;
+  const scopedState = buildScopedClientState(demoState.data, sandboxClientId);
+  const clientOptions = demoState.data?.adminClients ?? [];
+  const selectedAdminClient = clientOptions.find((client) => client.id === (sandboxClientId ?? clientOptions[0]?.id)) ?? clientOptions[0];
+  const accountApproved = scopedState?.client.productionAccess === true;
+  const isPending = state.matches("pendingPortal") || (state.matches("approvedPortal") && !accountApproved);
+  const isApproved = state.matches("approvedPortal") && accountApproved;
   const isPortal = isPending || isApproved;
   const uppy = useMemo(() => new Uppy({ restrictions: { maxNumberOfFiles: 3 } }), []);
-  const previewSubUser = demoState.data?.subUsers.find((item) => item.id === previewSubUserId && item.status === "active");
+  const previewSubUser = scopedState?.subUsers.find((item) => item.id === previewSubUserId && item.status === "active");
   const previewAllowed = new Set(previewSubUser?.allowedModules ?? []);
   const nav = navBase.map((item) => ({
     ...item,
@@ -124,7 +129,9 @@ export function ClientPortal() {
   }));
   const refreshState = () => queryClient.invalidateQueries({ queryKey: ["demo-state"] });
   const ingestion = useMutation({
-    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/ingestion/information-blocks"),
+    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/ingestion/information-blocks", {
+      clientId: scopedState?.client.id
+    }),
     onSuccess: () => {
       toast.success("Bloque de informacion procesado en sandbox.");
       refreshState();
@@ -135,7 +142,8 @@ export function ClientPortal() {
       product: queryProduct,
       channel: "portal",
       identifierType: guessIdentifierType(queryIdentifier),
-      identifier: queryIdentifier
+      identifier: queryIdentifier,
+      clientId: scopedState?.client.id
     }),
     onSuccess: () => {
       toast.success("Consulta registrada con BAC y consentimiento.");
@@ -144,7 +152,8 @@ export function ClientPortal() {
   });
   const batchQuery = useMutation({
     mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/batch-queries", {
-      product: batchProduct
+      product: batchProduct,
+      clientId: scopedState?.client.id
     }),
     onSuccess: () => {
       toast.success("Consulta por bloque procesada.");
@@ -157,7 +166,8 @@ export function ClientPortal() {
       channel: "api",
       identifierType: "ruc",
       identifier: "0999999999001",
-      user: "api-key:megadatos-demo"
+      user: `api-key:${scopedState?.client.id ?? "megadatos-demo"}`,
+      clientId: scopedState?.client.id
     }),
     onSuccess: () => {
       toast.success("Consumo API simulado y facturable.");
@@ -165,14 +175,14 @@ export function ClientPortal() {
     }
   });
   const createSubUser = useMutation({
-    mutationFn: (body: { name: string; email: string; role: string; allowedModules: string[] }) => backendPost<{ state: DemoState }>("/api/v1/client/subusers", body),
+    mutationFn: (body: { name: string; email: string; role: string; allowedModules: string[] }) => backendPost<{ state: DemoState }>("/api/v1/client/subusers", { ...body, clientId: scopedState?.client.id }),
     onSuccess: () => {
       toast.success("Subusuario creado con credenciales temporales simuladas.");
       refreshState();
     }
   });
   const updateSubUser = useMutation({
-    mutationFn: (body: { id: string; allowedModules?: string[]; active?: boolean }) => backendPost<{ state: DemoState }>(`/api/v1/client/subusers/${body.id}`, body),
+    mutationFn: (body: { id: string; allowedModules?: string[]; active?: boolean }) => backendPost<{ state: DemoState }>(`/api/v1/client/subusers/${body.id}`, { ...body, clientId: scopedState?.client.id }),
     onSuccess: () => {
       toast.success("Permisos del subusuario actualizados.");
       refreshState();
@@ -202,6 +212,18 @@ export function ClientPortal() {
     setActive(id);
   }
 
+  function handleSandboxClientChange(clientId: string) {
+    const nextClient = clientOptions.find((client) => client.id === clientId);
+    setSandboxClientId(clientId);
+    setPreviewSubUserId(null);
+    if (state.matches("pendingPortal") && nextClient?.productionAccess) {
+      send({ type: "APPROVE_DEMO" });
+    }
+    if (state.matches("approvedPortal") && !nextClient?.productionAccess) {
+      send({ type: "RESET_TO_PENDING" });
+    }
+  }
+
   if (!isPortal) {
     return (
       <main className="grid min-h-screen place-items-center p-6">
@@ -226,8 +248,17 @@ export function ClientPortal() {
                   <div>
                     <Badge tone="info">Acceso seguro</Badge>
                     <h2 className="mt-3 text-2xl font-black">Ingresa a tu cuenta</h2>
-                    <p className="mt-2 text-sm text-muted">Cliente cero: MEGADATOS S.A. / Data Partner Founding sandbox.</p>
+                    <p className="mt-2 text-sm text-muted">Cuenta seleccionada: {selectedAdminClient?.legalName ?? "cargando"} / {selectedAdminClient?.mode ?? "sandbox"}.</p>
                   </div>
+                  {clientOptions.length > 0 ? (
+                    <Field label="Cuenta sandbox para probar el journey">
+                      <Select value={selectedAdminClient?.id ?? ""} onChange={(event) => handleSandboxClientChange(event.target.value)}>
+                        {clientOptions.map((client) => (
+                          <option key={client.id} value={client.id}>{client.legalName} / {client.statusLabel}</option>
+                        ))}
+                      </Select>
+                    </Field>
+                  ) : null}
                   <Field label="Correo corporativo">
                     <Input defaultValue="operaciones@megadatos.demo" />
                   </Field>
@@ -235,7 +266,7 @@ export function ClientPortal() {
                     <Input type="password" defaultValue="demo1234" />
                   </Field>
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="primary" onClick={() => send({ type: demoState.data?.client.productionAccess ? "APPROVED" : "PENDING" })}>Ingresar cliente cero</Button>
+                    <Button variant="primary" onClick={() => send({ type: accountApproved ? "APPROVED" : "PENDING" })}>Ingresar cuenta sandbox</Button>
                     <Button variant="ghost" onClick={() => send({ type: "REGISTER" })}>No tengo usuario</Button>
                   </div>
                 </div>
@@ -293,7 +324,7 @@ export function ClientPortal() {
   return (
     <AppShell
       label="Portal cliente"
-      title="Portal cliente / Data Partner"
+      title={`${scopedState?.client.legalName ?? "Portal cliente"} / ${scopedState?.client.mode ?? "Data Partner"}`}
       subtitle={previewSubUser ? `Vista previa como ${previewSubUser.name}: solo modulos permitidos por el superadministrador.` : "Cockpit con estado de cuenta, documentos, ingesta, consultas, API, facturacion postpago y auditoria BAC."}
       nav={nav}
       active={active}
@@ -302,7 +333,17 @@ export function ClientPortal() {
       aside={
         <>
           <b className="text-foreground">{isApproved ? "Cliente aprobado" : "Cliente pendiente"}</b>
-          <p className="mt-1">{previewSubUser ? `Preview subusuario: ${previewSubUser.email}` : isApproved ? "Superadministrador cliente cero sandbox." : "Solo estado, documentos y carga no productiva."}</p>
+          <p className="mt-1">{previewSubUser ? `Preview subusuario: ${previewSubUser.email}` : isApproved ? `Superadministrador de ${scopedState?.client.legalName}.` : "Solo estado, documentos y carga no productiva."}</p>
+          {clientOptions.length > 0 ? (
+            <div className="mt-3 grid gap-2">
+              <span className="text-xs font-semibold uppercase text-muted">Cuenta sandbox</span>
+              <Select value={selectedAdminClient?.id ?? ""} onChange={(event) => handleSandboxClientChange(event.target.value)}>
+                {clientOptions.map((client) => (
+                  <option key={client.id} value={client.id}>{client.legalName} / {client.statusLabel}</option>
+                ))}
+              </Select>
+            </div>
+          ) : null}
           {previewSubUser ? <Button className="mt-3 w-full" size="sm" onClick={() => setPreviewSubUserId(null)}>Salir vista subusuario</Button> : null}
           <Button className="mt-3 w-full" size="sm" onClick={() => send({ type: "LOGOUT" })}>Cerrar sesion</Button>
         </>
@@ -313,17 +354,17 @@ export function ClientPortal() {
           Cuenta pendiente: las funciones productivas quedan bloqueadas hasta aprobar documentos habilitantes. Puedes cargar informacion no productiva.
         </div>
       ) : null}
-      {active === "inicio" && <Inicio isPending={!isApproved} demoState={demoState.data} />}
-      {active === "estado" && <Estado demoState={demoState.data} />}
+      {active === "inicio" && <Inicio isPending={!isApproved} demoState={scopedState} />}
+      {active === "estado" && <Estado demoState={scopedState} />}
       {active === "documentos" && <Documentos />}
-      {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={demoState.data} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
-      {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={demoState.data} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
-      {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={demoState.data?.queries[0]} /></LockedAware>}
-      {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={demoState.data} product={batchProduct} onProductChange={setBatchProduct} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
+      {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={scopedState} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
+      {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={scopedState} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
+      {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={scopedState?.queries[0]} /></LockedAware>}
+      {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={scopedState} product={batchProduct} onProductChange={setBatchProduct} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
       {active === "api" && <LockedAware enabled={isApproved}><Api onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
-      {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion demoState={demoState.data} /></LockedAware>}
-      {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria events={demoState.data?.queries ?? bacEvents} /></LockedAware>}
-      {active === "notificaciones" && <Notificaciones demoState={demoState.data} />}
+      {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion demoState={scopedState} /></LockedAware>}
+      {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria events={scopedState?.queries ?? bacEvents} /></LockedAware>}
+      {active === "notificaciones" && <Notificaciones demoState={scopedState} />}
     </AppShell>
   );
 }
@@ -540,7 +581,7 @@ function Carga({ uppy, isPending, demoState, onSimulate, loading }: { uppy: Uppy
             <Button asChild>
               <a href="/api/backend/api/v1/templates/information-block.csv" download><Download className="size-4" /> Descargar template CSV</a>
             </Button>
-            <Button variant="primary" onClick={onSimulate} disabled={loading}><UploadCloud className="size-4" /> Simular carga MEGADATOS</Button>
+            <Button variant="primary" onClick={onSimulate} disabled={loading}><UploadCloud className="size-4" /> Simular carga {demoState?.client.legalName ?? "cliente"}</Button>
           </div>
           {latest ? (
             <div className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3">
@@ -860,6 +901,47 @@ function Notificaciones({ demoState }: { demoState?: DemoState }) {
       {demoState?.outbox.map((email) => <Info key={email.id} title={email.subject} text={`${email.to} - ${email.status}`} tone="info" />)}
     </div>
   );
+}
+
+function buildScopedClientState(demoState: DemoState | undefined, sandboxClientId: string | null): DemoState | undefined {
+  if (!demoState) {
+    return undefined;
+  }
+
+  const selected = demoState.adminClients.find((client) => client.id === sandboxClientId)
+    ?? demoState.adminClients.find((client) => client.id === demoState.client.id)
+    ?? demoState.adminClients[0];
+
+  if (!selected) {
+    return demoState;
+  }
+
+  return {
+    ...demoState,
+    client: {
+      id: selected.id,
+      legalName: selected.legalName,
+      sector: selected.sector,
+      mode: selected.mode,
+      state: selected.state,
+      productionAccess: selected.productionAccess,
+      sandboxUploadAllowed: selected.sandboxUploadAllowed,
+      creditsBalance: selected.creditsBalance
+    },
+    documents: selected.documents,
+    uploads: selected.uploads,
+    queries: selected.queries,
+    batchQueries: selected.batchQueries,
+    subUsers: selected.subUsers,
+    usage: selected.usage,
+    outbox: selected.outbox,
+    invoicePreview: selected.invoicePreview,
+    accessRequest: {
+      id: selected.requestId,
+      state: selected.state,
+      blockingDocumentsMissing: selected.blockingDocumentsMissing
+    }
+  };
 }
 
 function getMainQueryType(demoState?: DemoState) {
