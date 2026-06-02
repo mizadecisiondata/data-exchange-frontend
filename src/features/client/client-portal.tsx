@@ -105,6 +105,7 @@ export function ClientPortal() {
   const [queryProduct, setQueryProduct] = useState("complete_report");
   const [queryIdentifier, setQueryIdentifier] = useState("0923048581");
   const [batchProduct, setBatchProduct] = useState("complete_report");
+  const [batchRecordCount, setBatchRecordCount] = useState(1000);
   const [currentLoadSubjects, setCurrentLoadSubjects] = useState(1);
   const [historicalLoadSubjects, setHistoricalLoadSubjects] = useState(0);
   const [historicalLoadDepth, setHistoricalLoadDepth] = useState(48);
@@ -159,6 +160,7 @@ export function ClientPortal() {
   const batchQuery = useMutation({
     mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/batch-queries", {
       product: batchProduct,
+      recordCount: batchRecordCount,
       clientId: scopedState?.client.id
     }),
     onSuccess: () => {
@@ -366,7 +368,7 @@ export function ClientPortal() {
       {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={scopedState} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
       {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={scopedState} currentSubjects={currentLoadSubjects} historicalSubjects={historicalLoadSubjects} historicalDepth={historicalLoadDepth} onCurrentSubjectsChange={setCurrentLoadSubjects} onHistoricalSubjectsChange={setHistoricalLoadSubjects} onHistoricalDepthChange={setHistoricalLoadDepth} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
       {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={scopedState?.queries[0]} /></LockedAware>}
-      {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={scopedState} product={batchProduct} onProductChange={setBatchProduct} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
+      {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={scopedState} product={batchProduct} onProductChange={setBatchProduct} recordCount={batchRecordCount} onRecordCountChange={setBatchRecordCount} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
       {active === "api" && <LockedAware enabled={isApproved}><Api onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
       {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion demoState={scopedState} /></LockedAware>}
       {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria events={scopedState?.queries ?? bacEvents} /></LockedAware>}
@@ -394,9 +396,16 @@ function LockedAware({ enabled, children }: { enabled: boolean; children: React.
 
 function Inicio({ isPending, demoState }: { isPending: boolean; demoState?: DemoState }) {
   const totalQueries = getTotalQueries(demoState);
+  const creditAlert = getCreditAlert(demoState);
 
   return (
     <div className="grid gap-4">
+      {creditAlert ? (
+        <div className={`rounded-lg border p-4 text-sm ${creditAlert.tone === "danger" ? "border-red-400/30 bg-red-500/10 text-red-100" : "border-amber-300/30 bg-amber-400/10 text-amber-100"}`}>
+          <b>{creditAlert.title}</b>
+          <p className="mt-1">{creditAlert.text}</p>
+        </div>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-4">
         <MetricCard label="Consultas del mes" value={String(totalQueries)} tone={isPending ? "warn" : "ok"} />
         <MetricCard label="Principal consulta" value={getMainQueryType(demoState)} tone="warn" />
@@ -692,7 +701,23 @@ function ConsultaIndividual({
   );
 }
 
-function ConsultaBloque({ demoState, product, onProductChange, onRun, loading }: { demoState?: DemoState; product: string; onProductChange: (value: string) => void; onRun: () => void; loading: boolean }) {
+function ConsultaBloque({
+  demoState,
+  product,
+  onProductChange,
+  recordCount,
+  onRecordCountChange,
+  onRun,
+  loading
+}: {
+  demoState?: DemoState;
+  product: string;
+  onProductChange: (value: string) => void;
+  recordCount: number;
+  onRecordCountChange: (value: number) => void;
+  onRun: () => void;
+  loading: boolean;
+}) {
   const latest = demoState?.batchQueries[0];
 
   return (
@@ -705,6 +730,17 @@ function ConsultaBloque({ demoState, product, onProductChange, onRun, loading }:
             {queryProducts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
           </Select>
         </Field>
+        <div className="grid gap-3 lg:grid-cols-[1fr_2fr]">
+          <Field label="Registros a simular">
+            <Input type="number" min={1} max={5000000} value={recordCount} onChange={(event) => onRecordCountChange(Number(event.target.value))} />
+          </Field>
+          <div className="grid grid-cols-3 gap-2">
+            {[1000, 100000, 1000000].map((size) => (
+              <Button key={size} size="sm" onClick={() => onRecordCountChange(size)}>{size.toLocaleString("en-US")}</Button>
+            ))}
+          </div>
+        </div>
+        <Info title="Simulacion masiva" text="Para miles o millones de registros, el sandbox liquida el bloque agregado por rangos tarifarios sin crear millones de filas en memoria." tone="info" />
         <div className="flex flex-wrap gap-2">
           <Button asChild>
             <a href="/api/backend/api/v1/templates/batch-query.csv" download><Download className="size-4" /> Descargar template CSV</a>
@@ -714,9 +750,21 @@ function ConsultaBloque({ demoState, product, onProductChange, onRun, loading }:
         {latest ? (
           <Info
             title={`Bloque ${latest.id}`}
-            text={`${latest.rowsProcessed}/${latest.rowsReceived} filas procesadas. Panorama completo: ${latest.completeReportRows ?? 0} filas con revision SB, ${latest.sebInhabilitatedRows ?? 0} inhabilitadas. Subtotal estimado $${latest.estimatedSubtotal.toFixed(2)}.`}
+            text={`${latest.rowsProcessed.toLocaleString("en-US")}/${latest.rowsReceived.toLocaleString("en-US")} filas procesadas${latest.isAggregated ? " en modo agregado" : ""}. Panorama completo: ${(latest.completeReportRows ?? 0).toLocaleString("en-US")} filas con revision SB, ${(latest.sebInhabilitatedRows ?? 0).toLocaleString("en-US")} inhabilitadas. Con credit: ${(latest.creditAppliedRows ?? 0).toLocaleString("en-US")}; exceso/normal: ${((latest.excessRows ?? 0) + (latest.normalRows ?? 0)).toLocaleString("en-US")}. Subtotal estimado $${latest.estimatedSubtotal.toFixed(2)}.`}
             tone="ok"
           />
+        ) : null}
+        {latest?.tariffBreakdown?.length ? (
+          <div className="grid gap-2">
+            {latest.tariffBreakdown.map((item) => (
+              <div key={`${item.tariff}-${item.tariffTier}-${item.unitPrice}`} className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm lg:grid-cols-[1fr_120px_120px_120px]">
+                <span>{item.tariffLabel}</span>
+                <span>{item.tariffTier}</span>
+                <span>{item.rows.toLocaleString("en-US")} filas</span>
+                <b>${item.subtotal.toFixed(2)}</b>
+              </div>
+            ))}
+          </div>
         ) : null}
       </CardContent>
     </Card>
@@ -802,6 +850,27 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
           </div>
           <BillingRow label="Dentro de Decision Credits Data Partner Founding" queries={dataPartnerCreditQueries} subtotal={dataPartnerCreditSubtotal} />
           <BillingRow label="Exceso a tarifa Cliente Normal" queries={excessNormalQueries} subtotal={excessNormalSubtotal} />
+        </div>
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-4">
+          <Badge tone="info">Tarifas aplicadas</Badge>
+          <div className="mt-3 grid gap-2">
+            {(demoState?.queries ?? []).slice(0, 6).map((event) => (
+              <div key={event.id} className="grid gap-2 rounded-lg border border-white/10 bg-black/20 p-3 text-sm lg:grid-cols-[1fr_190px_120px_120px]">
+                <span>{formatProduct(event.product)} / {event.channel}</span>
+                <span>{event.tariffLabel ?? event.tariff}</span>
+                <span>{event.creditApplied ? `Credit ${event.creditCost ?? 1}` : "Sin credit"}</span>
+                <b>${event.estimatedValue.toFixed(2)}</b>
+              </div>
+            ))}
+            {(demoState?.batchQueries ?? []).slice(0, 3).flatMap((batch) => batch.tariffBreakdown?.map((item) => (
+              <div key={`${batch.id}-${item.tariff}-${item.tariffTier}`} className="grid gap-2 rounded-lg border border-white/10 bg-black/20 p-3 text-sm lg:grid-cols-[1fr_190px_120px_120px]">
+                <span>Bloque {batch.id} / {item.rows.toLocaleString("en-US")} filas</span>
+                <span>{item.tariffLabel}</span>
+                <span>{item.tariffTier}</span>
+                <b>${item.subtotal.toFixed(2)}</b>
+              </div>
+            )) ?? [])}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -951,8 +1020,11 @@ function Subusuarios({
 }
 
 function Notificaciones({ demoState }: { demoState?: DemoState }) {
+  const creditAlert = getCreditAlert(demoState);
+
   return (
     <div className="grid gap-3">
+      {creditAlert ? <Info title={creditAlert.title} text={creditAlert.text} tone={creditAlert.tone} /> : null}
       <Info title="Observacion documental" text="Falta nombramiento actualizado del representante legal." tone="warn" />
       <Info title="Sandbox listo" text="La plantilla de carga no productiva esta disponible." tone="ok" />
       <Info title="Consulta bloqueada" text="Cuenta pendiente de aprobacion documental completa." tone="danger" />
@@ -1070,6 +1142,25 @@ function formatProduct(product: string) {
 function getTotalQueries(demoState?: DemoState) {
   return (demoState?.usage.basicReports ?? 0)
     + (demoState?.usage.completeReports ?? 0);
+}
+
+function getCreditAlert(demoState: DemoState | undefined): { title: string; text: string; tone: "warn" | "danger" } | null {
+  const balance = demoState?.client.creditsBalance ?? 0;
+  if (balance <= 0) {
+    return {
+      title: "Decision Credits agotados",
+      text: "Desde este momento, las consultas sin saldo disponible se liquidan a tarifa de Cliente Normal hasta que generes nuevos credits con carga de informacion.",
+      tone: "danger"
+    };
+  }
+  if (balance <= 1) {
+    return {
+      title: "Decision Credits por agotarse",
+      text: `Saldo actual: ${balance}. Cuando llegue a 0, el exceso se cobrara a tarifa de Cliente Normal.`,
+      tone: "warn"
+    };
+  }
+  return null;
 }
 
 function guessIdentifierType(identifier: string) {

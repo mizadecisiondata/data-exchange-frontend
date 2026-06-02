@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Progress, Select, Textarea } from "@/components/ui";
-import { backendGet, backendPost, type AdminClient, type AdminUser, type DemoState } from "@/lib/backend-api";
+import { backendGet, backendPost, type AdminAuditEvent, type AdminClient, type AdminUser, type DemoState } from "@/lib/backend-api";
 import { commercialModes, reporterSectors, requiredDocuments } from "@/lib/data-exchange";
 
 const nav: NavItem[] = [
@@ -98,6 +98,13 @@ export function AdminPortal() {
     },
     onError: (error) => toast.error(error.message)
   });
+  const dispatchInvoice = useMutation({
+    mutationFn: (body: { clientId: string; channel: "email" | "provider_api" }) => backendPost<{ state: DemoState }>(`/api/v1/admin/billing/${body.clientId}/dispatch`, { channel: body.channel }),
+    onSuccess: () => {
+      toast.success("Factura aprobada y despacho simulado registrado.");
+      refreshState();
+    }
+  });
 
   if (!authenticated) {
     return (
@@ -150,9 +157,9 @@ export function AdminPortal() {
       {active === "clientes" && <Clientes clients={clients} selectedClient={selectedClient} onSelect={setSelectedClientId} onCreate={(body) => createClient.mutate(body)} creating={createClient.isPending} />}
       {active === "usuarios" && <Usuarios users={demoState.data?.adminUsers ?? []} onCreate={(body) => createAdminUser.mutate(body)} creating={createAdminUser.isPending} onUpdate={(body) => updateAdminUser.mutate(body)} updating={updateAdminUser.isPending} />}
       {active === "ingesta" && <Ingesta demoState={demoState.data} />}
-      {active === "consumos" && <Consumos demoState={demoState.data} />}
-      {active === "facturacion" && <Facturacion demoState={demoState.data} />}
-      {active === "auditoria" && <Auditoria demoState={demoState.data} />}
+      {active === "consumos" && <Consumos demoState={demoState.data} selectedClient={selectedClient} clients={clients} onSelect={setSelectedClientId} />}
+      {active === "facturacion" && <Facturacion clients={clients} selectedClient={selectedClient} onSelect={setSelectedClientId} onDispatch={(clientId, channel) => dispatchInvoice.mutate({ clientId, channel })} dispatching={dispatchInvoice.isPending} />}
+      {active === "auditoria" && <Auditoria demoState={demoState.data} clients={clients} selectedClient={selectedClient} />}
       {active === "notificaciones" && <Notificaciones demoState={demoState.data} />}
       {active === "configuracion" && <Configuracion demoState={demoState.data} onUpdate={(body) => updateSettings.mutate(body)} updating={updateSettings.isPending} />}
     </AppShell>
@@ -381,8 +388,20 @@ function Ingesta({ demoState }: { demoState?: DemoState }) {
   );
 }
 
-function Consumos({ demoState }: { demoState?: DemoState }) {
+function Consumos({
+  demoState,
+  clients,
+  selectedClient,
+  onSelect
+}: {
+  demoState?: DemoState;
+  clients: AdminClient[];
+  selectedClient?: AdminClient;
+  onSelect: (id: string) => void;
+}) {
   const usage = demoState?.globalUsage;
+  const selectedUsage = selectedClient?.usage;
+  const clientConsumptionMax = Math.max(...clients.map((client) => client.usage.basicReports + client.usage.completeReports + client.usage.apiCalls), 1);
 
   return (
     <div className="grid gap-4">
@@ -397,6 +416,33 @@ function Consumos({ demoState }: { demoState?: DemoState }) {
         <CardContent><LineChart data={usage?.series ?? []} /></CardContent>
       </Card>
       <Card>
+        <CardHeader><CardTitle>Consumo en tiempo real por cliente</CardTitle><Badge tone="ok">{selectedClient?.legalName ?? "Seleccion"}</Badge></CardHeader>
+        <CardContent className="grid gap-4">
+          <Field label="Cliente a monitorear">
+            <Select value={selectedClient?.id ?? ""} onChange={(event) => onSelect(event.target.value)}>
+              {clients.map((client) => <option key={client.id} value={client.id}>{client.legalName}</option>)}
+            </Select>
+          </Field>
+          <div className="grid gap-3 lg:grid-cols-4">
+            <Info title="Basicos" text={`${selectedUsage?.basicReports ?? 0} consultas`} tone="info" />
+            <Info title="Panorama" text={`${selectedUsage?.completeReports ?? 0} consultas`} tone="warn" />
+            <Info title="API" text={`${selectedUsage?.apiCalls ?? 0} llamadas`} tone="neutral" />
+            <Info title="Decision Credits" text={`${selectedClient?.creditsBalance ?? 0} disponibles`} tone={(selectedClient?.creditsBalance ?? 0) <= 0 ? "danger" : "ok"} />
+          </div>
+          <div className="grid gap-2">
+            {clients.map((client) => (
+              <BarRow
+                key={client.id}
+                label={client.legalName}
+                value={client.usage.basicReports + client.usage.completeReports + client.usage.apiCalls}
+                max={clientConsumptionMax}
+                detail={`${client.mode} / $${client.usage.estimatedSubtotal.toFixed(2)} subtotal / ${client.creditsBalance} credits`}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
         <CardHeader><CardTitle>Consumo por cliente</CardTitle><Badge tone="info">Consultas + API</Badge></CardHeader>
         <CardContent className="grid gap-2">
           {(usage?.byClient ?? []).map((client) => <BarRow key={client.clientId} label={client.legalName} value={client.queries} max={Math.max(...(usage?.byClient ?? []).map((item) => item.queries), 1)} detail={`Subtotal $${client.subtotal.toFixed(2)} / estado ${client.state}`} />)}
@@ -406,32 +452,145 @@ function Consumos({ demoState }: { demoState?: DemoState }) {
   );
 }
 
-function Facturacion({ demoState }: { demoState?: DemoState }) {
-  const global = demoState?.globalUsage;
+function Facturacion({
+  clients,
+  selectedClient,
+  onSelect,
+  onDispatch,
+  dispatching
+}: {
+  clients: AdminClient[];
+  selectedClient?: AdminClient;
+  onSelect: (id: string) => void;
+  onDispatch: (clientId: string, channel: "email" | "provider_api") => void;
+  dispatching: boolean;
+}) {
+  const invoice = selectedClient?.invoicePreview;
+  const usage = selectedClient?.usage;
+  const appliedTariffs = [
+    ...(selectedClient?.queries ?? []).map((query) => ({
+      id: query.id,
+      label: `${query.product} / ${query.channel}`,
+      detail: `${query.tariffLabel ?? query.tariff} / $${query.estimatedValue.toFixed(2)} / ${query.creditApplied ? "con credito" : "sin credito"}`
+    })),
+    ...(selectedClient?.batchQueries ?? []).flatMap((batch) =>
+      (batch.tariffBreakdown ?? []).map((item) => ({
+        id: `${batch.id}-${item.bucket}-${item.tariffTier}`,
+        label: `Bloque ${batch.rowsProcessed.toLocaleString()} registros`,
+        detail: `${item.tariffLabel} / ${item.tariffTier} / ${item.rows.toLocaleString()} filas / $${item.subtotal.toFixed(2)}`
+      }))
+    )
+  ].slice(0, 8);
+  const lastDispatch = selectedClient?.outbox.find((item) => item.type?.includes("invoice"));
+
+  return (
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader><CardTitle>Facturacion y tarifas</CardTitle><Badge tone="ok">Postpago por cliente</Badge></CardHeader>
+        <CardContent className="grid gap-4">
+          <Field label="Empresa o cliente">
+            <Select value={selectedClient?.id ?? ""} onChange={(event) => onSelect(event.target.value)}>
+              {clients.map((client) => <option key={client.id} value={client.id}>{client.legalName}</option>)}
+            </Select>
+          </Field>
+          <div className="grid gap-3 lg:grid-cols-4">
+            <Info title="Subtotal" text={`$${(invoice?.subtotal ?? 0).toFixed(2)}`} tone="neutral" />
+            <Info title="IVA estimado" text={`$${(invoice?.tax ?? 0).toFixed(2)}`} tone="warn" />
+            <Info title="Total postpago" text={`$${(invoice?.total ?? 0).toFixed(2)}`} tone="ok" />
+            <Info title="Decision Credits" text={`${selectedClient?.creditsBalance ?? 0} disponibles`} tone={(selectedClient?.creditsBalance ?? 0) <= 0 ? "danger" : "info"} />
+          </div>
+          <div className="grid gap-3 lg:grid-cols-3">
+            <Info title="Con credito" text={`${usage?.dataPartnerCreditQueries ?? 0} consultas / $${(usage?.dataPartnerCreditSubtotal ?? 0).toFixed(2)}`} tone="ok" />
+            <Info title="Exceso Cliente Normal" text={`${usage?.excessNormalQueries ?? 0} consultas / $${(usage?.excessNormalSubtotal ?? 0).toFixed(2)}`} tone="warn" />
+            <Info title="Cliente Normal" text={`${usage?.clienteNormalQueries ?? 0} consultas / $${(usage?.clienteNormalSubtotal ?? 0).toFixed(2)}`} tone="neutral" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="primary" disabled={!selectedClient || dispatching} onClick={() => selectedClient && onDispatch(selectedClient.id, "email")}>Aprobar y enviar por correo</Button>
+            <Button disabled={!selectedClient || dispatching} onClick={() => selectedClient && onDispatch(selectedClient.id, "provider_api")}>Aprobar y enviar API proveedor/SRI</Button>
+          </div>
+          {lastDispatch ? <Info title="Ultimo despacho" text={`${lastDispatch.subject} / ${lastDispatch.status} / ${lastDispatch.createdAt.slice(0, 19).replace("T", " ")}`} tone="info" /> : null}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Tarifas aplicadas</CardTitle><Badge tone="info">{appliedTariffs.length} movimientos</Badge></CardHeader>
+        <CardContent className="grid gap-2">
+          {appliedTariffs.map((item) => <EventRow key={item.id} title={item.label} detail={item.detail} status="rated" date={new Date().toISOString()} />)}
+          {appliedTariffs.length === 0 ? <Info title="Sin movimientos" text="Cuando el cliente consulte o simule bloques, la tarifa aplicada aparecera aqui." tone="warn" /> : null}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Auditoria({ demoState, clients, selectedClient }: { demoState?: DemoState; clients: AdminClient[]; selectedClient?: AdminClient }) {
+  const [clientFilter, setClientFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const eventTypes = Array.from(new Set((demoState?.auditLog ?? []).map((event) => event.type)));
+  const filteredEvents = (demoState?.auditLog ?? []).filter((event) => {
+    const eventDate = event.createdAt.slice(0, 10);
+    if (clientFilter !== "all" && event.clientId !== clientFilter) return false;
+    if (typeFilter !== "all" && event.type !== typeFilter) return false;
+    if (fromDate && eventDate < fromDate) return false;
+    if (toDate && eventDate > toDate) return false;
+    return true;
+  });
+  const csvHref = buildAuditCsvHref(filteredEvents);
 
   return (
     <Card>
-      <CardHeader><CardTitle>Facturacion y tarifas</CardTitle><Badge tone="ok">Postpago global</Badge></CardHeader>
-      <CardContent className="grid gap-3 lg:grid-cols-4">
-        <Info title="Subtotal global" text={`$${(global?.estimatedSubtotal ?? 0).toFixed(2)}`} tone="neutral" />
-        <Info title="IVA estimado" text={`$${((global?.estimatedSubtotal ?? 0) * 0.15).toFixed(2)}`} tone="warn" />
-        <Info title="Total postpago" text={`$${((global?.estimatedSubtotal ?? 0) * 1.15).toFixed(2)}`} tone="ok" />
-        <Info title="Regla comercial" text="Excesos Data Partner se liquidan como Cliente Normal. Cambios de pricing requieren Mateo." tone="danger" />
+      <CardHeader><CardTitle>Auditoria BAC y operativa</CardTitle><Badge tone="info">{filteredEvents.length} eventos</Badge></CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="grid gap-3 lg:grid-cols-5">
+          <Field label="Cliente">
+            <Select value={clientFilter} onChange={(event) => setClientFilter(event.target.value)}>
+              <option value="all">Todos los clientes</option>
+              {clients.map((client) => <option key={client.id} value={client.id}>{client.legalName}</option>)}
+            </Select>
+          </Field>
+          <Field label="Tipo">
+            <Select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+              <option value="all">Todos</option>
+              {eventTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+            </Select>
+          </Field>
+          <Field label="Desde"><Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} /></Field>
+          <Field label="Hasta"><Input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} /></Field>
+          <div className="flex items-end">
+            <a className="inline-flex h-10 w-full items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-4 text-sm font-bold text-foreground hover:border-primary/60" href={csvHref} download="auditoria-decision-data.csv">Descargar CSV</a>
+          </div>
+        </div>
+        {selectedClient ? <Info title="Cliente activo" text={`${selectedClient.legalName} / ${selectedClient.mode} / ${selectedClient.statusLabel}`} tone="info" /> : null}
+        <div className="grid gap-2">
+          {filteredEvents.map((event) => <EventRow key={event.id} title={`${event.clientName} / ${event.actor}`} detail={`${event.type} - ${event.detail}${event.tariffLabel ? ` - ${event.tariffLabel}` : ""}${event.estimatedValue ? ` - $${event.estimatedValue.toFixed(2)}` : ""}`} status={event.status} date={event.createdAt} />)}
+          {filteredEvents.length === 0 ? <Info title="Sin eventos" text="Ajusta los filtros o ejecuta aprobaciones, cargas y consultas para generar trazabilidad." tone="warn" /> : null}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-function Auditoria({ demoState }: { demoState?: DemoState }) {
-  return (
-    <Card>
-      <CardHeader><CardTitle>Auditoria BAC y operativa</CardTitle><Badge tone="info">{demoState?.auditLog.length ?? 0} eventos</Badge></CardHeader>
-      <CardContent className="grid gap-2">
-        {(demoState?.auditLog ?? []).map((event) => <EventRow key={event.id} title={`${event.clientName} / ${event.actor}`} detail={`${event.type} - ${event.detail}${event.estimatedValue ? ` - $${event.estimatedValue.toFixed(2)}` : ""}`} status={event.status} date={event.createdAt} />)}
-        {(demoState?.auditLog.length ?? 0) === 0 ? <Info title="Sin eventos aun" text="Las aprobaciones, cargas y consultas apareceran aqui con trazabilidad." tone="warn" /> : null}
-      </CardContent>
-    </Card>
-  );
+function buildAuditCsvHref(events: AdminAuditEvent[]) {
+  const header = ["fecha", "cliente", "actor", "tipo", "canal", "producto", "tarifa", "valor", "estado", "detalle"];
+  const rows = events.map((event) => [
+    event.createdAt,
+    event.clientName,
+    event.actor,
+    event.type,
+    event.channel,
+    event.product ?? "",
+    event.tariffLabel ?? event.tariff ?? "",
+    event.estimatedValue?.toFixed(2) ?? "",
+    event.status,
+    event.detail
+  ]);
+  const csv = [header, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+  return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+}
+
+function escapeCsv(value: string) {
+  return `"${value.replaceAll('"', '""')}"`;
 }
 
 function Notificaciones({ demoState }: { demoState?: DemoState }) {

@@ -104,6 +104,7 @@ export type AdminAuditEvent = {
   channel: string;
   product?: string;
   tariff?: string;
+  tariffLabel?: string;
   estimatedValue?: number;
   status: string;
   detail: string;
@@ -159,6 +160,7 @@ export type QueryAudit = {
   identifier: string;
   product: string;
   tariff: string;
+  tariffLabel?: string;
   estimatedValue: number;
   tariffTier?: string;
   unitPrice?: number;
@@ -182,10 +184,23 @@ export type InhabilitationsResult = {
 export type BatchSummary = {
   id: string;
   status: string;
+  isAggregated?: boolean;
   rowsReceived: number;
   rowsProcessed: number;
   completeReportRows?: number;
   sebInhabilitatedRows?: number;
+  creditAppliedRows?: number;
+  excessRows?: number;
+  normalRows?: number;
+  tariffBreakdown?: Array<{
+    bucket: "data_partner_credit" | "excess_cliente_normal" | "cliente_normal";
+    tariff: string;
+    tariffLabel: string;
+    tariffTier: string;
+    unitPrice: number;
+    rows: number;
+    subtotal: number;
+  }>;
   estimatedSubtotal: number;
   createdAt: string;
 };
