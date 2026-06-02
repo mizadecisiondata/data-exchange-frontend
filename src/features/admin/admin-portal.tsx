@@ -99,9 +99,16 @@ export function AdminPortal() {
     onError: (error) => toast.error(error.message)
   });
   const dispatchInvoice = useMutation({
-    mutationFn: (body: { clientId: string; channel: "email" | "provider_api" }) => backendPost<{ state: DemoState }>(`/api/v1/admin/billing/${body.clientId}/dispatch`, { channel: body.channel }),
+    mutationFn: (body: { clientId: string; channel: "email" | "provider_api"; cutoffPeriod: string }) => backendPost<{ state: DemoState }>(`/api/v1/admin/billing/${body.clientId}/dispatch`, { channel: body.channel, cutoffPeriod: body.cutoffPeriod }),
     onSuccess: () => {
       toast.success("Factura aprobada y despacho simulado registrado.");
+      refreshState();
+    }
+  });
+  const approveDocument = useMutation({
+    mutationFn: (body: { clientId: string; documentId: string }) => backendPost<{ state: DemoState }>(`/api/v1/admin/clients/${body.clientId}/documents/${body.documentId}/approve`, {}),
+    onSuccess: () => {
+      toast.success("Documento aprobado.");
       refreshState();
     }
   });
@@ -152,13 +159,15 @@ export function AdminPortal() {
           approving={approve.isPending}
           onObserve={(requestId, observation) => observe.mutate({ requestId, observation })}
           observing={observe.isPending}
+          onApproveDocument={(clientId, documentId) => approveDocument.mutate({ clientId, documentId })}
+          approvingDocument={approveDocument.isPending}
         />
       )}
       {active === "clientes" && <Clientes clients={clients} selectedClient={selectedClient} onSelect={setSelectedClientId} onCreate={(body) => createClient.mutate(body)} creating={createClient.isPending} />}
       {active === "usuarios" && <Usuarios users={demoState.data?.adminUsers ?? []} onCreate={(body) => createAdminUser.mutate(body)} creating={createAdminUser.isPending} onUpdate={(body) => updateAdminUser.mutate(body)} updating={updateAdminUser.isPending} />}
       {active === "ingesta" && <Ingesta demoState={demoState.data} />}
       {active === "consumos" && <Consumos demoState={demoState.data} selectedClient={selectedClient} clients={clients} onSelect={setSelectedClientId} />}
-      {active === "facturacion" && <Facturacion clients={clients} selectedClient={selectedClient} onSelect={setSelectedClientId} onDispatch={(clientId, channel) => dispatchInvoice.mutate({ clientId, channel })} dispatching={dispatchInvoice.isPending} />}
+      {active === "facturacion" && <Facturacion clients={clients} selectedClient={selectedClient} onSelect={setSelectedClientId} onDispatch={(clientId, channel, cutoffPeriod) => dispatchInvoice.mutate({ clientId, channel, cutoffPeriod })} dispatching={dispatchInvoice.isPending} />}
       {active === "auditoria" && <Auditoria demoState={demoState.data} clients={clients} selectedClient={selectedClient} />}
       {active === "notificaciones" && <Notificaciones demoState={demoState.data} />}
       {active === "configuracion" && <Configuracion demoState={demoState.data} onUpdate={(body) => updateSettings.mutate(body)} updating={updateSettings.isPending} />}
@@ -209,7 +218,9 @@ function Onboarding({
   onApprove,
   approving,
   onObserve,
-  observing
+  observing,
+  onApproveDocument,
+  approvingDocument
 }: {
   clients: AdminClient[];
   selectedClient?: AdminClient;
@@ -218,6 +229,8 @@ function Onboarding({
   approving: boolean;
   onObserve: (requestId: string, observation: string) => void;
   observing: boolean;
+  onApproveDocument: (clientId: string, documentId: string) => void;
+  approvingDocument: boolean;
 }) {
   const [observation, setObservation] = useState("Falta completar documentos habilitantes para aprobar acceso productivo.");
   const docs = selectedClient?.documents ?? {};
@@ -261,9 +274,21 @@ function Onboarding({
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             {requiredDocuments.map((item) => (
-              <div key={item.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
-                <span>{item.label}</span>
-                <Badge tone={docs[item.id] ? "ok" : item.blocking ? "warn" : "neutral"}>{docs[item.id] ? "ok" : item.blocking ? "bloqueante" : "pendiente"}</Badge>
+              <div key={item.id} className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <b>{item.label}</b>
+                    <p className="mt-1 text-xs text-muted">{selectedClient?.documentFiles?.[item.id]?.fileName ?? "Sin archivo cargado"}</p>
+                  </div>
+                  <Badge tone={docs[item.id] ? "ok" : selectedClient?.documentFiles?.[item.id] ? "info" : item.blocking ? "warn" : "neutral"}>{docs[item.id] ? "aprobado" : selectedClient?.documentFiles?.[item.id] ? "en revision" : item.blocking ? "bloqueante" : "pendiente"}</Badge>
+                </div>
+                <Button
+                  size="sm"
+                  disabled={!selectedClient || docs[item.id] || !selectedClient.documentFiles?.[item.id] || approvingDocument}
+                  onClick={() => selectedClient && onApproveDocument(selectedClient.id, item.id)}
+                >
+                  Aprobar documento
+                </Button>
               </div>
             ))}
           </div>
@@ -372,6 +397,10 @@ function Ingesta({ demoState }: { demoState?: DemoState }) {
         <MetricCard label="Umbral minimo" value={`${Math.round((dashboard?.qualityThreshold ?? 0.95) * 100)}%`} tone="warn" />
       </div>
       <Card>
+        <CardHeader><CardTitle>Tendencia de ingesta</CardTitle><Badge tone="warn">Registros aceptados</Badge></CardHeader>
+        <CardContent><LineChart data={dashboard?.series ?? []} /></CardContent>
+      </Card>
+      <Card>
         <CardHeader><CardTitle>Cargas por cliente</CardTitle><Badge tone="info">Bloques de informacion</Badge></CardHeader>
         <CardContent className="grid gap-2">
           {(dashboard?.byClient ?? []).map((item) => <BarRow key={item.clientId} label={item.legalName} value={item.acceptedRows} max={Math.max(...(dashboard?.byClient ?? []).map((client) => client.acceptedRows), 1)} detail={`${item.uploads} cargas / ${item.creditsGenerated} credits`} />)}
@@ -414,6 +443,14 @@ function Consumos({
       <Card>
         <CardHeader><CardTitle>Tendencia global de consumo</CardTitle><Badge tone="warn">Todos los clientes</Badge></CardHeader>
         <CardContent><LineChart data={usage?.series ?? []} /></CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Mix por canal</CardTitle><Badge tone="info">Portal / bloque / API</Badge></CardHeader>
+        <CardContent className="grid gap-2">
+          {(usage?.channelMix ?? []).map((item) => (
+            <BarRow key={item.label} label={item.label} value={item.count} max={Math.max(...(usage?.channelMix ?? []).map((channel) => channel.count), 1)} detail={`Subtotal $${item.subtotal.toFixed(2)}`} />
+          ))}
+        </CardContent>
       </Card>
       <Card>
         <CardHeader><CardTitle>Consumo en tiempo real por cliente</CardTitle><Badge tone="ok">{selectedClient?.legalName ?? "Seleccion"}</Badge></CardHeader>
@@ -462,9 +499,10 @@ function Facturacion({
   clients: AdminClient[];
   selectedClient?: AdminClient;
   onSelect: (id: string) => void;
-  onDispatch: (clientId: string, channel: "email" | "provider_api") => void;
+  onDispatch: (clientId: string, channel: "email" | "provider_api", cutoffPeriod: string) => void;
   dispatching: boolean;
 }) {
+  const [cutoffPeriod, setCutoffPeriod] = useState("2026-05");
   const invoice = selectedClient?.invoicePreview;
   const usage = selectedClient?.usage;
   const appliedTariffs = [
@@ -488,13 +526,18 @@ function Facturacion({
       <Card>
         <CardHeader><CardTitle>Facturacion y tarifas</CardTitle><Badge tone="ok">Postpago por cliente</Badge></CardHeader>
         <CardContent className="grid gap-4">
-          <Field label="Empresa o cliente">
-            <Select value={selectedClient?.id ?? ""} onChange={(event) => onSelect(event.target.value)}>
-              {clients.map((client) => <option key={client.id} value={client.id}>{client.legalName}</option>)}
-            </Select>
-          </Field>
+          <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+            <Field label="Empresa o cliente">
+              <Select value={selectedClient?.id ?? ""} onChange={(event) => onSelect(event.target.value)}>
+                {clients.map((client) => <option key={client.id} value={client.id}>{client.legalName}</option>)}
+              </Select>
+            </Field>
+            <Field label="Fecha de corte">
+              <Input type="month" value={cutoffPeriod} onChange={(event) => setCutoffPeriod(event.target.value)} />
+            </Field>
+          </div>
           <div className="grid gap-3 lg:grid-cols-4">
-            <Info title="Subtotal" text={`$${(invoice?.subtotal ?? 0).toFixed(2)}`} tone="neutral" />
+            <Info title="Subtotal" text={`$${(invoice?.subtotal ?? 0).toFixed(2)} / corte ${cutoffPeriod}`} tone="neutral" />
             <Info title="IVA estimado" text={`$${(invoice?.tax ?? 0).toFixed(2)}`} tone="warn" />
             <Info title="Total postpago" text={`$${(invoice?.total ?? 0).toFixed(2)}`} tone="ok" />
             <Info title="Decision Credits" text={`${selectedClient?.creditsBalance ?? 0} disponibles`} tone={(selectedClient?.creditsBalance ?? 0) <= 0 ? "danger" : "info"} />
@@ -505,8 +548,8 @@ function Facturacion({
             <Info title="Cliente Normal" text={`${usage?.clienteNormalQueries ?? 0} consultas / $${(usage?.clienteNormalSubtotal ?? 0).toFixed(2)}`} tone="neutral" />
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="primary" disabled={!selectedClient || dispatching} onClick={() => selectedClient && onDispatch(selectedClient.id, "email")}>Aprobar y enviar por correo</Button>
-            <Button disabled={!selectedClient || dispatching} onClick={() => selectedClient && onDispatch(selectedClient.id, "provider_api")}>Aprobar y enviar API proveedor/SRI</Button>
+            <Button variant="primary" disabled={!selectedClient || dispatching} onClick={() => selectedClient && onDispatch(selectedClient.id, "email", cutoffPeriod)}>Aprobar y enviar por correo</Button>
+            <Button disabled={!selectedClient || dispatching} onClick={() => selectedClient && onDispatch(selectedClient.id, "provider_api", cutoffPeriod)}>Aprobar y enviar API proveedor/SRI</Button>
           </div>
           {lastDispatch ? <Info title="Ultimo despacho" text={`${lastDispatch.subject} / ${lastDispatch.status} / ${lastDispatch.createdAt.slice(0, 19).replace("T", " ")}`} tone="info" /> : null}
         </CardContent>

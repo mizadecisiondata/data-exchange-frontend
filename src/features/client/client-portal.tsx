@@ -144,6 +144,18 @@ export function ClientPortal() {
       refreshState();
     }
   });
+  const uploadDocument = useMutation({
+    mutationFn: (body: { documentId: string; fileName: string }) => backendPost<{ state: DemoState }>("/api/v1/client/documents", {
+      clientId: scopedState?.client.id,
+      documentId: body.documentId,
+      fileName: body.fileName,
+      uploadedBy: scopedState ? `operaciones@${scopedState.client.legalName.toLowerCase().replaceAll(" ", "-")}.demo` : "operaciones@cliente.demo"
+    }),
+    onSuccess: () => {
+      toast.success("Documento cargado para revision administrativa.");
+      refreshState();
+    }
+  });
   const individualQuery = useMutation({
     mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/queries", {
       product: queryProduct,
@@ -364,7 +376,7 @@ export function ClientPortal() {
       ) : null}
       {active === "inicio" && <Inicio isPending={!isApproved} demoState={scopedState} />}
       {active === "estado" && <Estado demoState={scopedState} />}
-      {active === "documentos" && <Documentos />}
+      {active === "documentos" && <Documentos demoState={scopedState} onUpload={(documentId, fileName) => uploadDocument.mutate({ documentId, fileName })} uploading={uploadDocument.isPending} />}
       {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={scopedState} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
       {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={scopedState} currentSubjects={currentLoadSubjects} historicalSubjects={historicalLoadSubjects} historicalDepth={historicalLoadDepth} onCurrentSubjectsChange={setCurrentLoadSubjects} onHistoricalSubjectsChange={setHistoricalLoadSubjects} onHistoricalDepthChange={setHistoricalLoadDepth} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
       {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={scopedState?.queries[0]} /></LockedAware>}
@@ -551,7 +563,9 @@ function Estado({ demoState }: { demoState?: DemoState }) {
   );
 }
 
-function Documentos() {
+function Documentos({ demoState, onUpload, uploading }: { demoState?: DemoState; onUpload: (documentId: string, fileName: string) => void; uploading: boolean }) {
+  const [fileNames, setFileNames] = useState<Record<string, string>>({});
+
   return (
     <div className="grid gap-4 xl:grid-cols-2">
       <Card>
@@ -569,14 +583,36 @@ function Documentos() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle>Checklist habilitante</CardTitle><Badge tone="warn">Revision</Badge></CardHeader>
-        <CardContent className="grid gap-2">
-          {requiredDocuments.map((document, index) => (
-            <label key={document.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
-              <span>{document.label}</span>
-              <Badge tone={index < 3 ? "ok" : "warn"}>{index < 3 ? "recibido" : document.blocking ? "bloqueante" : "pendiente"}</Badge>
-            </label>
-          ))}
+        <CardHeader><CardTitle>Carga documental</CardTitle><Badge tone="warn">Revision admin</Badge></CardHeader>
+        <CardContent className="grid gap-3">
+          {requiredDocuments.map((document) => {
+            const approved = demoState?.documents?.[document.id] === true;
+            const file = demoState?.documentFiles?.[document.id];
+            const chosenName = fileNames[document.id] ?? `${document.id}-signed.pdf`;
+
+            return (
+              <div key={document.id} className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <b>{document.label}</b>
+                    <p className="mt-1 text-xs text-muted">{file?.fileName ?? "Sin archivo cargado"}{file?.uploadedAt ? ` / ${file.uploadedAt.slice(0, 10)}` : ""}</p>
+                  </div>
+                  <Badge tone={approved ? "ok" : file ? "info" : document.blocking ? "warn" : "neutral"}>{approved ? "aprobado" : file ? "en revision" : document.blocking ? "bloqueante" : "pendiente"}</Badge>
+                </div>
+                <div className="grid gap-2 lg:grid-cols-[1fr_auto]">
+                  <Input
+                    type="file"
+                    disabled={approved || uploading}
+                    onChange={(event) => {
+                      const selected = event.target.files?.[0]?.name;
+                      if (selected) setFileNames((current) => ({ ...current, [document.id]: selected }));
+                    }}
+                  />
+                  <Button disabled={approved || uploading} onClick={() => onUpload(document.id, chosenName)}>Cargar para revision</Button>
+                </div>
+              </div>
+            );
+          })}
         </CardContent>
       </Card>
     </div>
@@ -621,16 +657,16 @@ function Carga({
           <p>{isPending ? "Como cliente pendiente, esta carga es no productiva y sirve para validar formato, calidad y simulacion de credits." : "Como cliente aprobado, queda lista para control productivo y BAC."}</p>
           <div className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 lg:grid-cols-3">
             <Field label="Sujetos M0 actuales">
-              <Input type="number" min={0} value={currentSubjects} onChange={(event) => onCurrentSubjectsChange(Number(event.target.value))} />
+              <Input type="number" min={0} max={10000} value={currentSubjects} onChange={(event) => onCurrentSubjectsChange(Number(event.target.value))} />
             </Field>
             <Field label="Sujetos con historico">
-              <Input type="number" min={0} value={historicalSubjects} onChange={(event) => onHistoricalSubjectsChange(Number(event.target.value))} />
+              <Input type="number" min={0} max={10000} value={historicalSubjects} onChange={(event) => onHistoricalSubjectsChange(Number(event.target.value))} />
             </Field>
             <Field label="Profundidad M-1..M-n">
               <Input type="number" min={0} max={48} value={historicalDepth} onChange={(event) => onHistoricalDepthChange(Number(event.target.value))} />
             </Field>
             <div className="lg:col-span-3 rounded-lg border border-primary/20 bg-primary/10 p-3 text-xs leading-5 text-amber-100">
-              M0 genera 1 credit por sujeto. La serie historica completa M-1 a M-48 suma 4 credits por sujeto y se pondera logaritmicamente. Estimado visual: {projectedCurrentCredits.toFixed(2)} actuales + {projectedHistoricalCredits.toFixed(2)} historicos.
+              M0 genera 1 credit por sujeto. La serie historica del mismo sujeto genera 4 credits adicionales cuando cargas historia M-1..M-n. Estimado visual: {projectedCurrentCredits.toFixed(2)} actuales + {projectedHistoricalCredits.toFixed(2)} historicos.
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -889,9 +925,7 @@ function BillingRow({ label, queries, subtotal }: { label: string; queries: numb
 
 function estimateHistoricalCredits(depth: number) {
   const safeDepth = Math.max(0, Math.min(48, Math.round(depth)));
-  const raw = Array.from({ length: 48 }, (_, index) => Math.log(50 / (index + 2)));
-  const scale = 4 / raw.reduce((sum, value) => sum + value, 0);
-  return raw.slice(0, safeDepth).reduce((sum, value) => sum + value * scale, 0);
+  return safeDepth > 0 ? 4 : 0;
 }
 
 function Auditoria({ events }: { events: QueryAudit[] | typeof bacEvents }) {
@@ -1059,6 +1093,7 @@ function buildScopedClientState(demoState: DemoState | undefined, sandboxClientI
       creditsBalance: selected.creditsBalance
     },
     documents: selected.documents,
+    documentFiles: selected.documentFiles,
     uploads: selected.uploads,
     queries: selected.queries,
     batchQueries: selected.batchQueries,

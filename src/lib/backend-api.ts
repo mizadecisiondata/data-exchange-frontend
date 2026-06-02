@@ -12,6 +12,7 @@ export type DemoState = {
     creditsBalance: number;
   };
   documents: Record<string, boolean>;
+  documentFiles: Record<string, DocumentFile>;
   uploads: UploadSummary[];
   queries: QueryAudit[];
   batchQueries: BatchSummary[];
@@ -45,6 +46,7 @@ export type AdminClient = {
   creditsBalance: number;
   blockingDocumentsMissing: string[];
   documents: Record<string, boolean>;
+  documentFiles: Record<string, DocumentFile>;
   uploads: UploadSummary[];
   queries: QueryAudit[];
   batchQueries: BatchSummary[];
@@ -83,6 +85,7 @@ export type GlobalUsage = {
   totalQueries: number;
   series: Array<{ label: string; queries: number; amount: number }>;
   productMix: Array<{ label: string; count: number }>;
+  channelMix: Array<{ label: string; count: number; subtotal: number }>;
   byClient: Array<{ clientId: string; legalName: string; queries: number; uploads: number; subtotal: number; state: string }>;
 };
 
@@ -92,6 +95,7 @@ export type IngestionDashboard = {
   duplicateRows: number;
   errorRows: number;
   qualityThreshold: number;
+  series: Array<{ label: string; queries: number; amount: number }>;
   byClient: Array<{ clientId: string; legalName: string; uploads: number; acceptedRows: number; creditsGenerated: number }>;
 };
 
@@ -147,6 +151,17 @@ export type UploadSummary = {
     policy: string;
   };
   createdAt: string;
+};
+
+export type DocumentFile = {
+  documentId: string;
+  label: string;
+  fileName: string;
+  status: "uploaded_for_review" | "approved" | "rejected";
+  uploadedAt: string;
+  uploadedBy: string;
+  approvedAt?: string;
+  approvedBy?: string;
 };
 
 export type QueryAudit = {
