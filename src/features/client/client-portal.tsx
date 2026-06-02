@@ -105,6 +105,9 @@ export function ClientPortal() {
   const [queryProduct, setQueryProduct] = useState("complete_report");
   const [queryIdentifier, setQueryIdentifier] = useState("0923048581");
   const [batchProduct, setBatchProduct] = useState("complete_report");
+  const [currentLoadSubjects, setCurrentLoadSubjects] = useState(1);
+  const [historicalLoadSubjects, setHistoricalLoadSubjects] = useState(0);
+  const [historicalLoadDepth, setHistoricalLoadDepth] = useState(48);
   const [sandboxClientId, setSandboxClientId] = useState<string | null>(null);
   const [previewSubUserId, setPreviewSubUserId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -130,7 +133,10 @@ export function ClientPortal() {
   const refreshState = () => queryClient.invalidateQueries({ queryKey: ["demo-state"] });
   const ingestion = useMutation({
     mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/ingestion/information-blocks", {
-      clientId: scopedState?.client.id
+      clientId: scopedState?.client.id,
+      currentSubjects: currentLoadSubjects,
+      historicalSubjects: historicalLoadSubjects,
+      historicalDepth: historicalLoadDepth
     }),
     onSuccess: () => {
       toast.success("Bloque de informacion procesado en sandbox.");
@@ -358,7 +364,7 @@ export function ClientPortal() {
       {active === "estado" && <Estado demoState={scopedState} />}
       {active === "documentos" && <Documentos />}
       {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={scopedState} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
-      {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={scopedState} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
+      {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={scopedState} currentSubjects={currentLoadSubjects} historicalSubjects={historicalLoadSubjects} historicalDepth={historicalLoadDepth} onCurrentSubjectsChange={setCurrentLoadSubjects} onHistoricalSubjectsChange={setHistoricalLoadSubjects} onHistoricalDepthChange={setHistoricalLoadDepth} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
       {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={scopedState?.queries[0]} /></LockedAware>}
       {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={scopedState} product={batchProduct} onProductChange={setBatchProduct} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
       {active === "api" && <LockedAware enabled={isApproved}><Api onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
@@ -529,7 +535,8 @@ function Estado({ demoState }: { demoState?: DemoState }) {
         <Info title="Carga sandbox" text="Permitida para validar formato, calidad, duplicados y consumo simulado." tone="ok" />
         <Info title="Tarifario vigente" text="Founding mantiene tarifa preferencial solo dentro del saldo de Decision Credits: reporte completo desde $0.50 en el tramo 1-100. El exceso cae a Cliente Normal." tone="info" />
         <Info title="Postpago" text={`Subtotal mensual estimado: $${(demoState?.invoicePreview.subtotal ?? 0).toFixed(2)}. No se maneja prepago como modelo principal.`} tone="ok" />
-        <Info title="Decision Credits" text={`Generados: ${demoState?.usage.creditsGenerated ?? 0}. Usados: ${demoState?.usage.creditsUsed ?? 0}. Saldo: ${demoState?.client.creditsBalance ?? 0}.`} tone="neutral" />
+        <Info title="Decision Credits" text={`Generados: ${demoState?.usage.creditsGenerated ?? 0} (M0 ${demoState?.usage.currentCreditsGenerated ?? 0} / historicos ${demoState?.usage.historicalCreditsGenerated ?? 0}). Usados: ${demoState?.usage.creditsUsed ?? 0}. Saldo: ${demoState?.client.creditsBalance ?? 0}.`} tone="neutral" />
+        <Info title="Depreciacion de saldo" text={`Al corte mensual se descuenta hasta ${demoState?.invoicePreview.balanceDepreciationPolicy?.monthlyFixedCredits ?? 0.08} credits del saldo no usado. Proyectado del mes: ${demoState?.invoicePreview.balanceDepreciationPolicy?.projectedMonthlyDepreciation ?? 0}.`} tone="warn" />
       </CardContent>
     </Card>
   );
@@ -567,8 +574,34 @@ function Documentos() {
   );
 }
 
-function Carga({ uppy, isPending, demoState, onSimulate, loading }: { uppy: Uppy; isPending: boolean; demoState?: DemoState; onSimulate: () => void; loading: boolean }) {
+function Carga({
+  uppy,
+  isPending,
+  demoState,
+  currentSubjects,
+  historicalSubjects,
+  historicalDepth,
+  onCurrentSubjectsChange,
+  onHistoricalSubjectsChange,
+  onHistoricalDepthChange,
+  onSimulate,
+  loading
+}: {
+  uppy: Uppy;
+  isPending: boolean;
+  demoState?: DemoState;
+  currentSubjects: number;
+  historicalSubjects: number;
+  historicalDepth: number;
+  onCurrentSubjectsChange: (value: number) => void;
+  onHistoricalSubjectsChange: (value: number) => void;
+  onHistoricalDepthChange: (value: number) => void;
+  onSimulate: () => void;
+  loading: boolean;
+}) {
   const latest = demoState?.uploads[0];
+  const projectedCurrentCredits = Math.max(0, currentSubjects);
+  const projectedHistoricalCredits = estimateHistoricalCredits(historicalDepth) * Math.max(0, historicalSubjects);
 
   return (
     <div className="grid gap-4 xl:grid-cols-[.85fr_1.15fr]">
@@ -576,7 +609,21 @@ function Carga({ uppy, isPending, demoState, onSimulate, loading }: { uppy: Uppy
         <CardHeader><CardTitle>Carga de informacion</CardTitle><Badge tone={isPending ? "warn" : "ok"}>{isPending ? "Sandbox" : "Productivo"}</Badge></CardHeader>
         <CardContent className="grid gap-3 text-sm text-muted">
           <p>Regla: bloques de informacion, umbral minimo 95%, duplicados descartados sin error y sin Decision Credits.</p>
-          <p>{isPending ? "Como cliente pendiente, esta carga no genera consumo ni facturacion." : "Como cliente aprobado, queda lista para control productivo y BAC."}</p>
+          <p>{isPending ? "Como cliente pendiente, esta carga es no productiva y sirve para validar formato, calidad y simulacion de credits." : "Como cliente aprobado, queda lista para control productivo y BAC."}</p>
+          <div className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 lg:grid-cols-3">
+            <Field label="Sujetos M0 actuales">
+              <Input type="number" min={0} value={currentSubjects} onChange={(event) => onCurrentSubjectsChange(Number(event.target.value))} />
+            </Field>
+            <Field label="Sujetos con historico">
+              <Input type="number" min={0} value={historicalSubjects} onChange={(event) => onHistoricalSubjectsChange(Number(event.target.value))} />
+            </Field>
+            <Field label="Profundidad M-1..M-n">
+              <Input type="number" min={0} max={48} value={historicalDepth} onChange={(event) => onHistoricalDepthChange(Number(event.target.value))} />
+            </Field>
+            <div className="lg:col-span-3 rounded-lg border border-primary/20 bg-primary/10 p-3 text-xs leading-5 text-amber-100">
+              M0 genera 1 credit por sujeto. La serie historica completa M-1 a M-48 suma 4 credits por sujeto y se pondera logaritmicamente. Estimado visual: {projectedCurrentCredits.toFixed(2)} actuales + {projectedHistoricalCredits.toFixed(2)} historicos.
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild>
               <a href="/api/backend/api/v1/templates/information-block.csv" download><Download className="size-4" /> Descargar template CSV</a>
@@ -588,6 +635,7 @@ function Carga({ uppy, isPending, demoState, onSimulate, loading }: { uppy: Uppy
               <b className="text-foreground">Ultima carga: {latest.id}</b>
               <span>Filas recibidas: {latest.rowsReceived} / aceptadas: {latest.acceptedRows} / duplicadas: {latest.duplicateRows} / errores: {latest.errorRows}</span>
               <span>Calidad: {Math.round(latest.qualityScore * 100)}% / creditos generados: {latest.creditsGenerated}</span>
+              <span>M0: {(latest.currentCreditsGenerated ?? latest.creditGeneration?.currentCredits ?? 0).toFixed(2)} / historicos: {(latest.historicalCreditsGenerated ?? latest.creditGeneration?.historicalCredits ?? 0).toFixed(2)}</span>
             </div>
           ) : null}
         </CardContent>
@@ -739,7 +787,10 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
         <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-4">
           <Badge tone="ok">Decision Credits</Badge>
           <p className="mt-3 text-sm leading-6 text-muted">
-            Generados: {invoice?.creditsGenerated ?? 0}. Usados: {invoice?.creditsUsed ?? 0}. Saldo: {invoice?.creditsBalance ?? 0}. Modelo: postpago mensual.
+            Generados: {invoice?.creditsGenerated ?? 0} (M0: {invoice?.currentCreditsGenerated ?? demoState?.usage.currentCreditsGenerated ?? 0}, historicos: {invoice?.historicalCreditsGenerated ?? demoState?.usage.historicalCreditsGenerated ?? 0}). Usados: {invoice?.creditsUsed ?? 0}. Saldo: {invoice?.creditsBalance ?? 0}. Modelo: postpago mensual.
+          </p>
+          <p className="mt-2 text-sm leading-6 text-muted">
+            Depreciacion de saldo al corte: {invoice?.balanceDepreciationPolicy?.projectedMonthlyDepreciation ?? 0} creditos. Saldo proyectado despues del corte: {invoice?.balanceDepreciationPolicy?.projectedBalanceAfterDepreciation ?? invoice?.creditsBalance ?? 0}.
           </p>
           <p className="mt-2 text-xs text-muted">{invoice?.note}</p>
         </div>
@@ -765,6 +816,13 @@ function BillingRow({ label, queries, subtotal }: { label: string; queries: numb
       <b>${subtotal.toFixed(2)}</b>
     </div>
   );
+}
+
+function estimateHistoricalCredits(depth: number) {
+  const safeDepth = Math.max(0, Math.min(48, Math.round(depth)));
+  const raw = Array.from({ length: 48 }, (_, index) => Math.log(50 / (index + 2)));
+  const scale = 4 / raw.reduce((sum, value) => sum + value, 0);
+  return raw.slice(0, safeDepth).reduce((sum, value) => sum + value * scale, 0);
 }
 
 function Auditoria({ events }: { events: QueryAudit[] | typeof bacEvents }) {

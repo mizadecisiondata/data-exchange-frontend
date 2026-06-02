@@ -74,7 +74,10 @@ export type GlobalUsage = {
   apiCalls: number;
   estimatedSubtotal: number;
   creditsGenerated: number;
+  currentCreditsGenerated: number;
+  historicalCreditsGenerated: number;
   creditsUsed: number;
+  creditsDepreciated: number;
   productiveClients: number;
   pendingClients: number;
   totalQueries: number;
@@ -132,6 +135,16 @@ export type UploadSummary = {
   qualityScore: number;
   threshold: number;
   creditsGenerated: number;
+  currentCreditsGenerated?: number;
+  historicalCreditsGenerated?: number;
+  creditGeneration?: {
+    currentRows: number;
+    historicalRows: number;
+    currentCredits: number;
+    historicalCredits: number;
+    totalCredits: number;
+    policy: string;
+  };
   createdAt: string;
 };
 
@@ -183,7 +196,10 @@ export type UsageSummary = {
   apiCalls: number;
   estimatedSubtotal: number;
   creditsGenerated: number;
+  currentCreditsGenerated: number;
+  historicalCreditsGenerated: number;
   creditsUsed: number;
+  creditsDepreciated: number;
   dataPartnerCreditQueries: number;
   dataPartnerCreditSubtotal: number;
   excessNormalQueries: number;
@@ -211,8 +227,17 @@ export type InvoicePreview = {
   tax: number;
   total: number;
   creditsGenerated: number;
+  currentCreditsGenerated?: number;
+  historicalCreditsGenerated?: number;
   creditsUsed: number;
+  creditsDepreciated?: number;
   creditsBalance: number;
+  balanceDepreciationPolicy?: {
+    monthlyFixedCredits: number;
+    projectedMonthlyDepreciation: number;
+    projectedBalanceAfterDepreciation: number;
+    description: string;
+  };
   breakdown?: {
     dataPartnerCreditQueries: number;
     dataPartnerCreditSubtotal: number;
