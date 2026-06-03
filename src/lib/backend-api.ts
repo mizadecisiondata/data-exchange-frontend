@@ -200,6 +200,8 @@ export type BatchSummary = {
   id: string;
   status: string;
   isAggregated?: boolean;
+  product?: string;
+  channel?: string;
   rowsReceived: number;
   rowsProcessed: number;
   completeReportRows?: number;
@@ -253,6 +255,7 @@ export type InvoicePreview = {
   period: string;
   currency: string;
   billingMode: string;
+  ratingTier?: string;
   subtotal: number;
   tax: number;
   total: number;
@@ -276,6 +279,17 @@ export type InvoicePreview = {
     clienteNormalQueries: number;
     clienteNormalSubtotal: number;
   };
+  consolidatedLines?: Array<{
+    channel: string;
+    product: string;
+    productLabel: string;
+    bucket: "data_partner_credit" | "excess_cliente_normal" | "cliente_normal";
+    tariffLabel: string;
+    tariffTier: string;
+    unitPrice: number;
+    queries: number;
+    subtotal: number;
+  }>;
   note: string;
 };
 

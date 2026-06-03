@@ -106,6 +106,8 @@ export function ClientPortal() {
   const [queryIdentifier, setQueryIdentifier] = useState("0923048581");
   const [batchProduct, setBatchProduct] = useState("complete_report");
   const [batchRecordCount, setBatchRecordCount] = useState(1000);
+  const [apiProduct, setApiProduct] = useState("complete_report");
+  const [apiRecordCount, setApiRecordCount] = useState(1000);
   const [currentLoadSubjects, setCurrentLoadSubjects] = useState(1);
   const [historicalLoadSubjects, setHistoricalLoadSubjects] = useState(0);
   const [historicalLoadDepth, setHistoricalLoadDepth] = useState(48);
@@ -181,11 +183,10 @@ export function ClientPortal() {
     }
   });
   const apiQuery = useMutation({
-    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/queries", {
-      product: "complete_report",
+    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/batch-queries", {
+      product: apiProduct,
       channel: "api",
-      identifierType: "ruc",
-      identifier: "0999999999001",
+      recordCount: apiRecordCount,
       user: `api-key:${scopedState?.client.id ?? "megadatos-demo"}`,
       clientId: scopedState?.client.id
     }),
@@ -381,7 +382,7 @@ export function ClientPortal() {
       {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={scopedState} currentSubjects={currentLoadSubjects} historicalSubjects={historicalLoadSubjects} historicalDepth={historicalLoadDepth} onCurrentSubjectsChange={setCurrentLoadSubjects} onHistoricalSubjectsChange={setHistoricalLoadSubjects} onHistoricalDepthChange={setHistoricalLoadDepth} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
       {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={scopedState?.queries[0]} /></LockedAware>}
       {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={scopedState} product={batchProduct} onProductChange={setBatchProduct} recordCount={batchRecordCount} onRecordCountChange={setBatchRecordCount} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
-      {active === "api" && <LockedAware enabled={isApproved}><Api onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
+      {active === "api" && <LockedAware enabled={isApproved}><Api product={apiProduct} onProductChange={setApiProduct} recordCount={apiRecordCount} onRecordCountChange={setApiRecordCount} onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
       {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion demoState={scopedState} /></LockedAware>}
       {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria events={scopedState?.queries ?? bacEvents} /></LockedAware>}
       {active === "notificaciones" && <Notificaciones demoState={scopedState} />}
@@ -807,22 +808,50 @@ function ConsultaBloque({
   );
 }
 
-function Api({ onRun, loading }: { onRun: () => void; loading: boolean }) {
+function Api({
+  product,
+  onProductChange,
+  recordCount,
+  onRecordCountChange,
+  onRun,
+  loading
+}: {
+  product: string;
+  onProductChange: (value: string) => void;
+  recordCount: number;
+  onRecordCountChange: (value: number) => void;
+  onRun: () => void;
+  loading: boolean;
+}) {
   return (
     <div className="grid gap-3">
       <Info title="API keys" text="Scopes, rotacion y vencimiento solo para clientes aprobados." tone="warn" />
       <Card>
-        <CardHeader><CardTitle>Ejemplo para desarrolladores</CardTitle><Badge tone="info">Sandbox</Badge></CardHeader>
+        <CardHeader><CardTitle>Consumo API masivo</CardTitle><Badge tone="info">Sandbox</Badge></CardHeader>
         <CardContent className="grid gap-3">
+          <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+            <Field label="Tipo de reporte">
+              <Select value={product} onChange={(event) => onProductChange(event.target.value)}>
+                {queryProducts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+              </Select>
+            </Field>
+            <Field label="Registros a consultar">
+              <Input type="number" min={1} max={5000000} value={recordCount} onChange={(event) => onRecordCountChange(Number(event.target.value))} />
+            </Field>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[1000, 100000, 1000000].map((size) => (
+              <Button key={size} size="sm" onClick={() => onRecordCountChange(size)}>{size.toLocaleString("en-US")}</Button>
+            ))}
+          </div>
           <pre className="overflow-auto rounded-lg border border-white/10 bg-black/30 p-3 text-xs text-slate-200">{`POST /api/v1/queries
 Authorization: Bearer dd_sandbox_key
 {
-  "identifierType": "ruc",
-  "identifier": "0999999999001",
-  "product": "complete_report",
-  "channel": "api"
+  "product": "${product}",
+  "channel": "api",
+  "recordCount": ${recordCount}
 }`}</pre>
-          <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Simular llamada API</Button>
+          <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Simular consumo API</Button>
         </CardContent>
       </Card>
       <div className="grid gap-2">
@@ -854,6 +883,12 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
         <MetricCard label="Panorama" value={String(demoState?.usage.completeReports ?? 0)} tone="warn" />
         <MetricCard label="API calls" value={String(demoState?.usage.apiCalls ?? 0)} tone="neutral" />
         <MetricCard label="Total estimado" value={`$${(invoice?.total ?? 0).toFixed(2)}`} tone="ok" />
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-4">
+          <Badge tone="info">Corte mensual consolidado</Badge>
+          <p className="mt-3 text-sm leading-6 text-muted">
+            Banda global vigente: {invoice?.ratingTier ?? "1-100"}. Las tarifas del corte se agrupan por canal, producto y uso de Decision Credits; el subtotal es cantidad por precio unitario.
+          </p>
+        </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-2">
           <Badge tone="ok">Consultas con credit Data Partner</Badge>
           <strong className="mt-3 block text-2xl font-black text-primary">{dataPartnerCreditQueries}</strong>
@@ -886,6 +921,27 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
           </div>
           <BillingRow label="Dentro de Decision Credits Data Partner Founding" queries={dataPartnerCreditQueries} subtotal={dataPartnerCreditSubtotal} />
           <BillingRow label="Exceso a tarifa Cliente Normal" queries={excessNormalQueries} subtotal={excessNormalSubtotal} />
+        </div>
+        <div className="overflow-hidden rounded-lg border border-white/10 lg:col-span-4">
+          <div className="grid gap-3 border-b border-white/10 bg-white/[0.04] p-3 text-xs font-semibold uppercase text-muted lg:grid-cols-[110px_170px_1fr_110px_120px_120px]">
+            <span>Canal</span>
+            <span>Producto</span>
+            <span>Tarifa aplicada</span>
+            <span>Precio</span>
+            <span>Cantidad</span>
+            <span>Subtotal</span>
+          </div>
+          {(invoice?.consolidatedLines ?? []).map((line) => (
+            <div key={`${line.channel}-${line.product}-${line.bucket}-${line.unitPrice}`} className="grid gap-3 border-b border-white/10 p-3 text-sm last:border-b-0 lg:grid-cols-[110px_170px_1fr_110px_120px_120px]">
+              <span>{formatChannel(line.channel)}</span>
+              <span>{line.productLabel}</span>
+              <span>{line.tariffLabel} / {line.tariffTier}</span>
+              <b>${line.unitPrice.toFixed(2)}</b>
+              <b>{line.queries.toLocaleString("en-US")}</b>
+              <b>${line.subtotal.toFixed(2)}</b>
+            </div>
+          ))}
+          {(invoice?.consolidatedLines?.length ?? 0) === 0 ? <div className="p-3 text-sm text-muted">Sin consumo facturable en el corte.</div> : null}
         </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-4">
           <Badge tone="info">Tarifas aplicadas</Badge>
@@ -1172,6 +1228,13 @@ function toChartPoints(series: Array<{ label: string; queries: number; amount: n
 
 function formatProduct(product: string) {
   return getQueryProductLabel(product);
+}
+
+function formatChannel(channel: string) {
+  if (channel === "api") return "API";
+  if (channel === "batch") return "Bloque";
+  if (channel === "portal") return "Portal";
+  return channel;
 }
 
 function getTotalQueries(demoState?: DemoState) {
