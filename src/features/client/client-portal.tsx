@@ -380,7 +380,7 @@ export function ClientPortal() {
       {active === "documentos" && <Documentos demoState={scopedState} onUpload={(documentId, fileName) => uploadDocument.mutate({ documentId, fileName })} uploading={uploadDocument.isPending} />}
       {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={scopedState} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
       {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={scopedState} currentSubjects={currentLoadSubjects} historicalSubjects={historicalLoadSubjects} historicalDepth={historicalLoadDepth} onCurrentSubjectsChange={setCurrentLoadSubjects} onHistoricalSubjectsChange={setHistoricalLoadSubjects} onHistoricalDepthChange={setHistoricalLoadDepth} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
-      {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={scopedState?.queries[0]} /></LockedAware>}
+      {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual demoState={scopedState} identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={scopedState?.queries[0]} /></LockedAware>}
       {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={scopedState} product={batchProduct} onProductChange={setBatchProduct} recordCount={batchRecordCount} onRecordCountChange={setBatchRecordCount} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
       {active === "api" && <LockedAware enabled={isApproved}><Api product={apiProduct} onProductChange={setApiProduct} recordCount={apiRecordCount} onRecordCountChange={setApiRecordCount} onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
       {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion demoState={scopedState} /></LockedAware>}
@@ -453,6 +453,7 @@ function ClientUsageDashboard({ demoState }: { demoState?: DemoState }) {
   const areaPath = `${path} L ${lastPoint?.x ?? 0} 180 L ${points[0]?.x ?? 0} 180 Z`;
   const mix = buildProductMix(demoState);
   const maxValue = Math.max(...series.map((item) => item.queries), 1);
+  const tariffDescription = buildCreditBenefitText(demoState?.client.mode);
 
   return (
     <Card>
@@ -526,7 +527,7 @@ function ClientUsageDashboard({ demoState }: { demoState?: DemoState }) {
           </div>
           <Info
             title="Tarifa aplicada"
-            text="Cliente cero Data Partner Founding: cada Decision Credit habilita 1 consulta con tarifa Founding. Cuando el saldo llega a 0, el exceso se cobra con tarifa Cliente Normal."
+            text={tariffDescription}
             tone="ok"
           />
           <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4">
@@ -548,14 +549,15 @@ function ClientUsageDashboard({ demoState }: { demoState?: DemoState }) {
 }
 
 function Estado({ demoState }: { demoState?: DemoState }) {
+  const mode = demoState?.client.mode ?? "Data Partner";
   return (
     <Card>
       <CardHeader><CardTitle>Estado de cuenta</CardTitle><Badge tone="warn">Centro unico</Badge></CardHeader>
       <CardContent className="grid gap-3 lg:grid-cols-3">
-        <Info title="Modalidad" text={demoState?.client.mode ?? "Data Partner Founding"} tone="warn" />
+        <Info title="Modalidad" text={mode} tone="warn" />
         <Info title="Estado de aprobacion" text={demoState?.client.productionAccess ? "Aprobado para sandbox productivo." : "Pendiente de aprobacion documental admin."} tone={demoState?.client.productionAccess ? "ok" : "danger"} />
         <Info title="Carga sandbox" text="Permitida para validar formato, calidad, duplicados y consumo simulado." tone="ok" />
-        <Info title="Tarifario vigente" text="Founding mantiene tarifa preferencial solo dentro del saldo de Decision Credits: reporte completo desde $0.50 en el tramo 1-100. El exceso cae a Cliente Normal." tone="info" />
+        <Info title="Tarifario vigente" text={buildTariffStatusText(mode)} tone="info" />
         <Info title="Postpago" text={`Subtotal mensual estimado: $${(demoState?.invoicePreview.subtotal ?? 0).toFixed(2)}. No se maneja prepago como modelo principal.`} tone="ok" />
         <Info title="Decision Credits" text={`Generados: ${demoState?.usage.creditsGenerated ?? 0} (M0 ${demoState?.usage.currentCreditsGenerated ?? 0} / historicos ${demoState?.usage.historicalCreditsGenerated ?? 0}). Usados: ${demoState?.usage.creditsUsed ?? 0}. Saldo: ${demoState?.client.creditsBalance ?? 0}.`} tone="neutral" />
         <Info title="Depreciacion de saldo" text={`Al corte mensual se descuenta hasta ${demoState?.invoicePreview.balanceDepreciationPolicy?.monthlyFixedCredits ?? 0.08} credits del saldo no usado. Proyectado del mes: ${demoState?.invoicePreview.balanceDepreciationPolicy?.projectedMonthlyDepreciation ?? 0}.`} tone="warn" />
@@ -696,6 +698,7 @@ function Carga({
 }
 
 function ConsultaIndividual({
+  demoState,
   identifier,
   onIdentifierChange,
   product,
@@ -704,6 +707,7 @@ function ConsultaIndividual({
   loading,
   latest
 }: {
+  demoState?: DemoState;
   identifier: string;
   onIdentifierChange: (value: string) => void;
   product: string;
@@ -728,7 +732,7 @@ function ConsultaIndividual({
               {queryProducts.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
             </Select>
           </Field>
-          <Info title="Valor estimado" text="Founding aplica tarifa preferencial mientras existan Decision Credits. Al agotarse, la siguiente consulta se cobra como exceso a tarifa Cliente Normal. Panorama completo incluye el indicador de inhabilidad SB dentro del reporte." tone="ok" />
+          <Info title="Valor estimado" text={`${buildTariffStatusText(demoState?.client.mode)} Panorama completo incluye el indicador de inhabilidad SB dentro del reporte.`} tone="ok" />
           <Button variant="primary" onClick={onRun} disabled={loading}><Play className="size-4" /> Consultar con consentimiento</Button>
           {latest ? <Info title={`BAC ${latest.bac}`} text={`Producto ${formatProduct(latest.product)}, canal ${latest.channel}, tarifa ${latest.tariff}, tramo ${latest.tariffTier ?? "1-100"}, ${latest.creditApplied ? `consume ${latest.creditCost ?? 1} Decision Credit` : "sin Decision Credit"}, valor $${latest.estimatedValue.toFixed(2)}.`} tone="info" /> : null}
         </CardContent>
@@ -874,6 +878,8 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
   const dataPartnerCreditSubtotal = breakdown?.dataPartnerCreditSubtotal ?? demoState?.usage.dataPartnerCreditSubtotal ?? 0;
   const excessNormalQueries = breakdown?.excessNormalQueries ?? demoState?.usage.excessNormalQueries ?? 0;
   const excessNormalSubtotal = breakdown?.excessNormalSubtotal ?? demoState?.usage.excessNormalSubtotal ?? 0;
+  const mode = demoState?.client.mode ?? "Data Partner";
+  const partnerTier = getDataPartnerTierLabel(mode);
 
   return (
     <Card>
@@ -893,7 +899,7 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
           <Badge tone="ok">Consultas con credit Data Partner</Badge>
           <strong className="mt-3 block text-2xl font-black text-primary">{dataPartnerCreditQueries}</strong>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Subtotal con tarifa Founding: ${dataPartnerCreditSubtotal.toFixed(2)}. Estas consultas consumen Decision Credits y mantienen beneficio preferencial.
+            Subtotal con beneficio {partnerTier}: ${dataPartnerCreditSubtotal.toFixed(2)}. Estas consultas consumen Decision Credits y mantienen la tarifa preferencial vigente de {mode}.
           </p>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:col-span-2">
@@ -919,7 +925,7 @@ function Facturacion({ demoState }: { demoState?: DemoState }) {
             <span>Consultas</span>
             <span>Subtotal</span>
           </div>
-          <BillingRow label="Dentro de Decision Credits Data Partner Founding" queries={dataPartnerCreditQueries} subtotal={dataPartnerCreditSubtotal} />
+          <BillingRow label={`Dentro de Decision Credits ${mode}`} queries={dataPartnerCreditQueries} subtotal={dataPartnerCreditSubtotal} />
           <BillingRow label="Exceso a tarifa Cliente Normal" queries={excessNormalQueries} subtotal={excessNormalSubtotal} />
         </div>
         <div className="overflow-hidden rounded-lg border border-white/10 lg:col-span-4">
@@ -977,6 +983,39 @@ function BillingRow({ label, queries, subtotal }: { label: string; queries: numb
       <b>${subtotal.toFixed(2)}</b>
     </div>
   );
+}
+
+function getDataPartnerTierLabel(mode?: string) {
+  if (!mode) {
+    return "Data Partner";
+  }
+  return mode.replace("Data Partner ", "");
+}
+
+function buildCreditBenefitText(mode?: string) {
+  if (!mode || !mode.startsWith("Data Partner")) {
+    return "Cliente Normal: las consultas se liquidan a tarifa publica del corte mensual, sin Decision Credits.";
+  }
+
+  const tier = getDataPartnerTierLabel(mode);
+  if (mode === "Data Partner Contributor") {
+    return "Cliente cero Data Partner Contributor: cada Decision Credit habilita reporte basico gratis. Panorama completo se cobra como Cliente Normal salvo cambio a Active o Founding.";
+  }
+
+  return `Cliente cero ${mode}: reporte basico gratis con Decision Credits y Panorama completo con tarifa ${tier} preferencial mientras exista saldo. Cuando el saldo llega a 0, el exceso se cobra como Cliente Normal.`;
+}
+
+function buildTariffStatusText(mode?: string) {
+  if (!mode || !mode.startsWith("Data Partner")) {
+    return "Cliente Normal usa la tarifa publica del rango mensual vigente. No aplica Decision Credits.";
+  }
+
+  const tier = getDataPartnerTierLabel(mode);
+  if (mode === "Data Partner Contributor") {
+    return "Contributor usa Decision Credits solo para reporte basico gratis. Panorama completo y reportes especializados se liquidan como Cliente Normal.";
+  }
+
+  return `${tier} mantiene reporte basico gratis con Decision Credits y tarifa ${tier} preferencial para Panorama completo solo dentro del saldo disponible. El exceso cae a Cliente Normal.`;
 }
 
 function estimateHistoricalCredits(depth: number) {
