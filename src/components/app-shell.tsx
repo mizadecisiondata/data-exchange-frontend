@@ -34,6 +34,8 @@ export function AppShell({
   aside?: React.ReactNode;
   portalLinks?: boolean;
 }) {
+  const visibleNav = nav.slice(0, 7);
+
   return (
     <div className="dd-shell">
       <aside className="dd-sidebar flex flex-col gap-5 p-5">
@@ -66,6 +68,30 @@ export function AppShell({
         <div className="mt-auto rounded-lg border border-white/10 bg-white/[0.03] p-3 text-xs leading-5 text-muted">{aside}</div>
       </aside>
       <main className="min-w-0 p-5 lg:p-7">
+        <div className="dd-web-nav mb-5">
+          <div className="dd-web-nav__brand">
+            <span>Data Exchange</span>
+            <b>{label}</b>
+          </div>
+          <nav className="dd-web-nav__links" aria-label="Navegacion principal de plataforma">
+            {visibleNav.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onSelect(item.id)}
+                className={cn(active === item.id && "is-active")}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+          {portalLinks ? (
+            <div className="dd-web-nav__actions">
+              <Link href="/client">Cliente</Link>
+              <Link href="/admin">Admin</Link>
+            </div>
+          ) : null}
+        </div>
         <header className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="text-xs font-black uppercase tracking-[0.16em] text-primary">Data Exchange</div>

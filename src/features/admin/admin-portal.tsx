@@ -20,6 +20,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
+import { SingularityHero } from "@/components/singularity-hero";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Progress, Select, Textarea } from "@/components/ui";
 import { backendGet, backendPost, type AdminAuditEvent, type AdminClient, type AdminUser, type DemoState } from "@/lib/backend-api";
 import { commercialModes, reporterSectors, requiredDocuments } from "@/lib/data-exchange";
@@ -115,19 +116,31 @@ export function AdminPortal() {
 
   if (!authenticated) {
     return (
-      <main className="grid min-h-screen place-items-center p-6">
-        <Card className="w-full max-w-xl">
-          <CardContent className="grid gap-5 p-6">
-            <div>
-              <Badge tone="info">Portal admin</Badge>
-              <h1 className="mt-3 text-3xl font-black">Acceso Decision Data</h1>
-              <p className="mt-2 text-sm text-muted">Login separado para administracion, onboarding, aprobaciones y control operativo.</p>
-            </div>
-            <Field label="Usuario admin"><Input defaultValue="admin@decisiondata.ec" /></Field>
-            <Field label="Contrasena"><Input type="password" defaultValue="demo-admin" /></Field>
-            <Button variant="primary" onClick={() => setAuthenticated(true)}>Ingresar al admin</Button>
-          </CardContent>
-        </Card>
+      <main className="dd-login-page grid min-h-screen place-items-center p-6">
+        <section className="grid w-full max-w-6xl gap-4 lg:grid-cols-[.95fr_1.05fr]">
+          <SingularityHero
+            eyebrow="Portal admin"
+            title="Centro de control Decision Data"
+            body="Login separado para administracion, onboarding, aprobaciones documentales y control operativo del sandbox."
+            items={[
+              "Solicitudes, clientes y modalidades.",
+              "Usuarios, ingesta, consumos y APIs.",
+              "Facturacion, BAC y notificaciones globales."
+            ]}
+          />
+          <Card className="dd-auth-card">
+            <CardContent className="grid gap-5 p-6">
+              <div>
+                <Badge tone="info">Portal admin</Badge>
+                <h1 className="mt-3 text-3xl font-black">Acceso Decision Data</h1>
+                <p className="mt-2 text-sm text-muted">Login separado para administracion, onboarding, aprobaciones y control operativo.</p>
+              </div>
+              <Field label="Usuario admin"><Input defaultValue="admin@decisiondata.ec" /></Field>
+              <Field label="Contrasena"><Input type="password" defaultValue="demo-admin" /></Field>
+              <Button variant="primary" onClick={() => setAuthenticated(true)}>Ingresar al admin</Button>
+            </CardContent>
+          </Card>
+        </section>
       </main>
     );
   }
@@ -691,8 +704,8 @@ function LineChart({ data }: { data: Array<{ label: string; queries: number; amo
   return (
     <div className="rounded-lg border border-white/10 bg-black/20 p-4">
       <svg viewBox="0 0 680 220" role="img" aria-label="Grafico de consumo global" className="h-64 w-full">
-        <path d={path} fill="none" stroke="#ffc400" strokeWidth="4" />
-        {points.map((point, index) => <circle key={safeData[index].label} cx={point.x} cy={point.y} r="6" fill="#ff6b1a" />)}
+        <path d={path} fill="none" stroke="#f5a623" strokeWidth="4" />
+        {points.map((point, index) => <circle key={safeData[index].label} cx={point.x} cy={point.y} r="6" fill="#ff6b2c" />)}
         {safeData.map((item, index) => <text key={item.label} x={points[index].x - 18} y="204" fill="#9fb0cc" fontSize="13">{item.label}</text>)}
         <text x="48" y="28" fill="#9fb0cc" fontSize="13">{max} consultas</text>
       </svg>
@@ -705,7 +718,7 @@ function BarRow({ label, value, max, detail }: { label: string; value: number; m
   return (
     <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
       <div className="mb-2 flex items-center justify-between gap-3 text-sm"><b>{label}</b><span className="text-muted">{value}</span></div>
-      <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-[#ff6b1a] to-[#ffc400]" style={{ width: `${width}%` }} /></div>
+      <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-[#ff6b2c] to-[#f5a623]" style={{ width: `${width}%` }} /></div>
       {detail ? <p className="mt-2 text-xs text-muted">{detail}</p> : null}
     </div>
   );

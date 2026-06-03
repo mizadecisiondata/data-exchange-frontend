@@ -8,8 +8,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-white/10 bg-card-strong text-foreground hover:border-primary/40",
-        primary: "border-primary/60 bg-gradient-to-r from-[#ff6b1a] to-[#ffc400] text-[#170b00] hover:brightness-110",
+        default: "border-white/10 bg-card-strong text-foreground hover:border-primary/40 hover:bg-white/[0.07]",
+        primary: "border-primary/60 bg-gradient-to-r from-[#ff6b2c] to-[#f5a623] text-[#170b00] hover:brightness-110",
         ghost: "border-transparent bg-transparent text-muted hover:bg-white/5 hover:text-foreground",
         danger: "border-danger/40 bg-danger/10 text-red-100"
       },
@@ -37,7 +37,7 @@ export function Button({ className, variant, size, asChild, ...props }: ButtonPr
 }
 
 export function Card({ className, ...props }: ComponentPropsWithoutRef<"section">) {
-  return <section className={cn("dd-surface rounded-lg", className)} {...props} />;
+  return <section className={cn("dd-surface rounded-[14px]", className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }: ComponentPropsWithoutRef<"div">) {
@@ -76,7 +76,7 @@ export function Input(props: ComponentPropsWithoutRef<"input">) {
     <input
       {...props}
       className={cn(
-        "h-10 w-full rounded-lg border border-white/10 bg-[#09142d] px-3 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary/50",
+        "h-10 w-full rounded-[10px] border border-white/10 bg-[#0f1530] px-3 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary/50 focus:bg-[#161d3e]",
         props.className
       )}
     />
@@ -88,7 +88,7 @@ export function Select(props: ComponentPropsWithoutRef<"select">) {
     <select
       {...props}
       className={cn(
-        "h-10 w-full rounded-lg border border-white/10 bg-[#09142d] px-3 text-sm text-foreground outline-none transition focus:border-primary/50",
+        "h-10 w-full rounded-[10px] border border-white/10 bg-[#0f1530] px-3 text-sm text-foreground outline-none transition focus:border-primary/50 focus:bg-[#161d3e]",
         props.className
       )}
     />
@@ -100,7 +100,7 @@ export function Textarea(props: ComponentPropsWithoutRef<"textarea">) {
     <textarea
       {...props}
       className={cn(
-        "min-h-24 w-full resize-none rounded-lg border border-white/10 bg-[#09142d] px-3 py-2 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary/50",
+        "min-h-24 w-full resize-none rounded-[10px] border border-white/10 bg-[#0f1530] px-3 py-2 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary/50 focus:bg-[#161d3e]",
         props.className
       )}
     />
@@ -135,7 +135,7 @@ export function Progress({ value, className }: { value: number; className?: stri
   return (
     <div className={cn("h-2 overflow-hidden rounded-full bg-white/10", className)}>
       <div
-        className="h-full rounded-full bg-gradient-to-r from-[#ff6b1a] to-[#ffc400] transition-all"
+        className="h-full rounded-full bg-gradient-to-r from-[#ff6b2c] to-[#f5a623] transition-all"
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
       />
     </div>

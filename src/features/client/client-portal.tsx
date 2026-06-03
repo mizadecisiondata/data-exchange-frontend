@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
 import { BackendStatusCard } from "@/components/backend-status";
 import { ReportHtmlViewer } from "@/components/report-html-viewer";
+import { SingularityHero } from "@/components/singularity-hero";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Select } from "@/components/ui";
 import { backendGet, backendPost, type DemoState, type QueryAudit, type SubUser } from "@/lib/backend-api";
 import {
@@ -247,22 +248,19 @@ export function ClientPortal() {
 
   if (!isPortal) {
     return (
-      <main className="grid min-h-screen place-items-center p-6">
+      <main className="dd-login-page grid min-h-screen place-items-center p-6">
         <section className="grid w-full max-w-6xl gap-4 lg:grid-cols-[.95fr_1.05fr]">
-          <Card className="dd-grid-bg min-h-[580px] p-7">
-            <img src="/decision-data-logo.png" alt="Decision Data" className="mb-5 size-20 rounded-lg border border-primary/30 bg-[#05091f] object-contain" />
-            <Badge tone="warn">Portal cliente</Badge>
-            <h1 className="mt-4 text-4xl font-black leading-tight">Acceso empresarial con control documental y trazabilidad BAC</h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-muted">
-              Login primero, autorregistro si no existe usuario, aprobacion documental por admin y operacion productiva solo cuando la cuenta queda habilitada.
-            </p>
-            <div className="mt-8 grid gap-3">
-              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-sm">Cliente pendiente: documentos y carga no productiva.</div>
-              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-sm">Cliente aprobado: consulta, API, facturacion y auditoria.</div>
-              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3 text-sm">Decision Credits liquidados en postpago mensual.</div>
-            </div>
-          </Card>
-          <Card>
+          <SingularityHero
+            eyebrow="Portal cliente"
+            title="Acceso empresarial con control documental y trazabilidad BAC"
+            body="Login primero, autorregistro si no existe usuario, aprobacion documental por admin y operacion productiva solo cuando la cuenta queda habilitada."
+            items={[
+              "Cliente pendiente: documentos y carga no productiva.",
+              "Cliente aprobado: consulta, API, facturacion y auditoria.",
+              "Decision Credits liquidados en postpago mensual."
+            ]}
+          />
+          <Card className="dd-auth-card">
             <CardContent className="p-6">
               {state.matches("login") ? (
                 <div className="flex flex-col gap-5">
@@ -479,18 +477,18 @@ function ClientUsageDashboard({ demoState }: { demoState?: DemoState }) {
           <svg viewBox="0 0 720 220" role="img" aria-label="Tendencia de consumo del cliente" className="h-64 w-full">
             <defs>
               <linearGradient id="usageArea" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#ffc400" stopOpacity="0.45" />
-                <stop offset="100%" stopColor="#ff6b1a" stopOpacity="0.03" />
+                <stop offset="0%" stopColor="#f5a623" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#ff6b2c" stopOpacity="0.03" />
               </linearGradient>
             </defs>
             {[40, 75, 110, 145, 180].map((y) => (
               <line key={y} x1="46" x2="690" y1={y} y2={y} stroke="rgba(255,255,255,.08)" />
             ))}
             <path d={areaPath} fill="url(#usageArea)" />
-            <path d={path} fill="none" stroke="#ffc400" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            <path d={path} fill="none" stroke="#f5a623" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
             {points.map((point, index) => (
               <g key={series[index].label}>
-                <circle cx={point.x} cy={point.y} r="6" fill="#ffc400" stroke="#07122c" strokeWidth="3" />
+                <circle cx={point.x} cy={point.y} r="6" fill="#f5a623" stroke="#090e22" strokeWidth="3" />
                 <text x={point.x} y="205" textAnchor="middle" fill="#9fb0cc" fontSize="13" fontWeight="700">{series[index].label}</text>
                 <text x={point.x} y={Math.max(22, point.y - 13)} textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="800">{series[index].queries}</text>
               </g>
@@ -519,7 +517,7 @@ function ClientUsageDashboard({ demoState }: { demoState?: DemoState }) {
                     <b>{item.count}</b>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                    <div className="h-full rounded-full bg-gradient-to-r from-[#ff6b1a] to-[#ffc400]" style={{ width: `${item.percent}%` }} />
+                    <div className="h-full rounded-full bg-gradient-to-r from-[#ff6b2c] to-[#f5a623]" style={{ width: `${item.percent}%` }} />
                   </div>
                 </div>
               ))}

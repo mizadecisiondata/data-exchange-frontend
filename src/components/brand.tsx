@@ -2,18 +2,18 @@ import Image from "next/image";
 
 export function BrandMark({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="dd-brand-mark">
       <Image
-        src="/decision-data-logo.png"
+        src="/brand/dd-icon.png"
         alt="Decision Data"
         width={48}
         height={48}
-        className="rounded-lg border border-primary/30 bg-[#05091f] object-contain"
+        className="dd-brand-mark__icon"
         priority
       />
       <div>
-        <b className="block text-sm text-foreground">Decision Data</b>
-        <span className="text-xs text-muted">{label}</span>
+        <Image src="/brand/dd-lockup-white.png" alt="Decision Data" width={178} height={36} className="dd-brand-mark__lockup" priority />
+        <span>{label}</span>
       </div>
     </div>
   );
