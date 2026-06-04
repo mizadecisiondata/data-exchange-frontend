@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Send, X } from "lucide-react";
-import { useState } from "react";
+import type { PointerEvent } from "react";
+import { useRef, useState } from "react";
 import { Button, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,15 @@ export function HelpBot() {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const dragRef = useRef({
+    active: false,
+    moved: false,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0
+  });
   const context = pathname.startsWith("/admin") ? "admin" : "client";
 
   function recordInteraction(event: string, payload: Record<string, string>) {
@@ -97,8 +107,67 @@ export function HelpBot() {
     recordInteraction("message", { text: value });
   }
 
+  function currentPosition() {
+    if (position) return position;
+    if (typeof window === "undefined") return { x: 0, y: 0 };
+    return {
+      x: Math.max(12, window.innerWidth - 140),
+      y: Math.max(12, window.innerHeight - 122)
+    };
+  }
+
+  function clampPosition(x: number, y: number) {
+    if (typeof window === "undefined") return { x, y };
+    return {
+      x: Math.min(Math.max(10, x), window.innerWidth - 92),
+      y: Math.min(Math.max(10, y), window.innerHeight - 92)
+    };
+  }
+
+  function startDrag(event: PointerEvent<HTMLButtonElement>) {
+    const origin = currentPosition();
+    dragRef.current = {
+      active: true,
+      moved: false,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: origin.x,
+      originY: origin.y
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function moveDrag(event: PointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current;
+    if (!drag.active) return;
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (Math.abs(deltaX) + Math.abs(deltaY) > 8) {
+      drag.moved = true;
+    }
+    setPosition(clampPosition(drag.originX + deltaX, drag.originY + deltaY));
+  }
+
+  function endDrag(event: PointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current;
+    if (!drag.active) return;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    drag.active = false;
+    if (drag.moved) {
+      recordInteraction("move", { state: "moved" });
+      return;
+    }
+    setOpen((value) => {
+      recordInteraction("toggle", { state: value ? "closed" : "open" });
+      return !value;
+    });
+  }
+
   return (
-    <div className={cn("dd-helpbot", open && "is-open")}>
+    <div
+      className={cn("dd-helpbot", open && "is-open", position && "is-moved")}
+      style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
+    >
       <div className="dd-helpbot__panel" aria-hidden={!open}>
         <header className="dd-helpbot__header">
           <Image src="/brand/dd-virtual-assistant-transparent.png" alt="" width={48} height={56} />
@@ -142,9 +211,14 @@ export function HelpBot() {
       <button
         type="button"
         className="dd-helpbot__launcher"
-        onClick={() => {
-          setOpen((value) => !value);
-          recordInteraction("toggle", { state: open ? "closed" : "open" });
+        onPointerDown={startDrag}
+        onPointerMove={moveDrag}
+        onPointerUp={endDrag}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setOpen((value) => !value);
+          }
         }}
         aria-expanded={open}
         aria-label="Abrir asistente Decision Data"

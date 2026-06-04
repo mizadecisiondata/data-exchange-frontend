@@ -31,9 +31,9 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
+import { AccessFrame } from "@/components/access-frame";
 import { BackendStatusCard } from "@/components/backend-status";
 import { ReportHtmlViewer } from "@/components/report-html-viewer";
-import { SingularityHero } from "@/components/singularity-hero";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Select } from "@/components/ui";
 import { backendGet, backendPost, type DemoState, type QueryAudit, type SubUser } from "@/lib/backend-api";
 import {
@@ -248,20 +248,9 @@ export function ClientPortal() {
 
   if (!isPortal) {
     return (
-      <main className="dd-login-page grid min-h-screen place-items-center p-6">
-        <section className="grid w-full max-w-6xl gap-4 lg:grid-cols-[.95fr_1.05fr]">
-          <SingularityHero
-            eyebrow="Portal cliente"
-            title="Acceso empresarial con control documental y trazabilidad BAC"
-            body="Login primero, autorregistro si no existe usuario, aprobacion documental por admin y operacion productiva solo cuando la cuenta queda habilitada."
-            items={[
-              "Cliente pendiente: documentos y carga no productiva.",
-              "Cliente aprobado: consulta, API, facturacion y auditoria.",
-              "Decision Credits liquidados en postpago mensual."
-            ]}
-          />
-          <Card className="dd-auth-card">
-            <CardContent className="p-6">
+      <AccessFrame eyebrow="Portal cliente">
+        <Card className="dd-auth-card">
+          <CardContent className="p-6">
               {state.matches("login") ? (
                 <div className="flex flex-col gap-5">
                   <div>
@@ -333,10 +322,9 @@ export function ClientPortal() {
                   </div>
                 </form>
               )}
-            </CardContent>
-          </Card>
-        </section>
-      </main>
+          </CardContent>
+        </Card>
+      </AccessFrame>
     );
   }
 

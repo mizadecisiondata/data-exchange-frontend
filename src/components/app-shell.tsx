@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useRef } from "react";
 import { BrandMark } from "@/components/brand";
 import { Badge, Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -34,57 +36,43 @@ export function AppShell({
   aside?: React.ReactNode;
   portalLinks?: boolean;
 }) {
-  const visibleNav = nav.slice(0, 7);
+  const navRef = useRef<HTMLDivElement>(null);
+
+  function scrollNav(direction: -1 | 1) {
+    navRef.current?.scrollBy({ left: direction * 280, behavior: "smooth" });
+  }
 
   return (
     <div className="dd-shell">
-      <aside className="dd-sidebar flex flex-col gap-5 p-5">
-        <BrandMark label={label} />
-        <nav className="flex flex-col gap-2">
-          {nav.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelect(item.id)}
-                className={cn(
-                  "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition",
-                  active === item.id
-                    ? "border-primary/40 bg-primary/10 text-foreground"
-                    : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5",
-                  item.locked && "text-slate-500"
-                )}
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <Icon className="size-4 shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                </span>
-                {item.locked ? <Badge tone="warn">lock</Badge> : null}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="mt-auto rounded-lg border border-white/10 bg-white/[0.03] p-3 text-xs leading-5 text-muted">{aside}</div>
-      </aside>
       <main className="min-w-0 p-5 lg:p-7">
         <div className="dd-web-nav mb-5">
-          <div className="dd-web-nav__brand">
-            <span>Data Exchange</span>
-            <b>{label}</b>
-          </div>
+          <BrandMark label={label} />
+          <button type="button" className="dd-web-nav__scroll" onClick={() => scrollNav(-1)} aria-label="Ver modulos anteriores">
+            <ChevronLeft className="size-4" />
+          </button>
           <nav className="dd-web-nav__links" aria-label="Navegacion principal de plataforma">
-            {visibleNav.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelect(item.id)}
-                className={cn(active === item.id && "is-active")}
-              >
-                {item.label}
-              </button>
-            ))}
+            <div ref={navRef} className="dd-web-nav__track">
+              {nav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onSelect(item.id)}
+                    className={cn(active === item.id && "is-active", item.locked && "is-locked")}
+                  >
+                    <Icon className="size-4 shrink-0" />
+                    <span>{item.label}</span>
+                    {item.locked ? <Badge tone="warn">lock</Badge> : null}
+                  </button>
+                );
+              })}
+            </div>
           </nav>
+          <button type="button" className="dd-web-nav__scroll" onClick={() => scrollNav(1)} aria-label="Ver mas modulos">
+            <ChevronRight className="size-4" />
+          </button>
+          {aside ? <div className="dd-web-nav__context">{aside}</div> : null}
           {portalLinks ? (
             <div className="dd-web-nav__actions">
               <Link href="/client">Cliente</Link>

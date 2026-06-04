@@ -19,8 +19,8 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/app-shell";
+import { AccessFrame } from "@/components/access-frame";
 import { BackendStatusCard } from "@/components/backend-status";
-import { SingularityHero } from "@/components/singularity-hero";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Progress, Select, Textarea } from "@/components/ui";
 import { backendGet, backendPost, type AdminAuditEvent, type AdminClient, type AdminUser, type DemoState } from "@/lib/backend-api";
 import { commercialModes, reporterSectors, requiredDocuments } from "@/lib/data-exchange";
@@ -116,20 +116,9 @@ export function AdminPortal() {
 
   if (!authenticated) {
     return (
-      <main className="dd-login-page grid min-h-screen place-items-center p-6">
-        <section className="grid w-full max-w-6xl gap-4 lg:grid-cols-[.95fr_1.05fr]">
-          <SingularityHero
-            eyebrow="Portal admin"
-            title="Centro de control Decision Data"
-            body="Login separado para administracion, onboarding, aprobaciones documentales y control operativo del sandbox."
-            items={[
-              "Solicitudes, clientes y modalidades.",
-              "Usuarios, ingesta, consumos y APIs.",
-              "Facturacion, BAC y notificaciones globales."
-            ]}
-          />
-          <Card className="dd-auth-card">
-            <CardContent className="grid gap-5 p-6">
+      <AccessFrame eyebrow="Portal admin">
+        <Card className="dd-auth-card">
+          <CardContent className="grid gap-5 p-6">
               <div>
                 <Badge tone="info">Portal admin</Badge>
                 <h1 className="mt-3 text-3xl font-black">Acceso Decision Data</h1>
@@ -138,10 +127,9 @@ export function AdminPortal() {
               <Field label="Usuario admin"><Input defaultValue="admin@decisiondata.ec" /></Field>
               <Field label="Contrasena"><Input type="password" defaultValue="demo-admin" /></Field>
               <Button variant="primary" onClick={() => setAuthenticated(true)}>Ingresar al admin</Button>
-            </CardContent>
-          </Card>
-        </section>
-      </main>
+          </CardContent>
+        </Card>
+      </AccessFrame>
     );
   }
 
