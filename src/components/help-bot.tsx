@@ -224,7 +224,7 @@ export function HelpBot() {
         aria-label="Abrir asistente Decision Data"
       >
         <Image src="/brand/dd-virtual-assistant-transparent.png" alt="" width={78} height={100} priority />
-        <span>Ayuda</span>
+        <span>Te ayudo</span>
       </button>
     </div>
   );

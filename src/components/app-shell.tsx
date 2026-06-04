@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRef } from "react";
+import { useState } from "react";
 import { BrandMark } from "@/components/brand";
 import { Badge, Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export function AppShell({
   portalLinks?: boolean;
 }) {
   const navRef = useRef<HTMLDivElement>(null);
+  const [compact, setCompact] = useState(false);
 
   function scrollNav(direction: -1 | 1) {
     navRef.current?.scrollBy({ left: direction * 280, behavior: "smooth" });
@@ -45,7 +47,7 @@ export function AppShell({
   return (
     <div className="dd-shell">
       <main className="min-w-0 p-5 lg:p-7">
-        <div className="dd-web-nav mb-5">
+        <div className={cn("dd-web-nav mb-5", compact && "is-compact")}>
           <BrandMark label={label} />
           <button type="button" className="dd-web-nav__scroll" onClick={() => scrollNav(-1)} aria-label="Ver modulos anteriores">
             <ChevronLeft className="size-4" />
@@ -71,6 +73,15 @@ export function AppShell({
           </nav>
           <button type="button" className="dd-web-nav__scroll" onClick={() => scrollNav(1)} aria-label="Ver mas modulos">
             <ChevronRight className="size-4" />
+          </button>
+          <button
+            type="button"
+            className="dd-web-nav__compact-toggle"
+            onClick={() => setCompact((value) => !value)}
+            aria-label={compact ? "Expandir contexto" : "Contraer contexto"}
+            title={compact ? "Expandir contexto" : "Contraer contexto"}
+          >
+            {compact ? <PanelRightOpen className="size-4" /> : <PanelRightClose className="size-4" />}
           </button>
           {aside ? <div className="dd-web-nav__context">{aside}</div> : null}
           {portalLinks ? (

@@ -139,11 +139,11 @@ textarea {
 .dd-brand-mark {
   display: flex;
   align-items: center;
-  gap: 12px;
   min-width: 0;
 }
 
 .dd-brand-mark__icon {
+  display: none;
   height: 46px;
   width: 46px;
   border-radius: 12px;
@@ -155,17 +155,17 @@ textarea {
 
 .dd-brand-mark__lockup {
   display: block;
-  height: 28px;
+  height: 24px;
   width: auto;
   object-fit: contain;
 }
 
 .dd-brand-mark span {
   display: block;
-  margin-top: 2px;
+  margin-top: 1px;
   color: var(--muted);
   font-family: var(--ff-mono);
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -176,20 +176,20 @@ textarea {
   z-index: 40;
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 70px;
+  gap: 8px;
+  min-height: 54px;
   border: 1px solid var(--line-soft);
-  border-radius: 20px;
+  border-radius: 16px;
   background:
     radial-gradient(420px 150px at 100% 0%, rgba(255, 107, 44, 0.14), transparent 75%),
     linear-gradient(180deg, rgba(15, 21, 48, 0.92), rgba(9, 14, 34, 0.84));
-  padding: 10px 12px;
+  padding: 7px 10px;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 28px 70px -54px rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(22px);
 }
 
 .dd-web-nav > .dd-brand-mark {
-  min-width: 220px;
+  min-width: 184px;
 }
 
 .dd-web-nav__links {
@@ -216,16 +216,16 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  min-height: 38px;
+  min-height: 32px;
   white-space: nowrap;
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
   color: var(--mist);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 6px 10px;
   transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
@@ -242,11 +242,12 @@ textarea {
   color: var(--silver);
 }
 
-.dd-web-nav__scroll {
+.dd-web-nav__scroll,
+.dd-web-nav__compact-toggle {
   display: grid;
   flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   place-items: center;
   border: 1px solid rgba(255, 107, 44, 0.22);
   border-radius: 999px;
@@ -255,19 +256,21 @@ textarea {
   cursor: pointer;
 }
 
-.dd-web-nav__scroll:hover {
+.dd-web-nav__scroll:hover,
+.dd-web-nav__compact-toggle:hover {
   border-color: rgba(255, 107, 44, 0.48);
   color: var(--foreground);
 }
 
 .dd-web-nav__context {
   min-width: 250px;
-  max-width: 340px;
+  max-width: 300px;
   border-left: 1px solid var(--line-soft);
   padding-left: 12px;
   color: var(--muted);
-  font-size: 11px;
-  line-height: 1.45;
+  font-size: 10px;
+  line-height: 1.35;
+  transition: max-width 0.2s ease, opacity 0.2s ease, padding 0.2s ease;
 }
 
 .dd-web-nav__context .w-full {
@@ -275,7 +278,28 @@ textarea {
 }
 
 .dd-web-nav__context select {
-  max-width: 260px;
+  height: 32px;
+  max-width: 220px;
+  font-size: 11px;
+}
+
+.dd-web-nav__context button {
+  min-height: 30px;
+  padding-block: 5px;
+}
+
+.dd-web-nav.is-compact {
+  min-height: 46px;
+}
+
+.dd-web-nav.is-compact .dd-web-nav__context {
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  border-left: 0;
+  padding-left: 0;
 }
 
 .dd-web-nav__actions {
@@ -297,81 +321,26 @@ textarea {
     linear-gradient(180deg, #020619 0%, #070b21 58%, #030717 100%);
 }
 
-.dd-access-stars {
+.dd-access-video,
+.dd-access-video-overlay {
   position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(2px 2px at 7% 18%, rgba(255, 255, 255, 0.38), transparent 60%),
-    radial-gradient(1px 1px at 24% 12%, rgba(255, 255, 255, 0.28), transparent 60%),
-    radial-gradient(2px 2px at 33% 84%, rgba(255, 255, 255, 0.28), transparent 60%),
-    radial-gradient(2px 2px at 77% 56%, rgba(255, 255, 255, 0.32), transparent 60%),
-    radial-gradient(1px 1px at 92% 18%, rgba(255, 255, 255, 0.42), transparent 60%);
+}
+
+.dd-access-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   opacity: 0.82;
+  transform: scale(1.02);
 }
 
-.dd-access-singularity {
-  position: absolute;
-  top: 8%;
-  left: 50%;
-  width: min(980px, 92vw);
-  height: 370px;
-  transform: translateX(-50%);
-  opacity: 0.92;
-  filter: drop-shadow(0 0 36px rgba(42, 127, 255, 0.18));
-}
-
-.dd-access-hole {
-  position: absolute;
-  left: 50%;
-  top: 48%;
-  width: 210px;
-  height: 74px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
+.dd-access-video-overlay {
   background:
-    radial-gradient(ellipse at center, #01020a 0 36%, rgba(2, 7, 24, 0.9) 48%, transparent 72%),
-    radial-gradient(ellipse at center, rgba(255, 143, 92, 0.68), transparent 68%);
-  box-shadow: 0 0 42px rgba(25, 125, 255, 0.34), 0 0 70px rgba(255, 107, 44, 0.22);
-}
-
-.dd-access-orbit {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  border: 1px solid rgba(70, 142, 255, 0.34);
-  border-radius: 50%;
-  transform: translate(-50%, -50%) rotate(-8deg);
-  animation: dd-access-spin 18s linear infinite;
-}
-
-.dd-access-orbit--one {
-  width: 92%;
-  height: 48%;
-}
-
-.dd-access-orbit--two {
-  width: 74%;
-  height: 36%;
-  border-color: rgba(245, 166, 35, 0.34);
-  animation-duration: 14s;
-  animation-direction: reverse;
-}
-
-.dd-access-orbit--three {
-  width: 58%;
-  height: 28%;
-  border-color: rgba(255, 255, 255, 0.18);
-  animation-duration: 22s;
-}
-
-.dd-access-dots {
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(2px 2px at 42% 50%, rgba(255, 196, 96, 0.95), transparent 62%),
-    radial-gradient(2px 2px at 58% 47%, rgba(255, 255, 255, 0.82), transparent 62%),
-    radial-gradient(2px 2px at 63% 53%, rgba(255, 107, 44, 0.9), transparent 62%);
-  animation: dd-access-drift 8s ease-in-out infinite;
+    radial-gradient(720px 420px at 50% 10%, rgba(7, 27, 72, 0.18), transparent 68%),
+    linear-gradient(180deg, rgba(3, 7, 21, 0.38), rgba(3, 7, 21, 0.8) 64%, rgba(3, 7, 21, 0.95)),
+    linear-gradient(90deg, rgba(2, 6, 19, 0.88), rgba(4, 8, 24, 0.35) 48%, rgba(2, 6, 19, 0.86));
+  backdrop-filter: saturate(1.08);
 }
 
 .dd-access-card {
@@ -463,15 +432,6 @@ textarea {
   font-family: var(--ff-mono);
   font-size: 11px;
   letter-spacing: 0.16em;
-}
-
-@keyframes dd-access-spin {
-  to { transform: translate(-50%, -50%) rotate(352deg); }
-}
-
-@keyframes dd-access-drift {
-  0%, 100% { transform: translateX(-12px); opacity: 0.72; }
-  50% { transform: translateX(16px); opacity: 1; }
 }
 
 .dd-login-page {
@@ -641,8 +601,8 @@ textarea {
 .dd-helpbot__launcher {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 92px;
+  gap: 12px;
+  min-height: 132px;
   border: 0;
   background: transparent;
   color: var(--foreground);
@@ -650,6 +610,7 @@ textarea {
   filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.55));
   user-select: none;
   touch-action: none;
+  animation: dd-bot-float 5.5s ease-in-out infinite;
 }
 
 .dd-helpbot__launcher:active {
@@ -657,7 +618,7 @@ textarea {
 }
 
 .dd-helpbot__launcher img {
-  height: 92px;
+  height: 132px;
   width: auto;
   object-fit: contain;
 }
@@ -671,13 +632,13 @@ textarea {
   box-shadow: 0 18px 46px -30px rgba(0, 0, 0, 0.8);
   color: var(--foreground);
   font-weight: 700;
-  padding: 11px 15px;
+  padding: 12px 17px;
 }
 
 .dd-helpbot__panel {
   position: absolute;
   right: 0;
-  bottom: 112px;
+  bottom: 148px;
   display: none;
   width: min(390px, calc(100vw - 24px));
   max-height: min(640px, calc(100vh - 140px));
@@ -688,6 +649,11 @@ textarea {
     radial-gradient(340px 180px at 100% 0%, rgba(255, 107, 44, 0.16), transparent 72%),
     rgba(22, 29, 62, 0.98);
   box-shadow: 0 28px 90px -34px rgba(0, 0, 0, 0.88);
+}
+
+@keyframes dd-bot-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
 }
 
 .dd-helpbot.is-moved .dd-helpbot__panel {
@@ -832,12 +798,6 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .dd-access-singularity {
-    top: 0;
-    width: 115vw;
-    height: 270px;
-  }
-
   .dd-access-footer {
     width: calc(100% - 32px);
     text-align: center;
@@ -917,7 +877,7 @@ textarea {
   }
 
   .dd-helpbot__launcher img {
-    width: 54px;
-    height: 54px;
+    width: auto;
+    height: 76px;
   }
 }
