@@ -30,7 +30,7 @@ import {
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { AppShell, type NavItem } from "@/components/app-shell";
+import { AppShell, type NavGroup, type NavItem } from "@/components/app-shell";
 import { AccessFrame } from "@/components/access-frame";
 import { BackendStatusCard } from "@/components/backend-status";
 import { ReportHtmlViewer } from "@/components/report-html-viewer";
@@ -85,10 +85,12 @@ const navBase: NavItem[] = [
   { id: "estado", label: "Estado de cuenta", icon: Activity },
   { id: "documentos", label: "Documentos", icon: FileCheck2 },
   { id: "subusuarios", label: "Subusuarios", icon: Users },
-  { id: "carga", label: "Carga de informacion", icon: UploadCloud },
+  { id: "carga-actual", label: "Carga de informacion actual", icon: UploadCloud },
+  { id: "carga-historica", label: "Carga de informacion historica", icon: UploadCloud },
+  { id: "carga-rectificacion", label: "Carga de rectificacion", icon: FileCheck2 },
   { id: "consulta-individual", label: "Consulta individual", icon: Search },
   { id: "consulta-bloque", label: "Consulta por bloque", icon: Blocks },
-  { id: "api", label: "API", icon: Braces },
+  { id: "api", label: "Consulta por API", icon: Braces },
   { id: "facturacion", label: "Facturacion", icon: BadgeDollarSign },
   { id: "auditoria", label: "Auditoria BAC", icon: ShieldCheck },
   { id: "notificaciones", label: "Notificaciones", icon: Bell }
@@ -130,17 +132,30 @@ export function ClientPortal() {
   const uppy = useMemo(() => new Uppy({ restrictions: { maxNumberOfFiles: 3 } }), []);
   const previewSubUser = scopedState?.subUsers.find((item) => item.id === previewSubUserId && item.status === "active");
   const previewAllowed = new Set(previewSubUser?.allowedModules ?? []);
+  if (previewAllowed.has("carga")) {
+    previewAllowed.add("carga-actual");
+    previewAllowed.add("carga-historica");
+    previewAllowed.add("carga-rectificacion");
+  }
   const nav = navBase.map((item) => ({
     ...item,
     locked: (!isApproved && approvedOnly.has(item.id)) || (Boolean(previewSubUser) && !previewAllowed.has(item.id))
   }));
+  const navById = new Map(nav.map((item) => [item.id, item]));
+  const clientNavGroups: NavGroup[] = [
+    buildNavGroup("inicio", "Inicio", Home, navById, ["inicio"]),
+    buildNavGroup("gestion", "Gestion de administracion", Users, navById, ["estado", "documentos", "subusuarios", "facturacion", "auditoria"]),
+    buildNavGroup("cargas", "Carga de informacion", UploadCloud, navById, ["carga-actual", "carga-historica", "carga-rectificacion"]),
+    buildNavGroup("consultas", "Consultas", Search, navById, ["consulta-individual", "consulta-bloque", "api"]),
+    buildNavGroup("notificaciones", "Notificaciones", Bell, navById, ["notificaciones"])
+  ];
   const refreshState = () => queryClient.invalidateQueries({ queryKey: ["demo-state"] });
   const ingestion = useMutation({
-    mutationFn: () => backendPost<{ state: DemoState }>("/api/v1/ingestion/information-blocks", {
+    mutationFn: (body?: { currentSubjects?: number; historicalSubjects?: number; historicalDepth?: number }) => backendPost<{ state: DemoState }>("/api/v1/ingestion/information-blocks", {
       clientId: scopedState?.client.id,
-      currentSubjects: currentLoadSubjects,
-      historicalSubjects: historicalLoadSubjects,
-      historicalDepth: historicalLoadDepth
+      currentSubjects: body?.currentSubjects ?? currentLoadSubjects,
+      historicalSubjects: body?.historicalSubjects ?? historicalLoadSubjects,
+      historicalDepth: body?.historicalDepth ?? historicalLoadDepth
     }),
     onSuccess: () => {
       toast.success("Bloque de informacion procesado en sandbox.");
@@ -334,16 +349,18 @@ export function ClientPortal() {
       title={`${scopedState?.client.legalName ?? "Portal cliente"} / ${scopedState?.client.mode ?? "Data Partner"}`}
       subtitle={previewSubUser ? `Vista previa como ${previewSubUser.name}: solo modulos permitidos por el superadministrador.` : "Cockpit con estado de cuenta, documentos, ingesta, consultas, API, facturacion postpago y auditoria BAC."}
       nav={nav}
+      navGroups={clientNavGroups}
       active={active}
       onSelect={selectSection}
       portalLinks={false}
       aside={
-        <>
-          <b className="text-foreground">{isApproved ? "Cliente aprobado" : "Cliente pendiente"}</b>
-          <p className="mt-1">{previewSubUser ? `Preview subusuario: ${previewSubUser.email}` : isApproved ? `Superadministrador de ${scopedState?.client.legalName}.` : "Solo estado, documentos y carga no productiva."}</p>
+        <div className="dd-shell-context">
+          <div className="dd-shell-context__status">
+            <b className="text-foreground">{isApproved ? "Cliente aprobado" : "Cliente pendiente"}</b>
+            <p>{previewSubUser ? `Preview: ${previewSubUser.email}` : isApproved ? scopedState?.client.legalName : "Acceso limitado"}</p>
+          </div>
           {clientOptions.length > 0 ? (
-            <div className="mt-3 grid gap-2">
-              <span className="text-xs font-semibold uppercase text-muted">Cuenta sandbox</span>
+            <div className="dd-shell-context__select">
               <Select value={selectedAdminClient?.id ?? ""} onChange={(event) => handleSandboxClientChange(event.target.value)}>
                 {clientOptions.map((client) => (
                   <option key={client.id} value={client.id}>{client.legalName} / {client.statusLabel}</option>
@@ -351,9 +368,9 @@ export function ClientPortal() {
               </Select>
             </div>
           ) : null}
-          {previewSubUser ? <Button className="mt-3 w-full" size="sm" onClick={() => setPreviewSubUserId(null)}>Salir vista subusuario</Button> : null}
-          <Button className="mt-3 w-full" size="sm" onClick={() => send({ type: "LOGOUT" })}>Cerrar sesion</Button>
-        </>
+          {previewSubUser ? <Button className="w-full" size="sm" onClick={() => setPreviewSubUserId(null)}>Salir preview</Button> : null}
+          <Button className="w-full" size="sm" onClick={() => send({ type: "LOGOUT" })}>Cerrar sesion</Button>
+        </div>
       }
     >
       {isPending ? (
@@ -365,12 +382,14 @@ export function ClientPortal() {
       {active === "estado" && <Estado demoState={scopedState} />}
       {active === "documentos" && <Documentos demoState={scopedState} onUpload={(documentId, fileName) => uploadDocument.mutate({ documentId, fileName })} uploading={uploadDocument.isPending} />}
       {active === "subusuarios" && <LockedAware enabled={isApproved}><Subusuarios demoState={scopedState} onCreate={(body) => createSubUser.mutate(body)} creating={createSubUser.isPending} onUpdate={(body) => updateSubUser.mutate(body)} updating={updateSubUser.isPending} previewSubUserId={previewSubUserId} onPreview={(id) => { setPreviewSubUserId(id); if (id) setActive("inicio"); }} /></LockedAware>}
-      {active === "carga" && <Carga uppy={uppy} isPending={!isApproved} demoState={scopedState} currentSubjects={currentLoadSubjects} historicalSubjects={historicalLoadSubjects} historicalDepth={historicalLoadDepth} onCurrentSubjectsChange={setCurrentLoadSubjects} onHistoricalSubjectsChange={setHistoricalLoadSubjects} onHistoricalDepthChange={setHistoricalLoadDepth} onSimulate={() => ingestion.mutate()} loading={ingestion.isPending} />}
+      {active === "carga-actual" && <Carga mode="actual" uppy={uppy} isPending={!isApproved} demoState={scopedState} currentSubjects={currentLoadSubjects} historicalSubjects={historicalLoadSubjects} historicalDepth={historicalLoadDepth} onCurrentSubjectsChange={setCurrentLoadSubjects} onHistoricalSubjectsChange={setHistoricalLoadSubjects} onHistoricalDepthChange={setHistoricalLoadDepth} onSimulate={() => ingestion.mutate({ currentSubjects: currentLoadSubjects, historicalSubjects: 0, historicalDepth: 0 })} loading={ingestion.isPending} />}
+      {active === "carga-historica" && <Carga mode="historica" uppy={uppy} isPending={!isApproved} demoState={scopedState} currentSubjects={currentLoadSubjects} historicalSubjects={historicalLoadSubjects} historicalDepth={historicalLoadDepth} onCurrentSubjectsChange={setCurrentLoadSubjects} onHistoricalSubjectsChange={setHistoricalLoadSubjects} onHistoricalDepthChange={setHistoricalLoadDepth} onSimulate={() => ingestion.mutate({ currentSubjects: 0, historicalSubjects: historicalLoadSubjects, historicalDepth: historicalLoadDepth })} loading={ingestion.isPending} />}
+      {active === "carga-rectificacion" && <CargaRectificacion demoState={scopedState} isPending={!isApproved} />}
       {active === "consulta-individual" && <LockedAware enabled={isApproved}><ConsultaIndividual demoState={scopedState} identifier={queryIdentifier} onIdentifierChange={setQueryIdentifier} product={queryProduct} onProductChange={setQueryProduct} onRun={() => individualQuery.mutate()} loading={individualQuery.isPending} latest={scopedState?.queries[0]} /></LockedAware>}
       {active === "consulta-bloque" && <LockedAware enabled={isApproved}><ConsultaBloque demoState={scopedState} product={batchProduct} onProductChange={setBatchProduct} recordCount={batchRecordCount} onRecordCountChange={setBatchRecordCount} onRun={() => batchQuery.mutate()} loading={batchQuery.isPending} /></LockedAware>}
       {active === "api" && <LockedAware enabled={isApproved}><Api product={apiProduct} onProductChange={setApiProduct} recordCount={apiRecordCount} onRecordCountChange={setApiRecordCount} onRun={() => apiQuery.mutate()} loading={apiQuery.isPending} /></LockedAware>}
       {active === "facturacion" && <LockedAware enabled={isApproved}><Facturacion demoState={scopedState} /></LockedAware>}
-      {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria events={scopedState?.queries ?? bacEvents} /></LockedAware>}
+      {active === "auditoria" && <LockedAware enabled={isApproved}><Auditoria events={scopedState?.queries ?? bacEvents} subUsers={scopedState?.subUsers ?? []} /></LockedAware>}
       {active === "notificaciones" && <Notificaciones demoState={scopedState} />}
     </AppShell>
   );
@@ -391,6 +410,15 @@ function LockedAware({ enabled, children }: { enabled: boolean; children: React.
     );
   }
   return children;
+}
+
+function buildNavGroup(id: string, label: string, icon: NavItem["icon"], navById: Map<string, NavItem>, itemIds: string[]): NavGroup {
+  return {
+    id,
+    label,
+    icon,
+    items: itemIds.map((itemId) => navById.get(itemId)).filter((item): item is NavItem => Boolean(item))
+  };
 }
 
 function Inicio({ isPending, demoState }: { isPending: boolean; demoState?: DemoState }) {
@@ -609,6 +637,7 @@ function Documentos({ demoState, onUpload, uploading }: { demoState?: DemoState;
 }
 
 function Carga({
+  mode,
   uppy,
   isPending,
   demoState,
@@ -621,6 +650,7 @@ function Carga({
   onSimulate,
   loading
 }: {
+  mode: "actual" | "historica";
   uppy: Uppy;
   isPending: boolean;
   demoState?: DemoState;
@@ -634,35 +664,48 @@ function Carga({
   loading: boolean;
 }) {
   const latest = demoState?.uploads[0];
-  const projectedCurrentCredits = Math.max(0, currentSubjects);
-  const projectedHistoricalCredits = estimateHistoricalCredits(historicalDepth) * Math.max(0, historicalSubjects);
+  const isActual = mode === "actual";
+  const title = isActual ? "Carga de informacion actual" : "Carga de informacion historica";
+  const description = isActual
+    ? "Registra el ultimo corte M0. Cada sujeto M0 valido genera 1 Decision Credit."
+    : "Registra profundidad historica M-1..M-n. La serie historica del sujeto pondera hasta 4 Decision Credits adicionales conforme al modelo aprobado.";
+  const projectedCurrentCredits = isActual ? Math.max(0, currentSubjects) : 0;
+  const projectedHistoricalCredits = isActual ? 0 : estimateHistoricalCredits(historicalDepth) * Math.max(0, historicalSubjects);
 
   return (
     <div className="grid gap-4 xl:grid-cols-[.85fr_1.15fr]">
       <Card>
-        <CardHeader><CardTitle>Carga de informacion</CardTitle><Badge tone={isPending ? "warn" : "ok"}>{isPending ? "Sandbox" : "Productivo"}</Badge></CardHeader>
+        <CardHeader><CardTitle>{title}</CardTitle><Badge tone={isPending ? "warn" : "ok"}>{isPending ? "Sandbox" : "Productivo"}</Badge></CardHeader>
         <CardContent className="grid gap-3 text-sm text-muted">
           <p>Regla: bloques de informacion, umbral minimo 95%, duplicados descartados sin error y sin Decision Credits.</p>
+          <p>{description}</p>
           <p>{isPending ? "Como cliente pendiente, esta carga es no productiva y sirve para validar formato, calidad y simulacion de credits." : "Como cliente aprobado, queda lista para control productivo y BAC."}</p>
-          <div className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 lg:grid-cols-3">
-            <Field label="Sujetos M0 actuales">
-              <Input type="number" min={0} max={10000} value={currentSubjects} onChange={(event) => onCurrentSubjectsChange(Number(event.target.value))} />
-            </Field>
-            <Field label="Sujetos con historico">
-              <Input type="number" min={0} max={10000} value={historicalSubjects} onChange={(event) => onHistoricalSubjectsChange(Number(event.target.value))} />
-            </Field>
-            <Field label="Profundidad M-1..M-n">
-              <Input type="number" min={0} max={48} value={historicalDepth} onChange={(event) => onHistoricalDepthChange(Number(event.target.value))} />
-            </Field>
-            <div className="lg:col-span-3 rounded-lg border border-primary/20 bg-primary/10 p-3 text-xs leading-5 text-amber-100">
-              M0 genera 1 credit por sujeto. La serie historica del mismo sujeto genera 4 credits adicionales cuando cargas historia M-1..M-n. Estimado visual: {projectedCurrentCredits.toFixed(2)} actuales + {projectedHistoricalCredits.toFixed(2)} historicos.
+          <div className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 lg:grid-cols-2">
+            {isActual ? (
+              <Field label="Sujetos M0 actuales">
+                <Input type="number" min={0} max={10000} value={currentSubjects} onChange={(event) => onCurrentSubjectsChange(Number(event.target.value))} />
+              </Field>
+            ) : (
+              <>
+                <Field label="Sujetos con historico">
+                  <Input type="number" min={0} max={10000} value={historicalSubjects} onChange={(event) => onHistoricalSubjectsChange(Number(event.target.value))} />
+                </Field>
+                <Field label="Profundidad M-1..M-n">
+                  <Input type="number" min={0} max={48} value={historicalDepth} onChange={(event) => onHistoricalDepthChange(Number(event.target.value))} />
+                </Field>
+              </>
+            )}
+            <div className="rounded-lg border border-primary/20 bg-primary/10 p-3 text-xs leading-5 text-amber-100 lg:col-span-2">
+              {isActual
+                ? `Estimado visual: ${projectedCurrentCredits.toFixed(2)} Decision Credits M0.`
+                : `Estimado visual: ${projectedHistoricalCredits.toFixed(2)} Decision Credits historicos. La serie completa M-1..M-48 suma 4 credits por sujeto.`}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild>
               <a href="/api/backend/api/v1/templates/information-block.csv" download><Download className="size-4" /> Descargar template CSV</a>
             </Button>
-            <Button variant="primary" onClick={onSimulate} disabled={loading}><UploadCloud className="size-4" /> Simular carga {demoState?.client.legalName ?? "cliente"}</Button>
+            <Button variant="primary" onClick={onSimulate} disabled={loading}><UploadCloud className="size-4" /> Simular {isActual ? "corte actual" : "carga historica"}</Button>
           </div>
           {latest ? (
             <div className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3">
@@ -677,6 +720,60 @@ function Carga({
       <Card>
         <CardContent>
           <Dashboard uppy={uppy} height={300} proudlyDisplayPoweredByUppy={false} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function CargaRectificacion({ demoState, isPending }: { demoState?: DemoState; isPending: boolean }) {
+  const [rows, setRows] = useState(100);
+  const [reason, setReason] = useState("Correccion de fecha de corte");
+  const latest = demoState?.uploads[0];
+
+  function simulateRectification() {
+    toast.info("Rectificacion simulada sin alterar Decision Credits. Pendiente regla comercial de Mateo.");
+  }
+
+  return (
+    <div className="grid gap-4 xl:grid-cols-[.85fr_1.15fr]">
+      <Card>
+        <CardHeader><CardTitle>Carga de rectificacion</CardTitle><Badge tone="warn">Regla pendiente</Badge></CardHeader>
+        <CardContent className="grid gap-3 text-sm text-muted">
+          <p>Esta pantalla separa correcciones de datos previamente reportados para evitar mezclarlas con cargas M0 o historicas.</p>
+          <Info title="No se alteran creditos aun" text="La regla de si una rectificacion genera credits, corrige credits anteriores o no genera credits requiere validacion comercial/regulatoria de Mateo antes de conectar backend productivo." tone="warn" />
+          <div className="grid gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-3 lg:grid-cols-2">
+            <Field label="Registros a rectificar">
+              <Input type="number" min={1} max={10000} value={rows} onChange={(event) => setRows(Number(event.target.value))} />
+            </Field>
+            <Field label="Motivo">
+              <Select value={reason} onChange={(event) => setReason(event.target.value)}>
+                <option>Correccion de fecha de corte</option>
+                <option>Correccion de identificador</option>
+                <option>Actualizacion documental</option>
+                <option>Reproceso por observacion de calidad</option>
+              </Select>
+            </Field>
+            <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs leading-5 lg:col-span-2">
+              Simulacion: {rows.toLocaleString("en-US")} registros / {reason}. Estado {isPending ? "sandbox no productivo" : "cliente aprobado"}.
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <a href="/api/backend/api/v1/templates/information-block.csv" download><Download className="size-4" /> Descargar template base</a>
+            </Button>
+            <Button variant="primary" onClick={simulateRectification}><FileCheck2 className="size-4" /> Simular rectificacion</Button>
+          </div>
+          {latest ? <Info title="Referencia ultima carga" text={`${latest.id} / ${latest.acceptedRows.toLocaleString("en-US")} filas aceptadas / calidad ${Math.round(latest.qualityScore * 100)}%.`} tone="info" /> : null}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Checklist de control</CardTitle><Badge tone="info">Previo a aprobacion</Badge></CardHeader>
+        <CardContent className="grid gap-2 text-sm text-muted">
+          <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3"><input type="checkbox" defaultChecked /> Identificar carga original o corte afectado.</label>
+          <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3"><input type="checkbox" defaultChecked /> Validar umbral minimo de calidad 95%.</label>
+          <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3"><input type="checkbox" /> Definir impacto crediticio con Mateo.</label>
+          <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3"><input type="checkbox" /> Registrar trazabilidad final en BAC/auditoria.</label>
         </CardContent>
       </Card>
     </div>
@@ -1009,26 +1106,133 @@ function estimateHistoricalCredits(depth: number) {
   return safeDepth > 0 ? 4 : 0;
 }
 
-function Auditoria({ events }: { events: QueryAudit[] | typeof bacEvents }) {
+type ClientAuditRow = {
+  id: string;
+  date: string;
+  user: string;
+  identifier: string;
+  channel: string;
+  product: string;
+  tariff: string;
+  value: string;
+  status: string;
+  bac: string;
+  consent: string;
+  ip: string;
+};
+
+function Auditoria({ events, subUsers }: { events: QueryAudit[] | typeof bacEvents; subUsers: SubUser[] }) {
+  const [channelFilter, setChannelFilter] = useState("all");
+  const [productFilter, setProductFilter] = useState("all");
+  const [userFilter, setUserFilter] = useState("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const normalizedEvents = events.map(normalizeClientAuditEvent);
+  const channels = Array.from(new Set(normalizedEvents.map((event) => event.channel)));
+  const products = Array.from(new Set(normalizedEvents.map((event) => event.product)));
+  const users = Array.from(new Set([...normalizedEvents.map((event) => event.user), ...subUsers.map((subUser) => subUser.email)]));
+  const filteredEvents = normalizedEvents.filter((event) => {
+    const eventDate = event.date.slice(0, 10);
+    if (channelFilter !== "all" && event.channel !== channelFilter) return false;
+    if (productFilter !== "all" && event.product !== productFilter) return false;
+    if (userFilter !== "all" && event.user !== userFilter) return false;
+    if (fromDate && eventDate < fromDate) return false;
+    if (toDate && eventDate > toDate) return false;
+    return true;
+  });
+  const csvHref = buildClientAuditCsvHref(filteredEvents);
+
   return (
     <Card>
-      <CardHeader><CardTitle>Auditoria BAC</CardTitle><Badge tone="info">Append-only</Badge></CardHeader>
-      <CardContent className="grid gap-3">
+      <CardHeader><CardTitle>Auditoria BAC</CardTitle><Badge tone="info">{filteredEvents.length} eventos</Badge></CardHeader>
+      <CardContent className="grid gap-4">
         <Info title="Contrato obligatorio" text="Cada consulta registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado." tone="info" />
+        <div className="grid gap-3 lg:grid-cols-6">
+          <Field label="Canal">
+            <Select value={channelFilter} onChange={(event) => setChannelFilter(event.target.value)}>
+              <option value="all">Todos</option>
+              {channels.map((channel) => <option key={channel} value={channel}>{formatChannel(channel)}</option>)}
+            </Select>
+          </Field>
+          <Field label="Producto">
+            <Select value={productFilter} onChange={(event) => setProductFilter(event.target.value)}>
+              <option value="all">Todos</option>
+              {products.map((product) => <option key={product} value={product}>{product}</option>)}
+            </Select>
+          </Field>
+          <Field label="Usuario/subusuario">
+            <Select value={userFilter} onChange={(event) => setUserFilter(event.target.value)}>
+              <option value="all">Todos</option>
+              {users.map((user) => <option key={user} value={user}>{user}</option>)}
+            </Select>
+          </Field>
+          <Field label="Desde"><Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} /></Field>
+          <Field label="Hasta"><Input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} /></Field>
+          <div className="flex items-end">
+            <a className="inline-flex h-10 w-full items-center justify-center rounded-md border border-white/15 bg-white/[0.04] px-4 text-sm font-bold text-foreground hover:border-primary/60" href={csvHref} download="auditoria-cliente-decision-data.csv">Descargar CSV</a>
+          </div>
+        </div>
         <div className="overflow-hidden rounded-lg border border-white/10">
-          {events.map((event) => (
-            <div key={"id" in event ? event.id : `${event.date}-${event.product}`} className="grid gap-2 border-b border-white/10 p-3 text-sm last:border-b-0 lg:grid-cols-[170px_1fr_110px_130px_100px]">
-              <span className="text-muted">{"createdAt" in event ? event.createdAt.slice(0, 19).replace("T", " ") : event.date}</span>
-              <span>{"user" in event ? `${event.user} / ${event.identifier}` : event.actor}</span>
-              <span>{event.channel}</span>
-              <span>{"estimatedValue" in event ? `$${event.estimatedValue.toFixed(2)}` : event.value}</span>
+          {filteredEvents.map((event) => (
+            <div key={event.id} className="grid gap-2 border-b border-white/10 p-3 text-sm last:border-b-0 lg:grid-cols-[170px_1fr_110px_140px_110px]">
+              <span className="text-muted">{event.date.slice(0, 19).replace("T", " ")}</span>
+              <span>{event.user}{event.identifier ? ` / ${event.identifier}` : ""}</span>
+              <span>{formatChannel(event.channel)}</span>
+              <span>{event.value}</span>
               <Badge tone="ok">{event.status}</Badge>
+              <span className="text-xs text-muted lg:col-span-5">Producto: {event.product} / tarifa: {event.tariff || "n/a"} / BAC: {event.bac || "n/a"} / consentimiento: {event.consent || "n/a"} / IP: {event.ip || "n/a"}</span>
             </div>
           ))}
+          {filteredEvents.length === 0 ? <div className="p-3 text-sm text-muted">Sin eventos para los filtros seleccionados.</div> : null}
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function normalizeClientAuditEvent(event: QueryAudit | (typeof bacEvents)[number]): ClientAuditRow {
+  if ("createdAt" in event) {
+    return {
+      id: event.id,
+      date: event.createdAt,
+      user: event.user,
+      identifier: event.identifier,
+      channel: event.channel,
+      product: formatProduct(event.product),
+      tariff: event.tariffLabel ?? event.tariff,
+      value: `$${event.estimatedValue.toFixed(2)}`,
+      status: event.status,
+      bac: event.bac,
+      consent: event.consent,
+      ip: event.ip
+    };
+  }
+
+  return {
+    id: `${event.date}-${event.actor}-${event.product}`,
+    date: event.date,
+    user: event.actor,
+    identifier: "",
+    channel: event.channel,
+    product: event.product,
+    tariff: "",
+    value: event.value,
+    status: event.status,
+    bac: "",
+    consent: "",
+    ip: ""
+  };
+}
+
+function buildClientAuditCsvHref(events: ClientAuditRow[]) {
+  const header = ["fecha", "usuario", "identificador", "canal", "producto", "tarifa", "valor", "estado", "bac", "consentimiento", "ip"];
+  const rows = events.map((event) => [event.date, event.user, event.identifier, event.channel, event.product, event.tariff, event.value, event.status, event.bac, event.consent, event.ip]);
+  const csv = [header, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+  return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+}
+
+function escapeCsv(value: string) {
+  return `"${value.replaceAll('"', '""')}"`;
 }
 
 function Subusuarios({
@@ -1051,7 +1255,7 @@ function Subusuarios({
   const [name, setName] = useState("Operador cobranza");
   const [email, setEmail] = useState("operador.cobranza@megadatos.demo");
   const [role, setRole] = useState("Operador cliente");
-  const [allowedModules, setAllowedModules] = useState(["inicio", "estado", "carga", "consulta-individual"]);
+  const [allowedModules, setAllowedModules] = useState(["inicio", "estado", "carga-actual", "carga-historica", "consulta-individual"]);
   const subUsers = demoState?.subUsers ?? [];
 
   function toggleCreateModule(moduleId: string) {

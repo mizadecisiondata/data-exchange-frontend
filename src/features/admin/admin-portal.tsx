@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AppShell, type NavItem } from "@/components/app-shell";
+import { AppShell, type NavGroup, type NavItem } from "@/components/app-shell";
 import { AccessFrame } from "@/components/access-frame";
 import { BackendStatusCard } from "@/components/backend-status";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Progress, Select, Textarea } from "@/components/ui";
@@ -53,6 +53,15 @@ export function AdminPortal() {
   const refreshState = () => queryClient.invalidateQueries({ queryKey: ["demo-state"] });
   const clients = demoState.data?.adminClients ?? [];
   const selectedClient = clients.find((client) => client.id === selectedClientId) ?? clients[0];
+  const navById = new Map(nav.map((item) => [item.id, item]));
+  const adminNavGroups: NavGroup[] = [
+    buildAdminNavGroup("dashboard", "Dashboard ejecutivo", Gauge, navById, ["dashboard"]),
+    buildAdminNavGroup("clientes", "Clientes", Building2, navById, ["onboarding", "clientes"]),
+    buildAdminNavGroup("administracion", "Gestion de administracion", Users, navById, ["usuarios", "facturacion", "auditoria"]),
+    buildAdminNavGroup("control", "Control de ingesta y consumo", UploadCloud, navById, ["ingesta", "consumos"]),
+    buildAdminNavGroup("notificaciones", "Notificaciones", Bell, navById, ["notificaciones"]),
+    buildAdminNavGroup("configuracion", "Configuracion", Settings, navById, ["configuracion"])
+  ];
 
   const approve = useMutation({
     mutationFn: (requestId: string) => backendPost("/api/v1/admin/access-requests/" + requestId + "/approve", {}),
@@ -139,15 +148,18 @@ export function AdminPortal() {
       title="Centro de control Decision Data"
       subtitle="Clientes, onboarding, usuarios, ingesta, consumos, facturacion, BAC, notificaciones y configuracion conectados al sandbox."
       nav={nav}
+      navGroups={adminNavGroups}
       active={active}
       onSelect={setActive}
       portalLinks={false}
       aside={
-        <>
-          <b className="text-foreground">{selectedClient?.legalName ?? "Sin cliente"}</b>
-          <p className="mt-1">{selectedClient ? `${selectedClient.mode} / ${selectedClient.statusLabel}` : "Cargando estado admin."}</p>
-          <Button className="mt-3 w-full" size="sm" onClick={() => setActive("clientes")}>Cambiar cliente</Button>
-        </>
+        <div className="dd-shell-context">
+          <div className="dd-shell-context__status">
+            <b className="text-foreground">{selectedClient?.legalName ?? "Sin cliente"}</b>
+            <p>{selectedClient ? `${selectedClient.mode} / ${selectedClient.statusLabel}` : "Cargando estado admin."}</p>
+          </div>
+          <Button className="w-full" size="sm" onClick={() => setActive("clientes")}>Cambiar cliente</Button>
+        </div>
       }
     >
       {active === "dashboard" && <Dashboard demoState={demoState.data} />}
@@ -174,6 +186,15 @@ export function AdminPortal() {
       {active === "configuracion" && <Configuracion demoState={demoState.data} onUpdate={(body) => updateSettings.mutate(body)} updating={updateSettings.isPending} />}
     </AppShell>
   );
+}
+
+function buildAdminNavGroup(id: string, label: string, icon: NavItem["icon"], navById: Map<string, NavItem>, itemIds: string[]): NavGroup {
+  return {
+    id,
+    label,
+    icon,
+    items: itemIds.map((itemId) => navById.get(itemId)).filter((item): item is NavItem => Boolean(item))
+  };
 }
 
 function Dashboard({ demoState }: { demoState?: DemoState }) {

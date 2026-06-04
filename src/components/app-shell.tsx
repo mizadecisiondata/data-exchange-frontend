@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useRef } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BrandMark } from "@/components/brand";
 import { Badge, Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -16,11 +15,19 @@ export type NavItem = {
   locked?: boolean;
 };
 
+export type NavGroup = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  items: NavItem[];
+};
+
 export function AppShell({
   label,
   title,
   subtitle,
   nav,
+  navGroups,
   active,
   onSelect,
   children,
@@ -31,6 +38,7 @@ export function AppShell({
   title: string;
   subtitle: string;
   nav: NavItem[];
+  navGroups?: NavGroup[];
   active: string;
   onSelect: (id: string) => void;
   children: React.ReactNode;
@@ -39,9 +47,17 @@ export function AppShell({
 }) {
   const navRef = useRef<HTMLDivElement>(null);
   const [compact, setCompact] = useState(false);
+  const groups = navGroups ?? nav.map((item) => ({ id: item.id, label: item.label, icon: item.icon, items: [item] }));
 
   function scrollNav(direction: -1 | 1) {
     navRef.current?.scrollBy({ left: direction * 280, behavior: "smooth" });
+  }
+
+  function selectGroup(group: NavGroup) {
+    const firstAvailable = group.items.find((item) => !item.locked) ?? group.items[0];
+    if (firstAvailable) {
+      onSelect(firstAvailable.id);
+    }
   }
 
   return (
@@ -54,19 +70,60 @@ export function AppShell({
           </button>
           <nav className="dd-web-nav__links" aria-label="Navegacion principal de plataforma">
             <div ref={navRef} className="dd-web-nav__track">
-              {nav.map((item) => {
-                const Icon = item.icon;
+              {groups.map((group) => {
+                const Icon = group.icon;
+                const isGroupActive = group.items.some((item) => item.id === active);
+                const groupLocked = group.items.every((item) => item.locked);
+                if (group.items.length === 1) {
+                  const item = group.items[0];
+                  const ItemIcon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => onSelect(item.id)}
+                      className={cn("dd-nav-item", active === item.id && "is-active", item.locked && "is-locked")}
+                    >
+                      <ItemIcon className="size-4 shrink-0" />
+                      <span>{item.label}</span>
+                      {item.locked ? <Badge tone="warn">lock</Badge> : null}
+                    </button>
+                  );
+                }
+
                 return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => onSelect(item.id)}
-                    className={cn(active === item.id && "is-active", item.locked && "is-locked")}
-                  >
-                    <Icon className="size-4 shrink-0" />
-                    <span>{item.label}</span>
-                    {item.locked ? <Badge tone="warn">lock</Badge> : null}
-                  </button>
+                  <div key={group.id} className="dd-nav-group">
+                    <button
+                      type="button"
+                      onClick={() => selectGroup(group)}
+                      className={cn("dd-nav-item dd-nav-group__trigger", isGroupActive && "is-active", groupLocked && "is-locked")}
+                      aria-haspopup="menu"
+                      aria-expanded={isGroupActive}
+                    >
+                      <Icon className="size-4 shrink-0" />
+                      <span>{group.label}</span>
+                      <ChevronDown className="size-3.5 shrink-0" />
+                      {groupLocked ? <Badge tone="warn">lock</Badge> : null}
+                    </button>
+                    <div className="dd-nav-submenu" role="menu">
+                      {group.items.map((item) => {
+                        const SubIcon = item.icon;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => onSelect(item.id)}
+                            className={cn(active === item.id && "is-active", item.locked && "is-locked")}
+                            role="menuitem"
+                          >
+                            <SubIcon className="size-4 shrink-0" />
+                            <span>{item.label}</span>
+                            {item.locked ? <Badge tone="warn">lock</Badge> : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
             </div>
