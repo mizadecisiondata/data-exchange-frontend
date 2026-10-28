@@ -193,7 +193,7 @@ textarea {
 }
 
 .dd-web-nav__links {
-  flex: 1 1 auto;
+  flex: 1 1 520px;
   min-width: 0;
   overflow: visible;
 }
@@ -319,8 +319,9 @@ textarea {
 }
 
 .dd-web-nav__context {
-  min-width: 220px;
-  max-width: 280px;
+  flex: 0 1 470px;
+  min-width: 390px;
+  max-width: 520px;
   border-left: 1px solid var(--line-soft);
   padding-left: 12px;
   color: var(--muted);
@@ -347,12 +348,13 @@ textarea {
 .dd-shell-context {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   min-width: 0;
 }
 
 .dd-shell-context__status {
-  min-width: 116px;
+  min-width: 104px;
 }
 
 .dd-shell-context__status b,
@@ -369,11 +371,17 @@ textarea {
 }
 
 .dd-shell-context__select {
+  flex: 0 1 210px;
   min-width: 156px;
 }
 
 .dd-shell-context .w-full {
   width: auto;
+  flex: 0 0 auto;
+}
+
+.dd-shell-context button {
+  white-space: nowrap;
 }
 
 .dd-web-nav.is-compact {

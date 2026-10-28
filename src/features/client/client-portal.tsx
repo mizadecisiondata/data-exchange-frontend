@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { AppShell, type NavGroup, type NavItem } from "@/components/app-shell";
 import { AccessFrame } from "@/components/access-frame";
 import { BackendStatusCard } from "@/components/backend-status";
+import { MessageInbox, type MessageInboxItem } from "@/components/message-inbox";
 import { ReportHtmlViewer } from "@/components/report-html-viewer";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Select } from "@/components/ui";
 import { backendGet, backendPost, type DemoState, type QueryAudit, type SubUser } from "@/lib/backend-api";
@@ -1112,6 +1113,7 @@ type ClientAuditRow = {
   user: string;
   identifier: string;
   channel: string;
+  queryType: string;
   product: string;
   tariff: string;
   value: string;
@@ -1122,18 +1124,18 @@ type ClientAuditRow = {
 };
 
 function Auditoria({ events, subUsers }: { events: QueryAudit[] | typeof bacEvents; subUsers: SubUser[] }) {
-  const [channelFilter, setChannelFilter] = useState("all");
+  const [queryTypeFilter, setQueryTypeFilter] = useState("all");
   const [productFilter, setProductFilter] = useState("all");
   const [userFilter, setUserFilter] = useState("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const normalizedEvents = events.map(normalizeClientAuditEvent);
-  const channels = Array.from(new Set(normalizedEvents.map((event) => event.channel)));
+  const queryTypes = Array.from(new Set(normalizedEvents.map((event) => event.queryType)));
   const products = Array.from(new Set(normalizedEvents.map((event) => event.product)));
   const users = Array.from(new Set([...normalizedEvents.map((event) => event.user), ...subUsers.map((subUser) => subUser.email)]));
   const filteredEvents = normalizedEvents.filter((event) => {
     const eventDate = event.date.slice(0, 10);
-    if (channelFilter !== "all" && event.channel !== channelFilter) return false;
+    if (queryTypeFilter !== "all" && event.queryType !== queryTypeFilter) return false;
     if (productFilter !== "all" && event.product !== productFilter) return false;
     if (userFilter !== "all" && event.user !== userFilter) return false;
     if (fromDate && eventDate < fromDate) return false;
@@ -1148,10 +1150,10 @@ function Auditoria({ events, subUsers }: { events: QueryAudit[] | typeof bacEven
       <CardContent className="grid gap-4">
         <Info title="Contrato obligatorio" text="Cada consulta registra BAC, consentimiento, usuario, canal, IP, producto, tarifa, valor estimado y estado." tone="info" />
         <div className="grid gap-3 lg:grid-cols-6">
-          <Field label="Canal">
-            <Select value={channelFilter} onChange={(event) => setChannelFilter(event.target.value)}>
+          <Field label="Tipo de consulta">
+            <Select value={queryTypeFilter} onChange={(event) => setQueryTypeFilter(event.target.value)}>
               <option value="all">Todos</option>
-              {channels.map((channel) => <option key={channel} value={channel}>{formatChannel(channel)}</option>)}
+              {queryTypes.map((queryType) => <option key={queryType} value={queryType}>{queryType}</option>)}
             </Select>
           </Field>
           <Field label="Producto">
@@ -1177,10 +1179,10 @@ function Auditoria({ events, subUsers }: { events: QueryAudit[] | typeof bacEven
             <div key={event.id} className="grid gap-2 border-b border-white/10 p-3 text-sm last:border-b-0 lg:grid-cols-[170px_1fr_110px_140px_110px]">
               <span className="text-muted">{event.date.slice(0, 19).replace("T", " ")}</span>
               <span>{event.user}{event.identifier ? ` / ${event.identifier}` : ""}</span>
-              <span>{formatChannel(event.channel)}</span>
+              <span>{event.queryType}</span>
               <span>{event.value}</span>
               <Badge tone="ok">{event.status}</Badge>
-              <span className="text-xs text-muted lg:col-span-5">Producto: {event.product} / tarifa: {event.tariff || "n/a"} / BAC: {event.bac || "n/a"} / consentimiento: {event.consent || "n/a"} / IP: {event.ip || "n/a"}</span>
+              <span className="text-xs text-muted lg:col-span-5">Canal: {formatChannel(event.channel)} / producto: {event.product} / tarifa: {event.tariff || "n/a"} / BAC: {event.bac || "n/a"} / consentimiento: {event.consent || "n/a"} / IP: {event.ip || "n/a"}</span>
             </div>
           ))}
           {filteredEvents.length === 0 ? <div className="p-3 text-sm text-muted">Sin eventos para los filtros seleccionados.</div> : null}
@@ -1198,6 +1200,7 @@ function normalizeClientAuditEvent(event: QueryAudit | (typeof bacEvents)[number
       user: event.user,
       identifier: event.identifier,
       channel: event.channel,
+      queryType: inferClientQueryType(event.channel),
       product: formatProduct(event.product),
       tariff: event.tariffLabel ?? event.tariff,
       value: `$${event.estimatedValue.toFixed(2)}`,
@@ -1214,6 +1217,7 @@ function normalizeClientAuditEvent(event: QueryAudit | (typeof bacEvents)[number
     user: event.actor,
     identifier: "",
     channel: event.channel,
+    queryType: inferClientQueryType(event.channel),
     product: event.product,
     tariff: "",
     value: event.value,
@@ -1225,10 +1229,17 @@ function normalizeClientAuditEvent(event: QueryAudit | (typeof bacEvents)[number
 }
 
 function buildClientAuditCsvHref(events: ClientAuditRow[]) {
-  const header = ["fecha", "usuario", "identificador", "canal", "producto", "tarifa", "valor", "estado", "bac", "consentimiento", "ip"];
-  const rows = events.map((event) => [event.date, event.user, event.identifier, event.channel, event.product, event.tariff, event.value, event.status, event.bac, event.consent, event.ip]);
+  const header = ["fecha", "usuario", "identificador", "tipo_consulta", "canal", "producto", "tarifa", "valor", "estado", "bac", "consentimiento", "ip"];
+  const rows = events.map((event) => [event.date, event.user, event.identifier, event.queryType, event.channel, event.product, event.tariff, event.value, event.status, event.bac, event.consent, event.ip]);
   const csv = [header, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
   return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+}
+
+function inferClientQueryType(channel: string) {
+  if (channel === "api") return "API";
+  if (channel === "batch") return "Consulta por bloque";
+  if (channel === "portal") return "Consulta individual";
+  return "Administrativo";
 }
 
 function escapeCsv(value: string) {
@@ -1341,15 +1352,71 @@ function Subusuarios({
 function Notificaciones({ demoState }: { demoState?: DemoState }) {
   const creditAlert = getCreditAlert(demoState);
 
-  return (
-    <div className="grid gap-3">
-      {creditAlert ? <Info title={creditAlert.title} text={creditAlert.text} tone={creditAlert.tone} /> : null}
-      <Info title="Observacion documental" text="Falta nombramiento actualizado del representante legal." tone="warn" />
-      <Info title="Sandbox listo" text="La plantilla de carga no productiva esta disponible." tone="ok" />
-      <Info title="Consulta bloqueada" text="Cuenta pendiente de aprobacion documental completa." tone="danger" />
-      {demoState?.outbox.map((email) => <Info key={email.id} title={email.subject} text={`${email.to} - ${email.status}`} tone="info" />)}
-    </div>
-  );
+  return <MessageInbox title="Buzon de mensajes" messages={buildClientInboxMessages(demoState, creditAlert)} />;
+}
+
+function buildClientInboxMessages(demoState: DemoState | undefined, creditAlert: ReturnType<typeof getCreditAlert>): MessageInboxItem[] {
+  const systemMessages: MessageInboxItem[] = [
+    ...(creditAlert ? [{
+      id: "credit-alert",
+      from: "Decision Data",
+      subject: creditAlert.title,
+      preview: creditAlert.text,
+      body: creditAlert.text,
+      createdAt: new Date().toISOString(),
+      unread: true,
+      tag: "Decision Credits",
+      tone: creditAlert.tone
+    } satisfies MessageInboxItem] : []),
+    {
+      id: "document-observation",
+      from: "Onboarding Decision Data",
+      subject: "Observacion documental",
+      preview: "Falta nombramiento actualizado del representante legal.",
+      body: "Por favor carga el nombramiento actualizado del representante legal para continuar con la aprobacion documental.",
+      createdAt: "2026-05-23T09:04:00.000Z",
+      unread: true,
+      tag: "Documentos",
+      tone: "warn"
+    },
+    {
+      id: "sandbox-ready",
+      from: "Operaciones Decision Data",
+      subject: "Sandbox listo",
+      preview: "La plantilla de carga no productiva esta disponible.",
+      body: "Ya puedes descargar la plantilla y ejecutar simulaciones no productivas para validar formato y calidad.",
+      createdAt: "2026-05-23T09:02:00.000Z",
+      unread: false,
+      tag: "Carga",
+      tone: "ok"
+    },
+    {
+      id: "blocked-query",
+      from: "Control BAC",
+      subject: "Consulta bloqueada",
+      preview: "Cuenta pendiente de aprobacion documental completa.",
+      body: "Las consultas productivas se habilitan cuando Decision Data apruebe la documentacion habilitante completa.",
+      createdAt: "2026-05-23T08:58:00.000Z",
+      unread: true,
+      tag: "Accesos",
+      tone: "danger"
+    }
+  ];
+
+  const outboxMessages = (demoState?.outbox ?? []).map((email): MessageInboxItem => ({
+    id: email.id,
+    from: "Decision Data",
+    to: email.to,
+    subject: email.subject,
+    preview: email.body ?? email.status,
+    body: email.body ?? `Estado del envio: ${email.status}.`,
+    createdAt: email.createdAt,
+    unread: email.status !== "sent",
+    tag: email.type,
+    tone: email.status === "sent" ? "ok" : "info"
+  }));
+
+  return [...systemMessages, ...outboxMessages].sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
 function buildScopedClientState(demoState: DemoState | undefined, sandboxClientId: string | null): DemoState | undefined {

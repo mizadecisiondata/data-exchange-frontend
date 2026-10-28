@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { AppShell, type NavGroup, type NavItem } from "@/components/app-shell";
 import { AccessFrame } from "@/components/access-frame";
 import { BackendStatusCard } from "@/components/backend-status";
+import { MessageInbox, type MessageInboxItem } from "@/components/message-inbox";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Field, Input, MetricCard, Progress, Select, Textarea } from "@/components/ui";
 import { backendGet, backendPost, type AdminAuditEvent, type AdminClient, type AdminUser, type DemoState } from "@/lib/backend-api";
 import { commercialModes, reporterSectors, requiredDocuments } from "@/lib/data-exchange";
@@ -659,14 +660,22 @@ function escapeCsv(value: string) {
 }
 
 function Notificaciones({ demoState }: { demoState?: DemoState }) {
-  return (
-    <Card>
-      <CardHeader><CardTitle>Notificaciones globales</CardTitle><Badge tone="ok">{demoState?.notifications.length ?? 0} mensajes</Badge></CardHeader>
-      <CardContent className="grid gap-2">
-        {(demoState?.notifications ?? []).map((email) => <EventRow key={email.id} title={`${email.clientName} / ${email.to}`} detail={`${email.subject}${email.body ? ` - ${email.body}` : ""}`} status={email.status} date={email.createdAt} />)}
-      </CardContent>
-    </Card>
-  );
+  return <MessageInbox title="Buzon global de mensajes" messages={buildAdminInboxMessages(demoState)} />;
+}
+
+function buildAdminInboxMessages(demoState?: DemoState): MessageInboxItem[] {
+  return (demoState?.notifications ?? []).map((email): MessageInboxItem => ({
+    id: email.id,
+    from: email.clientName,
+    to: email.to,
+    subject: email.subject,
+    preview: email.body ?? email.status,
+    body: email.body ?? `Estado del mensaje: ${email.status}.`,
+    createdAt: email.createdAt,
+    unread: email.status !== "sent",
+    tag: email.type,
+    tone: email.status === "sent" ? "ok" : email.status === "failed" ? "danger" : "info"
+  })).sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
 function Configuracion({ demoState, onUpdate, updating }: { demoState?: DemoState; onUpdate: (body: { emailProvider?: string; devMonitorExternal?: boolean; sbInhabilitationIncludedInPanorama?: boolean; allowPricingAutomation?: boolean }) => void; updating: boolean }) {
